@@ -1,6 +1,6 @@
 import { City, Category, Provider, Booking } from '../types';
 
-export const LOGO_URL = "https://lh3.googleusercontent.com/aida-public/AB6AXuAevR_6gDqbt0eSXTvSREwdzslz0MejQ7ludJk1bjLFqcKYHnnVQEk4YTo6uLIL68nYjNsD_YgqNb05fGXo8oXI3C1DuUeqMtp2eWsSh4jcwe-uIKMiOBVne4ZsRCm_Km8zCj6EmSBoPRKg-44hvCNW0z_kt1AcvWqsdEVP-1FRWMQ2ImaRLHRyL-lvrz2m2XxBCc4Fz_jfG9cq2R7biWdi55rtYeh_cIKCbOKIuQbUpLWDrJiqzg88";
+export const LOGO_URL = "/logo.png";
 
 export const CITIES: City[] = [
   { id: 'pereira', name: 'Pereira', department: 'Risaralda', isPopular: true },
