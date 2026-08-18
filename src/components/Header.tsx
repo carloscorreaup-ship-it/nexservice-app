@@ -31,7 +31,7 @@ export const Header: React.FC<HeaderProps> = ({
         >
           <img 
             alt="NexService Logo" 
-            className="w-9 h-9 object-contain rounded-md transition-transform group-hover:scale-105" 
+            className="w-14 h-14 object-contain rounded-md transition-transform group-hover:scale-105" 
             src={LOGO_URL} 
           />
           <span className="text-xl md:text-2xl font-bold font-geist text-[#003ec7] tracking-tight">
