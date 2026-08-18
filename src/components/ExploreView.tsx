@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Category, Provider } from '../types';
 import { CATEGORIES } from '../data/mockData';
 import { ProviderCard } from './ProviderCard';
+import { classifyTextToCategory, getSuggestedServicesForQuery } from '../utils/serviceClassifier';
 
 interface ExploreViewProps {
   currentCity: string;
@@ -29,6 +30,11 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
   const [filterVerifiedOnly, setFilterVerifiedOnly] = useState(false);
   const [sortBy, setSortBy] = useState<'rating' | 'reviews' | 'name'>('rating');
   const [showFilterDrawer, setShowFilterDrawer] = useState(false);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+
+  // Intelligent category detection
+  const detectedCategory = useMemo(() => classifyTextToCategory(searchQuery), [searchQuery]);
+  const suggestedServices = useMemo(() => getSuggestedServicesForQuery(searchQuery), [searchQuery]);
 
   // Filtered providers
   const filteredProviders = useMemo(() => {
@@ -38,7 +44,7 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
         const matchCity = !p.city || p.city.toLowerCase() === currentCity.toLowerCase();
         if (!matchCity) return false;
 
-        // Search query match
+        // Search query match with smart classification fallback
         if (searchQuery.trim()) {
           const q = searchQuery.toLowerCase();
           const matchName = p.name.toLowerCase().includes(q);
@@ -46,7 +52,11 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
           const matchCat = p.category.toLowerCase().includes(q);
           const matchTags = p.tags.some((t) => t.toLowerCase().includes(q));
           const matchServices = p.services.some((s) => s.name.toLowerCase().includes(q));
-          if (!matchName && !matchBiz && !matchCat && !matchTags && !matchServices) {
+          
+          // Smart classification match: if text matches a category knowledge base
+          const matchDetectedCategory = detectedCategory && p.category.toLowerCase() === detectedCategory.name.toLowerCase();
+
+          if (!matchName && !matchBiz && !matchCat && !matchTags && !matchServices && !matchDetectedCategory) {
             return false;
           }
         }
@@ -73,7 +83,7 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
         if (sortBy === 'reviews') return b.reviewCount - a.reviewCount;
         return a.name.localeCompare(b.name);
       });
-  }, [providers, currentCity, searchQuery, selectedCategory, filterDomicilioOnly, filterVerifiedOnly, sortBy]);
+  }, [providers, currentCity, searchQuery, selectedCategory, filterDomicilioOnly, filterVerifiedOnly, sortBy, detectedCategory]);
 
   const visibleCategories = showAllCategories ? CATEGORIES : CATEGORIES.slice(0, 6);
 
@@ -84,31 +94,100 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
         <h1 className="font-geist text-2xl md:text-4xl font-bold text-[#141b2b] mb-5 tracking-tight">
           ¿Qué producto o servicio necesitas hoy?
         </h1>
-        <div className="relative max-w-2xl mx-auto">
-          <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#737688] text-[22px]">
+        <div className="relative max-w-2xl mx-auto text-left">
+          <span className="material-symbols-outlined absolute left-4 top-4 text-[#737688] text-[22px]">
             search
           </span>
           <input 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            onFocus={() => setIsSearchFocused(true)}
+            onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
             className="w-full pl-12 pr-10 py-4 rounded-2xl bg-white border border-[#c3c5d9]/60 focus:border-[#0052ff] focus:ring-4 focus:ring-[#0052ff]/15 transition-all text-base text-[#141b2b] shadow-elevation-1 outline-none placeholder:text-[#737688]" 
-            placeholder="Ej. Plomero, Abogado, Electricista, Odontología..." 
+            placeholder="Ej. baño de gatos, organizo neveras, plomero, clases de inglés..." 
             type="text"
           />
           {searchQuery && (
             <button
-              onClick={() => setSearchQuery('')}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#737688] hover:text-[#141b2b] p-1 cursor-pointer"
+              onClick={() => {
+                setSearchQuery('');
+                setSelectedCategory(null);
+              }}
+              className="absolute right-3.5 top-4 text-[#737688] hover:text-[#141b2b] p-1 cursor-pointer"
             >
               <span className="material-symbols-outlined text-[18px]">close</span>
             </button>
+          )}
+
+          {/* Smart Auto-Classification & Dropdown Menu */}
+          {searchQuery.trim().length > 1 && (isSearchFocused || true) && (
+            <div className="absolute z-40 mt-2 w-full bg-white rounded-2xl shadow-elevation-hover border border-[#0052ff]/30 overflow-hidden animate-in fade-in zoom-in-95 duration-150 p-3 space-y-3">
+              {/* Category Auto-Detection Banner */}
+              {detectedCategory && (
+                <div className="bg-[#e9edff] p-2.5 rounded-xl flex items-center justify-between border border-[#0052ff]/20">
+                  <div className="flex items-center gap-2">
+                    <span className="bg-[#0052ff] text-white text-xs px-2 py-0.5 rounded-full font-bold">
+                      Categoría detectada
+                    </span>
+                    <span className="text-xs font-bold text-[#003ec7]">
+                      {detectedCategory.name}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setSelectedCategory(detectedCategory.name);
+                    }}
+                    className="text-xs text-[#0052ff] hover:underline font-semibold cursor-pointer"
+                  >
+                    Filtrar por {detectedCategory.name}
+                  </button>
+                </div>
+              )}
+
+              {/* Suggested Services Dropdown Items */}
+              {suggestedServices.length > 0 && (
+                <div>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#737688] px-1 block mb-1.5">
+                    Servicios Sugeridos
+                  </span>
+                  <div className="space-y-1">
+                    {suggestedServices.slice(0, 3).map((item, idx) => (
+                      <div
+                        key={idx}
+                        onClick={() => {
+                          setSearchQuery(item.name);
+                          setSelectedCategory(item.category);
+                        }}
+                        className="p-2.5 rounded-xl hover:bg-[#f1f3ff] transition-colors cursor-pointer flex items-center justify-between text-xs md:text-sm"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="material-symbols-outlined text-[#0052ff] text-[18px]">
+                            auto_awesome
+                          </span>
+                          <span className="font-medium text-[#141b2b]">{item.name}</span>
+                        </div>
+                        <span className="text-xs font-bold text-[#003ec7] bg-[#e9edff] px-2 py-0.5 rounded">
+                          {item.priceEstimate}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Direct Provider Matches Summary */}
+              <div className="pt-2 border-t border-[#f1f3ff] flex items-center justify-between text-xs text-[#737688]">
+                <span>Se encontraron <strong>{filteredProviders.length}</strong> profesionales relacionados</span>
+                <span className="text-[#0052ff] font-semibold">NexService.app</span>
+              </div>
+            </div>
           )}
         </div>
 
         {/* Quick search tags */}
         <div className="flex flex-wrap items-center justify-center gap-2 mt-3 text-xs text-[#737688]">
           <span className="font-medium">Populares:</span>
-          {['Plomería', 'Electricista', 'IT / Computadores', 'Abogado', 'Spa & Belleza'].map((tag) => (
+          {['Baño de gatos', 'Organizar neveras', 'Plomería', 'Electricista', 'IT / Computadores'].map((tag) => (
             <button
               key={tag}
               onClick={() => setSearchQuery(tag)}

@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Provider, ServiceItem } from '../types';
+import { classifyTextToCategory, CATEGORY_KNOWLEDGE } from '../utils/serviceClassifier';
 
 interface ProviderModeViewProps {
   currentCity: string;
@@ -28,6 +29,17 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
   const [isDelivery, setIsDelivery] = useState(existingProfile?.isDelivery ?? true);
   const [isPublished, setIsPublished] = useState(!!existingProfile?.businessName);
   const [showSuccessToast, setShowSuccessToast] = useState(false);
+  const [autoCategoryNotice, setAutoCategoryNotice] = useState<string | null>(null);
+
+  // Auto classification effect based on text inputs (e.g. "organizo neveras" or "baño de gatos")
+  useEffect(() => {
+    const textToAnalyze = `${businessName} ${newServiceName} ${description}`;
+    const detected = classifyTextToCategory(textToAnalyze);
+    if (detected && detected.name !== category) {
+      setCategory(detected.name);
+      setAutoCategoryNotice(`Clasificado automáticamente en la categoría "${detected.name}"`);
+    }
+  }, [businessName, description]);
 
   // Example services list
   const [services, setServices] = useState<ServiceItem[]>(
@@ -230,7 +242,10 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
                     id="category" 
                     name="category"
                     value={category}
-                    onChange={(e) => setCategory(e.target.value)}
+                    onChange={(e) => {
+                      setCategory(e.target.value);
+                      setAutoCategoryNotice(null);
+                    }}
                   >
                     <option value="Reparaciones">Plomería & Reparaciones</option>
                     <option value="Hogar">Hogar & Mantenimiento</option>
@@ -245,6 +260,13 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
                     <span className="material-symbols-outlined text-[20px]">expand_more</span>
                   </div>
                 </div>
+
+                {autoCategoryNotice && (
+                  <p className="mt-1.5 text-xs text-[#0052ff] font-semibold flex items-center gap-1 animate-in fade-in">
+                    <span className="material-symbols-outlined text-[15px] filled">auto_awesome</span>
+                    {autoCategoryNotice}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -368,6 +390,48 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
                     + Agregar
                   </button>
                 </div>
+
+                {/* Intelligent Template Suggestions for Active Category */}
+                {(() => {
+                  const currentKnowledge = CATEGORY_KNOWLEDGE.find(
+                    (k) => k.name.toLowerCase() === category.toLowerCase()
+                  );
+                  if (!currentKnowledge) return null;
+
+                  return (
+                    <div className="mt-3 bg-[#e9edff]/50 p-2.5 rounded-xl border border-[#0052ff]/20">
+                      <span className="text-[11px] font-bold text-[#003ec7] block mb-1.5 flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[15px] filled">lightbulb</span>
+                        Sugerencias populares para {category}:
+                      </span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {currentKnowledge.suggestedServices.map((tmpl, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => {
+                              if (!services.some(s => s.name === tmpl.name)) {
+                                setServices([
+                                  ...services,
+                                  {
+                                    id: `s-${Date.now()}-${idx}`,
+                                    name: tmpl.name,
+                                    priceEstimate: tmpl.priceEstimate || 'A convenir',
+                                    duration: tmpl.duration || '1 hr'
+                                  }
+                                ]);
+                              }
+                            }}
+                            className="bg-white hover:bg-[#0052ff] text-[#003ec7] hover:text-white border border-[#0052ff]/30 text-xs px-2.5 py-1 rounded-lg transition-colors cursor-pointer text-left flex items-center gap-1"
+                          >
+                            <span>+ {tmpl.name}</span>
+                            <span className="font-bold opacity-80">({tmpl.priceEstimate})</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             </div>
           </div>
