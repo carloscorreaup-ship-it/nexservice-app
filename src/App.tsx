@@ -80,14 +80,20 @@ export default function App() {
     localStorage.setItem(STORAGE_KEYS.BOOKINGS, JSON.stringify(bookings));
   }, [bookings]);
 
-  // Handle Onboarding Completion (Step 1)
-  const handleCompleteOnboarding = (email: string) => {
+  // Handle Onboarding / Auth Completion (Step 1)
+  const handleCompleteOnboarding = (data: { email: string; name?: string; mode?: 'client' | 'provider' } | string) => {
+    const email = typeof data === 'string' ? data : data.email;
+    const customName = typeof data === 'object' ? data.name : undefined;
+    const customMode = typeof data === 'object' ? data.mode : undefined;
+
     const isSpecialProvider = email.toLowerCase().includes('plomero') || email.toLowerCase().includes('proveedor');
+    
     setSession((prev) => ({
       ...prev,
       email,
+      name: customName?.trim() || prev.name || 'Usuario NexService',
       isOnboarded: true,
-      mode: isSpecialProvider ? 'provider' : 'client'
+      mode: customMode || (isSpecialProvider ? 'provider' : 'client')
     }));
   };
 
