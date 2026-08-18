@@ -6,7 +6,7 @@ import { ProviderCard } from './ProviderCard';
 interface ExploreViewProps {
   currentCity: string;
   providers: Provider[];
-  onSwitchToProviderMode: () => void;
+  onSwitchToProviderMode?: () => void;
   onContactWhatsApp: (provider: Provider, message?: string) => void;
   onViewDetails: (provider: Provider) => void;
   favorites: string[];
@@ -79,31 +79,10 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
 
   return (
     <main className="max-w-7xl mx-auto px-4 md:px-6 pt-22 pb-24 md:pb-16 font-inter">
-      {/* Mode Switcher Banner */}
-      <section className="mb-8 md:mb-12 flex justify-center">
-        <div className="glass-panel rounded-2xl p-5 md:p-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-elevation-1 border border-[#dce2f7] max-w-3xl w-full">
-          <div className="flex-1 text-center sm:text-left">
-            <h2 className="font-geist text-xl md:text-2xl font-bold text-[#141b2b] mb-1">
-              ¿Ofreces servicios?
-            </h2>
-            <p className="text-sm md:text-base text-[#434656]">
-              Únete a nuestra red de proveedores verificados en {currentCity}.
-            </p>
-          </div>
-          <button 
-            onClick={onSwitchToProviderMode}
-            className="bg-white border-2 border-[#0052ff] text-[#0052ff] hover:bg-[#0052ff] hover:text-white px-5 py-3 rounded-xl font-geist font-semibold text-sm flex items-center gap-2 transition-all duration-200 shadow-2xs shrink-0 cursor-pointer active:scale-95"
-          >
-            <span>Cambiar a Modo Proveedor</span>
-            <span className="material-symbols-outlined text-[18px]">swap_horiz</span>
-          </button>
-        </div>
-      </section>
-
       {/* Search Section */}
       <section className="mb-10 text-center max-w-3xl mx-auto">
         <h1 className="font-geist text-2xl md:text-4xl font-bold text-[#141b2b] mb-5 tracking-tight">
-          ¿Qué servicio necesitas hoy?
+          ¿Qué producto o servicio necesitas hoy?
         </h1>
         <div className="relative max-w-2xl mx-auto">
           <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#737688] text-[22px]">
