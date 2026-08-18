@@ -1,0 +1,6 @@
+{
+  "name": "NexService.app",
+  "description": "Encuentra y ofrece servicios profesionales en tu ciudad a un clic. Red de proveedores verificados.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
