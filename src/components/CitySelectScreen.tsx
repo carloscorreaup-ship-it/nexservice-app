@@ -17,6 +17,13 @@ export const CitySelectScreen: React.FC<CitySelectProps> = ({
 }) => {
   const [currentCity, setCurrentCity] = useState(selectedCity || 'Pereira');
   const [isOpen, setIsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredCities = CITIES.filter(
+    (c) =>
+      c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      c.department.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const handleConfirm = (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,39 +77,63 @@ export const CitySelectScreen: React.FC<CitySelectProps> = ({
             </span>
           </button>
 
-          {/* Dropdown Options */}
+          {/* Dropdown Options with Search */}
           {isOpen && (
-            <ul className="absolute z-30 mt-1.5 w-full bg-white rounded-xl shadow-elevation-hover border border-[#c3c5d9]/40 max-h-64 overflow-y-auto focus:outline-none py-1.5 animate-in fade-in zoom-in-95 duration-150">
-              {CITIES.map((city) => {
-                const isSelected = city.name.toLowerCase() === currentCity.toLowerCase();
-                return (
-                  <li
-                    key={city.id}
-                    onClick={() => {
-                      setCurrentCity(city.name);
-                      setIsOpen(false);
-                    }}
-                    className={`relative cursor-pointer select-none py-2.5 pl-4 pr-10 hover:bg-[#f1f3ff] transition-colors text-sm md:text-base flex items-center justify-between ${
-                      isSelected ? 'text-[#003ec7] font-semibold bg-[#e9edff]/50' : 'text-[#434656] font-normal'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="material-symbols-outlined text-[18px] text-[#737688]">
-                        location_city
-                      </span>
-                      <span>{city.name}</span>
-                      <span className="text-xs text-[#737688] font-normal">({city.department})</span>
-                    </div>
+            <div className="absolute z-30 mt-1.5 w-full bg-white rounded-xl shadow-elevation-hover border border-[#c3c5d9]/40 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+              <div className="p-2 border-b border-[#f1f3ff] bg-[#f9f9ff]">
+                <div className="relative flex items-center">
+                  <span className="material-symbols-outlined absolute left-3 text-[#737688] text-[18px]">
+                    search
+                  </span>
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Buscar ciudad o departamento..."
+                    className="w-full pl-9 pr-3 py-1.5 text-xs md:text-sm bg-white border border-[#c3c5d9]/60 rounded-lg outline-none focus:border-[#0052ff]"
+                    autoFocus
+                  />
+                </div>
+              </div>
+              <ul className="max-h-60 overflow-y-auto py-1">
+                {filteredCities.length > 0 ? (
+                  filteredCities.map((city) => {
+                    const isSelected = city.name.toLowerCase() === currentCity.toLowerCase();
+                    return (
+                      <li
+                        key={city.id}
+                        onClick={() => {
+                          setCurrentCity(city.name);
+                          setIsOpen(false);
+                          setSearchQuery('');
+                        }}
+                        className={`relative cursor-pointer select-none py-2.5 px-4 hover:bg-[#f1f3ff] transition-colors text-sm flex items-center justify-between ${
+                          isSelected ? 'text-[#003ec7] font-semibold bg-[#e9edff]/50' : 'text-[#434656] font-normal'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="material-symbols-outlined text-[18px] text-[#737688]">
+                            location_city
+                          </span>
+                          <span>{city.name}</span>
+                          <span className="text-xs text-[#737688] font-normal">({city.department})</span>
+                        </div>
 
-                    {isSelected && (
-                      <span className="text-[#0052ff] flex items-center">
-                        <span className="material-symbols-outlined text-[20px] filled">check</span>
-                      </span>
-                    )}
+                        {isSelected && (
+                          <span className="text-[#0052ff] flex items-center">
+                            <span className="material-symbols-outlined text-[20px] filled">check</span>
+                          </span>
+                        )}
+                      </li>
+                    );
+                  })
+                ) : (
+                  <li className="py-4 text-center text-xs text-[#737688]">
+                    No se encontró la ciudad
                   </li>
-                );
-              })}
-            </ul>
+                )}
+              </ul>
+            </div>
           )}
         </div>
 

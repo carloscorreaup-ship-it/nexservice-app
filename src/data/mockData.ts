@@ -3,16 +3,208 @@ import { City, Category, Provider, Booking } from '../types';
 export const LOGO_URL = "/logo.png";
 
 export const CITIES: City[] = [
-  { id: 'pereira', name: 'Pereira', department: 'Risaralda', isPopular: true },
+  // Ciudades Principales / Capitales
   { id: 'bogota', name: 'Bogotá', department: 'Cundinamarca', isPopular: true },
   { id: 'medellin', name: 'Medellín', department: 'Antioquia', isPopular: true },
   { id: 'cali', name: 'Cali', department: 'Valle del Cauca', isPopular: true },
+  { id: 'barranquilla', name: 'Barranquilla', department: 'Atlántico', isPopular: true },
+  { id: 'cartagena', name: 'Cartagena', department: 'Bolívar', isPopular: true },
+  { id: 'bucaramanga', name: 'Bucaramanga', department: 'Santander', isPopular: true },
+  { id: 'pereira', name: 'Pereira', department: 'Risaralda', isPopular: true },
   { id: 'manizales', name: 'Manizales', department: 'Caldas', isPopular: true },
   { id: 'armenia', name: 'Armenia', department: 'Quindío', isPopular: true },
-  { id: 'bucaramanga', name: 'Bucaramanga', department: 'Santander' },
-  { id: 'barranquilla', name: 'Barranquilla', department: 'Atlántico' },
-  { id: 'cartagena', name: 'Cartagena', department: 'Bolívar' },
-  { id: 'santa-marta', name: 'Santa Marta', department: 'Magdalena' },
+  { id: 'cucuta', name: 'Cúcuta', department: 'Norte de Santander', isPopular: true },
+  { id: 'ibague', name: 'Ibagué', department: 'Tolima', isPopular: true },
+  { id: 'santa-marta', name: 'Santa Marta', department: 'Magdalena', isPopular: true },
+  { id: 'villavicencio', name: 'Villavicencio', department: 'Meta', isPopular: true },
+  { id: 'pasto', name: 'Pasto', department: 'Nariño', isPopular: true },
+  { id: 'monteria', name: 'Montería', department: 'Córdoba', isPopular: true },
+  { id: 'neiva', name: 'Neiva', department: 'Huila' },
+  { id: 'valledupar', name: 'Valledupar', department: 'Cesar' },
+  { id: 'popayan', name: 'Popayán', department: 'Cauca' },
+  { id: 'sincelejo', name: 'Sincelejo', department: 'Sucre' },
+  { id: 'tunja', name: 'Tunja', department: 'Boyacá' },
+  { id: 'riohacha', name: 'Riohacha', department: 'La Guajira' },
+  { id: 'florencia', name: 'Florencia', department: 'Caquetá' },
+  { id: 'quibdo', name: 'Quibdó', department: 'Chocó' },
+  { id: 'yopal', name: 'Yopal', department: 'Casanare' },
+  { id: 'arauca', name: 'Arauca', department: 'Arauca' },
+  { id: 'mocoa', name: 'Mocoa', department: 'Putumayo' },
+  { id: 'san-andres', name: 'San Andrés', department: 'San Andrés y Providencia' },
+  { id: 'leticia', name: 'Leticia', department: 'Amazonas' },
+  { id: 'inirida', name: 'Inírida', department: 'Guainía' },
+  { id: 'san-jose-del-guaviare', name: 'San José del Guaviare', department: 'Guaviare' },
+  { id: 'mitu', name: 'Mitú', department: 'Vaupés' },
+  { id: 'puerto-carreno', name: 'Puerto Carreño', department: 'Vichada' },
+
+  // Amazonas
+  { id: 'puerto-narino', name: 'Puerto Nariño', department: 'Amazonas' },
+
+  // Antioquia
+  { id: 'envigado', name: 'Envigado', department: 'Antioquia' },
+  { id: 'itagui', name: 'Itagüí', department: 'Antioquia' },
+  { id: 'bello', name: 'Bello', department: 'Antioquia' },
+  { id: 'rionegro', name: 'Rionegro', department: 'Antioquia' },
+  { id: 'sabaneta', name: 'Sabaneta', department: 'Antioquia' },
+  { id: 'apartado', name: 'Apartadó', department: 'Antioquia' },
+  { id: 'turbo', name: 'Turbo', department: 'Antioquia' },
+  { id: 'caucasia', name: 'Caucasia', department: 'Antioquia' },
+  { id: 'caldas-ant', name: 'Caldas', department: 'Antioquia' },
+  { id: 'la-estrella', name: 'La Estrella', department: 'Antioquia' },
+  { id: 'marinilla', name: 'Marinilla', department: 'Antioquia' },
+  { id: 'guarne', name: 'Guarne', department: 'Antioquia' },
+  { id: 'copacabana', name: 'Copacabana', department: 'Antioquia' },
+  { id: 'girardota', name: 'Girardota', department: 'Antioquia' },
+  { id: 'santa-fe-de-antioquia', name: 'Santa Fe de Antioquia', department: 'Antioquia' },
+  { id: 'yarumal', name: 'Yarumal', department: 'Antioquia' },
+  { id: 'puerto-berrio', name: 'Puerto Berrío', department: 'Antioquia' },
+  { id: 'la-ceja', name: 'La Ceja', department: 'Antioquia' },
+  { id: 'el-carmen-de-viboral', name: 'El Carmen de Viboral', department: 'Antioquia' },
+
+  // Atlántico
+  { id: 'soledad', name: 'Soledad', department: 'Atlántico' },
+  { id: 'malambo', name: 'Malambo', department: 'Atlántico' },
+  { id: 'sabanalarga', name: 'Sabanalarga', department: 'Atlántico' },
+  { id: 'puerto-colombia', name: 'Puerto Colombia', department: 'Atlántico' },
+  { id: 'baranoa', name: 'Baranoa', department: 'Atlántico' },
+  { id: 'galapa', name: 'Galapa', department: 'Atlántico' },
+
+  // Bolívar
+  { id: 'magangue', name: 'Magangué', department: 'Bolívar' },
+  { id: 'el-carmen-de-bolivar', name: 'El Carmen de Bolívar', department: 'Bolívar' },
+  { id: 'turbaco', name: 'Turbaco', department: 'Bolívar' },
+  { id: 'arjona', name: 'Arjona', department: 'Bolívar' },
+
+  // Boyacá
+  { id: 'duitama', name: 'Duitama', department: 'Boyacá' },
+  { id: 'sogamoso', name: 'Sogamoso', department: 'Boyacá' },
+  { id: 'chiquinquira', name: 'Chiquinquirá', department: 'Boyacá' },
+  { id: 'paipa', name: 'Paipa', department: 'Boyacá' },
+  { id: 'villa-de-leyva', name: 'Villa de Leyva', department: 'Boyacá' },
+  { id: 'puerto-boyaca', name: 'Puerto Boyacá', department: 'Boyacá' },
+
+  // Caldas
+  { id: 'villamaria', name: 'Villamaría', department: 'Caldas' },
+  { id: 'la-dorada', name: 'La Dorada', department: 'Caldas' },
+  { id: 'chinchina', name: 'Chinchiná', department: 'Caldas' },
+  { id: 'riosucio', name: 'Riosucio', department: 'Caldas' },
+
+  // Caquetá
+  { id: 'san-vicente-del-cagua', name: 'San Vicente del Caguán', department: 'Caquetá' },
+
+  // Casanare
+  { id: 'aguazul', name: 'Aguazul', department: 'Casanare' },
+  { id: 'paz-de-ariporo', name: 'Paz de Ariporo', department: 'Casanare' },
+
+  // Cauca
+  { id: 'santander-de-quilichao', name: 'Santander de Quilichao', department: 'Cauca' },
+  { id: 'puerto-tejada', name: 'Puerto Tejada', department: 'Cauca' },
+
+  // Cesar
+  { id: 'aguachica', name: 'Aguachica', department: 'Cesar' },
+  { id: 'agustin-codazzi', name: 'Agustín Codazzi', department: 'Cesar' },
+
+  // Chocó
+  { id: 'istmina', name: 'Istmina', department: 'Chocó' },
+
+  // Córdoba
+  { id: 'cerete', name: 'Cereté', department: 'Córdoba' },
+  { id: 'lorica', name: 'Lorica', department: 'Córdoba' },
+  { id: 'sahagun', name: 'Sahagún', department: 'Córdoba' },
+  { id: 'montelibano', name: 'Montelíbano', department: 'Córdoba' },
+
+  // Cundinamarca
+  { id: 'soacha', name: 'Soacha', department: 'Cundinamarca' },
+  { id: 'chia', name: 'Chía', department: 'Cundinamarca' },
+  { id: 'zipaquira', name: 'Zipaquirá', department: 'Cundinamarca' },
+  { id: 'facatativa', name: 'Facatativá', department: 'Cundinamarca' },
+  { id: 'fusagasuga', name: 'Fusagasugá', department: 'Cundinamarca' },
+  { id: 'mosquera', name: 'Mosquera', department: 'Cundinamarca' },
+  { id: 'funza', name: 'Funza', department: 'Cundinamarca' },
+  { id: 'girardot', name: 'Girardot', department: 'Cundinamarca' },
+  { id: 'cajica', name: 'Cajicá', department: 'Cundinamarca' },
+  { id: 'madrid', name: 'Madrid', department: 'Cundinamarca' },
+  { id: 'sopo', name: 'Sopó', department: 'Cundinamarca' },
+  { id: 'tocancipa', name: 'Tocancipá', department: 'Cundinamarca' },
+  { id: 'la-calera', name: 'La Calera', department: 'Cundinamarca' },
+  { id: 'ubate', name: 'Ubaté', department: 'Cundinamarca' },
+  { id: 'villeta', name: 'Villeta', department: 'Cundinamarca' },
+
+  // Huila
+  { id: 'pitalito', name: 'Pitalito', department: 'Huila' },
+  { id: 'garzon', name: 'Garzón', department: 'Huila' },
+  { id: 'la-plata', name: 'La Plata', department: 'Huila' },
+
+  // La Guajira
+  { id: 'maicao', name: 'Maicao', department: 'La Guajira' },
+  { id: 'uribia', name: 'Uribia', department: 'La Guajira' },
+  { id: 'fonseca', name: 'Fonseca', department: 'La Guajira' },
+
+  // Magdalena
+  { id: 'cienaga', name: 'Ciénaga', department: 'Magdalena' },
+  { id: 'fundacion', name: 'Fundación', department: 'Magdalena' },
+  { id: 'el-banco', name: 'El Banco', department: 'Magdalena' },
+
+  // Meta
+  { id: 'acacias', name: 'Acacías', department: 'Meta' },
+  { id: 'granada', name: 'Granada', department: 'Meta' },
+  { id: 'puerto-lopez', name: 'Puerto López', department: 'Meta' },
+
+  // Nariño
+  { id: 'tumaco', name: 'Tumaco', department: 'Nariño' },
+  { id: 'ipiales', name: 'Ipiales', department: 'Nariño' },
+
+  // Norte de Santander
+  { id: 'ocana', name: 'Ocaña', department: 'Norte de Santander' },
+  { id: 'pamplona', name: 'Pamplona', department: 'Norte de Santander' },
+  { id: 'villa-del-rosario', name: 'Villa del Rosario', department: 'Norte de Santander' },
+  { id: 'los-patios', name: 'Los Patios', department: 'Norte de Santander' },
+
+  // Putumayo
+  { id: 'puerto-asis', name: 'Puerto Asís', department: 'Putumayo' },
+  { id: 'orito', name: 'Orito', department: 'Putumayo' },
+
+  // Quindío
+  { id: 'calarca', name: 'Calarcá', department: 'Quindío' },
+  { id: 'montenegro', name: 'Montenegro', department: 'Quindío' },
+  { id: 'quimbaya', name: 'Quimbaya', department: 'Quindío' },
+  { id: 'la-tebaida', name: 'La Tebaida', department: 'Quindío' },
+  { id: 'salento', name: 'Salento', department: 'Quindío' },
+
+  // Risaralda
+  { id: 'dosquebradas', name: 'Dosquebradas', department: 'Risaralda' },
+  { id: 'santa-rosa-de-cabal', name: 'Santa Rosa de Cabal', department: 'Risaralda' },
+  { id: 'la-virginia', name: 'La Virginia', department: 'Risaralda' },
+
+  // Santander
+  { id: 'floridablanca', name: 'Floridablanca', department: 'Santander' },
+  { id: 'giron', name: 'Girón', department: 'Santander' },
+  { id: 'piedecuesta', name: 'Piedecuesta', department: 'Santander' },
+  { id: 'barrancabermeja', name: 'Barrancabermeja', department: 'Santander' },
+  { id: 'san-gil', name: 'San Gil', department: 'Santander' },
+  { id: 'socorro', name: 'Socorro', department: 'Santander' },
+
+  // Sucre
+  { id: 'corozal', name: 'Corozal', department: 'Sucre' },
+  { id: 'san-marcos', name: 'San Marcos', department: 'Sucre' },
+
+  // Tolima
+  { id: 'espinal', name: 'Espinal', department: 'Tolima' },
+  { id: 'melgar', name: 'Melgar', department: 'Tolima' },
+  { id: 'honda', name: 'Honda', department: 'Tolima' },
+  { id: 'libano', name: 'Líbano', department: 'Tolima' },
+
+  // Valle del Cauca
+  { id: 'buenaventura', name: 'Buenaventura', department: 'Valle del Cauca' },
+  { id: 'palmira', name: 'Palmira', department: 'Valle del Cauca' },
+  { id: 'tulua', name: 'Tuluá', department: 'Valle del Cauca' },
+  { id: 'buga', name: 'Buga', department: 'Valle del Cauca' },
+  { id: 'cartago', name: 'Cartago', department: 'Valle del Cauca' },
+  { id: 'jamundi', name: 'Jamundí', department: 'Valle del Cauca' },
+  { id: 'yumbo', name: 'Yumbo', department: 'Valle del Cauca' },
+  { id: 'candelaria', name: 'Candelaria', department: 'Valle del Cauca' },
+  { id: 'sevilla', name: 'Sevilla', department: 'Valle del Cauca' },
+  { id: 'zarzal', name: 'Zarzal', department: 'Valle del Cauca' },
 ];
 
 export const CATEGORIES: Category[] = [
