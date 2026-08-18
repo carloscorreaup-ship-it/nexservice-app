@@ -81,9 +81,10 @@ export default function App() {
   }, [bookings]);
 
   // Handle Onboarding / Auth Completion (Step 1)
-  const handleCompleteOnboarding = (data: { email: string; name?: string; mode?: 'client' | 'provider' } | string) => {
+  const handleCompleteOnboarding = (data: { email: string; name?: string; avatarUrl?: string; mode?: 'client' | 'provider' } | string) => {
     const email = typeof data === 'string' ? data : data.email;
     const customName = typeof data === 'object' ? data.name : undefined;
+    const customAvatar = typeof data === 'object' ? data.avatarUrl : undefined;
     const customMode = typeof data === 'object' ? data.mode : undefined;
 
     const isSpecialProvider = email.toLowerCase().includes('plomero') || email.toLowerCase().includes('proveedor');
@@ -92,6 +93,7 @@ export default function App() {
       ...prev,
       email,
       name: customName?.trim() || prev.name || 'Usuario NexService',
+      avatarUrl: customAvatar || prev.avatarUrl,
       isOnboarded: true,
       mode: customMode || (isSpecialProvider ? 'provider' : 'client')
     }));
@@ -288,6 +290,7 @@ export default function App() {
         isProviderMode={session.mode === 'provider'}
         onToggleProviderMode={handleToggleProviderMode}
         bookingsCount={bookings.filter((b) => b.status === 'pendiente').length}
+        userAvatarUrl={session.avatarUrl}
       />
 
       {/* Main Views Container */}

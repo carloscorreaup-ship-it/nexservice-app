@@ -28,7 +28,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
       <div className="bg-white rounded-2xl p-6 border border-[#e1e8fd] shadow-elevation-1 mb-6 flex flex-col sm:flex-row items-center sm:items-start gap-5">
         <div className="w-20 h-20 rounded-full bg-[#e9edff] border-2 border-[#0052ff] overflow-hidden shrink-0 shadow-xs">
           <img 
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuDZvoz3EuYmNT3k6LuMqnW98-amCznFhnjHu2W5iezyKOp0vW4svO3COFcpNOLyspuY4k_GomBJ90ebg7jXdOejGuCplIV1OACf5DrnV1GAj38Mj-SansNHR1Q4duLoCns3SujwmakQdB_yZG7PIFy3iw2USnRAZb_NvVmtLBoZnJtcUfu1Kgq8rNeZJUE72ZgADOf7b-c_sn9yXxjVp5tjJIwcts1-TxoW6lKs3P9YFeHcgEm-U2t6" 
+            src={userSession.avatarUrl || "https://lh3.googleusercontent.com/aida-public/AB6AXuDZvoz3EuYmNT3k6LuMqnW98-amCznFhnjHu2W5iezyKOp0vW4svO3COFcpNOLyspuY4k_GomBJ90ebg7jXdOejGuCplIV1OACf5DrnV1GAj38Mj-SansNHR1Q4duLoCns3SujwmakQdB_yZG7PIFy3iw2USnRAZb_NvVmtLBoZnJtcUfu1Kgq8rNeZJUE72ZgADOf7b-c_sn9yXxjVp5tjJIwcts1-TxoW6lKs3P9YFeHcgEm-U2t6"} 
             alt="Foto de perfil"
             className="w-full h-full object-cover"
           />

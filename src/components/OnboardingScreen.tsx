@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { deriveNameFromEmail, deriveAvatarFromEmail } from '../utils/userUtils';
 
 interface OnboardingScreenProps {
-  onComplete: (data: { email: string; name?: string; mode?: 'client' | 'provider' } | string) => void;
+  onComplete: (data: { email: string; name?: string; avatarUrl?: string; mode?: 'client' | 'provider' } | string) => void;
   defaultEmail?: string;
 }
 
@@ -11,10 +12,14 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
 }) => {
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const [email, setEmail] = useState(defaultEmail);
-  const [name, setName] = useState('');
+  const [name, setName] = useState(() => deriveNameFromEmail(defaultEmail));
   const [userRole, setUserRole] = useState<'client' | 'provider'>('client');
   const [showAuthModule, setShowAuthModule] = useState(false);
   const [logoVisible, setLogoVisible] = useState(false);
+
+  // Auto-derived recognition
+  const derivedName = deriveNameFromEmail(email);
+  const avatarUrl = deriveAvatarFromEmail(email, name || derivedName);
 
   useEffect(() => {
     // Phase 1: Fade/Zoom in logo immediately
@@ -33,19 +38,34 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
     };
   }, []);
 
+  const handleEmailChange = (val: string) => {
+    setEmail(val);
+    const autoName = deriveNameFromEmail(val);
+    if (autoName) {
+      setName(autoName);
+    }
+  };
+
   const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (email.trim()) {
-      onComplete({ email: email.trim() });
+      const finalName = name.trim() || derivedName || 'Usuario NexService';
+      onComplete({
+        email: email.trim(),
+        name: finalName,
+        avatarUrl: deriveAvatarFromEmail(email.trim(), finalName)
+      });
     }
   };
 
   const handleRegisterSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (email.trim() && name.trim()) {
+    if (email.trim()) {
+      const finalName = name.trim() || derivedName || 'Usuario NexService';
       onComplete({
         email: email.trim(),
-        name: name.trim(),
+        name: finalName,
+        avatarUrl: deriveAvatarFromEmail(email.trim(), finalName),
         mode: userRole
       });
     }
@@ -134,9 +154,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
                     <p className="text-xs text-[#737688] mt-0.5">
                       Ingresa tu correo para acceder a tu cuenta
                     </p>
-                  </div>
-
-                  <div className="flex flex-col gap-1.5 text-left">
+                  </div>                  <div className="flex flex-col gap-1.5 text-left">
                     <label className="text-xs font-semibold text-[#434656] uppercase tracking-wider pl-1" htmlFor="email_login">
                       Correo Electrónico
                     </label>
@@ -149,13 +167,32 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
                         id="email_login" 
                         name="email" 
                         value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        onChange={(e) => handleEmailChange(e.target.value)}
                         placeholder="ejemplo@correo.com" 
                         required 
                         type="email"
                       />
                     </div>
                   </div>
+
+                  {/* Profile Recognition Preview */}
+                  {email.trim().includes('@') && (
+                    <div className="bg-[#f1f3ff] rounded-xl p-3 border border-[#0052ff]/20 flex items-center gap-3 animate-in fade-in duration-300">
+                      <div className="w-11 h-11 rounded-full border-2 border-[#0052ff] overflow-hidden shrink-0 shadow-xs bg-white">
+                        <img src={avatarUrl} alt="Foto de perfil" className="w-full h-full object-cover" />
+                      </div>
+                      <div className="flex-1 min-w-0 text-left">
+                        <div className="flex items-center gap-1">
+                          <span className="material-symbols-outlined text-[#0052ff] text-[15px] filled">verified</span>
+                          <span className="text-[11px] font-bold text-[#003ec7] uppercase tracking-wider">
+                            Perfil Reconocido
+                          </span>
+                        </div>
+                        <p className="text-xs font-bold text-[#141b2b] truncate">{name || derivedName || 'Usuario'}</p>
+                        <p className="text-[11px] text-[#737688] truncate">{email}</p>
+                      </div>
+                    </div>
+                  )}
 
                   <button 
                     className="w-full bg-[#0052ff] hover:bg-[#003ec7] active:scale-[0.99] text-white font-geist font-semibold py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-all duration-200 shadow-sm cursor-pointer mt-1" 
@@ -180,8 +217,29 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
                   </div>
 
                   <div className="flex flex-col gap-1.5 text-left">
+                    <label className="text-xs font-semibold text-[#434656] uppercase tracking-wider pl-1" htmlFor="reg_email">
+                      Correo Electrónico
+                    </label>
+                    <div className="relative flex items-center group">
+                      <span className="material-symbols-outlined absolute left-3.5 text-[#737688] group-focus-within:text-[#0052ff] transition-colors text-[20px]">
+                        mail
+                      </span>
+                      <input 
+                        className="w-full bg-[#F3F4F6] text-[#141b2b] border-2 border-transparent rounded-xl py-2.5 md:py-3 pl-11 pr-4 text-sm focus:bg-white focus:border-[#0052ff] focus:ring-3 focus:ring-[#0052ff]/15 transition-all outline-none" 
+                        id="reg_email" 
+                        name="email" 
+                        value={email}
+                        onChange={(e) => handleEmailChange(e.target.value)}
+                        placeholder="ejemplo@correo.com" 
+                        required 
+                        type="email"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-1.5 text-left">
                     <label className="text-xs font-semibold text-[#434656] uppercase tracking-wider pl-1" htmlFor="reg_name">
-                      Nombre Completo
+                      Nombre Completo Reconocido
                     </label>
                     <div className="relative flex items-center group">
                       <span className="material-symbols-outlined absolute left-3.5 text-[#737688] group-focus-within:text-[#0052ff] transition-colors text-[20px]">
@@ -200,26 +258,24 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
                     </div>
                   </div>
 
-                  <div className="flex flex-col gap-1.5 text-left">
-                    <label className="text-xs font-semibold text-[#434656] uppercase tracking-wider pl-1" htmlFor="reg_email">
-                      Correo Electrónico
-                    </label>
-                    <div className="relative flex items-center group">
-                      <span className="material-symbols-outlined absolute left-3.5 text-[#737688] group-focus-within:text-[#0052ff] transition-colors text-[20px]">
-                        mail
-                      </span>
-                      <input 
-                        className="w-full bg-[#F3F4F6] text-[#141b2b] border-2 border-transparent rounded-xl py-2.5 md:py-3 pl-11 pr-4 text-sm focus:bg-white focus:border-[#0052ff] focus:ring-3 focus:ring-[#0052ff]/15 transition-all outline-none" 
-                        id="reg_email" 
-                        name="email" 
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="ejemplo@correo.com" 
-                        required 
-                        type="email"
-                      />
+                  {/* Profile Recognition Preview Card in Register */}
+                  {email.trim().includes('@') && (
+                    <div className="bg-[#f1f3ff] rounded-xl p-3 border border-[#0052ff]/20 flex items-center gap-3 animate-in fade-in duration-300">
+                      <div className="w-11 h-11 rounded-full border-2 border-[#0052ff] overflow-hidden shrink-0 shadow-xs bg-white">
+                        <img src={avatarUrl} alt="Foto de perfil" className="w-full h-full object-cover" />
+                      </div>
+                      <div className="flex-1 min-w-0 text-left">
+                        <div className="flex items-center gap-1">
+                          <span className="material-symbols-outlined text-[#0052ff] text-[15px] filled">account_circle</span>
+                          <span className="text-[11px] font-bold text-[#003ec7] uppercase tracking-wider">
+                            Foto y Datos Detectados
+                          </span>
+                        </div>
+                        <p className="text-xs font-bold text-[#141b2b] truncate">{name || derivedName || 'Usuario'}</p>
+                        <p className="text-[11px] text-[#737688] truncate">{email}</p>
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* Role Selection */}
                   <div className="flex flex-col gap-1.5 text-left">
@@ -272,7 +328,12 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
                 <span className="text-[11px] text-[#737688]">Acceso rápido demo:</span>
                 <button 
                   type="button"
-                  onClick={() => onComplete({ email: 'carloscorreaup@gmail.com', name: 'Carlos Correa', mode: 'client' })}
+                  onClick={() => onComplete({
+                    email: 'carloscorreaup@gmail.com',
+                    name: 'Carlos Correa',
+                    avatarUrl: deriveAvatarFromEmail('carloscorreaup@gmail.com', 'Carlos Correa'),
+                    mode: 'client'
+                  })}
                   className="text-[11px] text-[#0052ff] hover:underline font-semibold cursor-pointer"
                 >
                   Cliente
@@ -280,7 +341,12 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
                 <span className="text-[11px] text-[#c3c5d9]">•</span>
                 <button 
                   type="button"
-                  onClick={() => onComplete({ email: 'juan.plomero@nexservice.co', name: 'Juan Pérez', mode: 'provider' })}
+                  onClick={() => onComplete({
+                    email: 'juan.plomero@nexservice.co',
+                    name: 'Juan Pérez',
+                    avatarUrl: deriveAvatarFromEmail('juan.plomero@nexservice.co', 'Juan Pérez'),
+                    mode: 'provider'
+                  })}
                   className="text-[11px] text-[#0052ff] hover:underline font-semibold cursor-pointer"
                 >
                   Proveedor Pro
@@ -289,7 +355,6 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
             </div>
           </div>
         </div>
-
       </div>
     </div>
   );

@@ -10,6 +10,7 @@ interface HeaderProps {
   isProviderMode: boolean;
   onToggleProviderMode: () => void;
   bookingsCount: number;
+  userAvatarUrl?: string;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -19,8 +20,11 @@ export const Header: React.FC<HeaderProps> = ({
   setActiveTab,
   isProviderMode,
   onToggleProviderMode,
-  bookingsCount
+  bookingsCount,
+  userAvatarUrl
 }) => {
+  const fallbackAvatar = "https://lh3.googleusercontent.com/aida-public/AB6AXuDZvoz3EuYmNT3k6LuMqnW98-amCznFhnjHu2W5iezyKOp0vW4svO3COFcpNOLyspuY4k_GomBJ90ebg7jXdOejGuCplIV1OACf5DrnV1GAj38Mj-SansNHR1Q4duLoCns3SujwmakQdB_yZG7PIFy3iw2USnRAZb_NvVmtLBoZnJtcUfu1Kgq8rNeZJUE72ZgADOf7b-c_sn9yXxjVp5tjJIwcts1-TxoW6lKs3P9YFeHcgEm-U2t6";
+
   return (
     <header className="fixed top-0 w-full z-40 bg-white/95 backdrop-blur-md border-b border-[#e1e8fd] shadow-xs">
       <div className="flex justify-between items-center px-4 md:px-6 w-full max-w-7xl mx-auto h-16">
@@ -142,7 +146,7 @@ export const Header: React.FC<HeaderProps> = ({
             title="Mi Perfil"
           >
             <img 
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuDZvoz3EuYmNT3k6LuMqnW98-amCznFhnjHu2W5iezyKOp0vW4svO3COFcpNOLyspuY4k_GomBJ90ebg7jXdOejGuCplIV1OACf5DrnV1GAj38Mj-SansNHR1Q4duLoCns3SujwmakQdB_yZG7PIFy3iw2USnRAZb_NvVmtLBoZnJtcUfu1Kgq8rNeZJUE72ZgADOf7b-c_sn9yXxjVp5tjJIwcts1-TxoW6lKs3P9YFeHcgEm-U2t6" 
+              src={userAvatarUrl || fallbackAvatar} 
               alt="Avatar" 
               className="w-full h-full object-cover"
             />

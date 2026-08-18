@@ -80,6 +80,7 @@ export interface Booking {
 export interface UserSession {
   email: string;
   name: string;
+  avatarUrl?: string;
   phone: string;
   city: string;
   mode: 'client' | 'provider';
