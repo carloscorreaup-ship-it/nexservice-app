@@ -65,7 +65,7 @@ export const Header: React.FC<HeaderProps> = ({
               <span className={`material-symbols-outlined text-[20px] ${activeTab === 'explore' ? 'filled' : ''}`}>
                 search
               </span>
-              Explore
+              Explorar
             </button>
 
             <button
@@ -79,7 +79,7 @@ export const Header: React.FC<HeaderProps> = ({
               <span className={`material-symbols-outlined text-[20px] ${activeTab === 'provider' ? 'filled' : ''}`}>
                 storefront
               </span>
-              Provider
+              Proveedores
             </button>
 
             <button
@@ -93,7 +93,7 @@ export const Header: React.FC<HeaderProps> = ({
               <span className={`material-symbols-outlined text-[20px] ${activeTab === 'bookings' ? 'filled' : ''}`}>
                 event_note
               </span>
-              Bookings
+              Solicitudes
               {bookingsCount > 0 && (
                 <span className="bg-[#0052ff] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
                   {bookingsCount}
@@ -112,7 +112,7 @@ export const Header: React.FC<HeaderProps> = ({
               <span className={`material-symbols-outlined text-[20px] ${activeTab === 'profile' ? 'filled' : ''}`}>
                 person
               </span>
-              Profile
+              Mi Perfil
             </button>
           </nav>
 

@@ -53,7 +53,7 @@ export const BottomNavBar: React.FC<BottomNavBarProps> = ({
           <span className={`material-symbols-outlined text-[22px] ${activeTab === 'explore' ? 'filled' : ''}`}>
             search
           </span>
-          <span className="text-[12px] font-medium mt-0.5">Explore</span>
+          <span className="text-[12px] font-medium mt-0.5">Explorar</span>
         </button>
 
         {/* Provider Tab */}
@@ -68,7 +68,7 @@ export const BottomNavBar: React.FC<BottomNavBarProps> = ({
           <span className={`material-symbols-outlined text-[22px] ${activeTab === 'provider' ? 'filled' : ''}`}>
             storefront
           </span>
-          <span className="text-[12px] font-medium mt-0.5">Provider</span>
+          <span className="text-[12px] font-medium mt-0.5">Proveedores</span>
         </button>
 
         {/* Bookings Tab */}
@@ -83,7 +83,7 @@ export const BottomNavBar: React.FC<BottomNavBarProps> = ({
           <span className={`material-symbols-outlined text-[22px] ${activeTab === 'bookings' ? 'filled' : ''}`}>
             event_note
           </span>
-          <span className="text-[12px] font-medium mt-0.5">Bookings</span>
+          <span className="text-[12px] font-medium mt-0.5">Solicitudes</span>
           {bookingsCount > 0 && (
             <span className="absolute top-0 right-3 bg-[#bf3003] text-white text-[9px] font-bold px-1 rounded-full">
               {bookingsCount}
@@ -103,7 +103,7 @@ export const BottomNavBar: React.FC<BottomNavBarProps> = ({
           <span className={`material-symbols-outlined text-[22px] ${activeTab === 'profile' ? 'filled' : ''}`}>
             person
           </span>
-          <span className="text-[12px] font-medium mt-0.5">Profile</span>
+          <span className="text-[12px] font-medium mt-0.5">Mi Perfil</span>
         </button>
       </nav>
     </>
