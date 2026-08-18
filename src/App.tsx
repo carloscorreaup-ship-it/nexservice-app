@@ -29,8 +29,9 @@ export default function App() {
     }
     return {
       email: '',
-      name: 'Carlos Correa',
-      phone: '+57 300 123 4567',
+      name: '',
+      avatarUrl: '',
+      phone: '',
       city: 'Pereira',
       mode: 'client',
       isOnboarded: false,
@@ -246,18 +247,25 @@ export default function App() {
 
   // Logout
   const handleLogout = () => {
-    setSession((prev) => ({
-      ...prev,
+    localStorage.removeItem(STORAGE_KEYS.SESSION);
+    setSession({
+      email: '',
+      name: '',
+      avatarUrl: '',
+      phone: '',
+      city: 'Pereira',
+      mode: 'client',
       isOnboarded: false,
-      hasChosenCity: false
-    }));
+      hasChosenCity: false,
+      favorites: [],
+    });
   };
 
   // 1. First Screen: Onboarding if not completed
   if (!session.isOnboarded) {
     return (
       <OnboardingScreen
-        defaultEmail={session.email || 'carloscorreaup@gmail.com'}
+        defaultEmail={session.email || ''}
         onComplete={handleCompleteOnboarding}
       />
     );

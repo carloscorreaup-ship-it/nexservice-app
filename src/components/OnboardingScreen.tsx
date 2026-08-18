@@ -8,7 +8,7 @@ interface OnboardingScreenProps {
 
 export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
   onComplete,
-  defaultEmail = 'carloscorreaup@gmail.com'
+  defaultEmail = ''
 }) => {
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const [email, setEmail] = useState(defaultEmail);
