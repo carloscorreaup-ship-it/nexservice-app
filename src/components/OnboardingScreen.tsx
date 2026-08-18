@@ -81,7 +81,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
           </h1>
 
           <p className="text-[#737688] font-medium text-xs md:text-sm mt-1 max-w-xs md:max-w-sm">
-            Tu red de servicios y profesionales en Colombia
+            Tu red de productos y servicios en Colombia
           </p>
         </div>
 
