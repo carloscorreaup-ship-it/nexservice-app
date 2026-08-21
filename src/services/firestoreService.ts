@@ -290,3 +290,22 @@ export async function toggleUserStatusInDB(email: string, nextStatus: boolean): 
   const updated = list.map(u => u.email.toLowerCase() === email.toLowerCase() ? { ...u, isActive: nextStatus } : u);
   setLocal(LOCAL_STORAGE_KEYS.USERS, updated);
 }
+
+export async function getUserByEmail(email: string): Promise<UserSession | null> {
+  if (db && isFirebaseConnected) {
+    try {
+      const docRef = doc(db, 'users', email.replace(/\./g, '_'));
+      const snap = await getDoc(docRef);
+      if (snap.exists()) {
+        return { id: snap.id, ...snap.data() } as UserSession;
+      }
+    } catch (e) {
+      console.warn('Firestore getUserByEmail error, using local fallback:', e);
+    }
+  }
+
+  const list = getLocal<UserSession[]>(LOCAL_STORAGE_KEYS.USERS, INITIAL_USERS);
+  const found = list.find(u => u.email.toLowerCase() === email.toLowerCase());
+  return found || null;
+}
+

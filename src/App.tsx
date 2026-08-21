@@ -15,6 +15,8 @@ import { ProviderDetailModal } from './components/ProviderDetailModal';
 import { ProductDetailModal } from './components/ProductDetailModal';
 import { WhatsAppModal } from './components/WhatsAppModal';
 import { FirebaseConfigModal } from './components/FirebaseConfigModal';
+import { AuthScreen } from './components/AuthScreen';
+import { auth, isFirebaseConnected } from './services/firebase';
 import {
   getProvidersFromDB,
   getProductsFromDB,
@@ -25,7 +27,8 @@ import {
   saveBookingToDB,
   updateBookingStatusInDB,
   toggleUserStatusInDB,
-  saveUserToDB
+  saveUserToDB,
+  getUserByEmail
 } from './services/firestoreService';
 import { getEmailAvatarUrl } from './utils/userUtils';
 
@@ -41,29 +44,24 @@ export default function App() {
     } catch (e) {
       console.error(e);
     }
-    const adminEmail = 'carloscorreaup@gmail.com';
     return {
-      id: 'usr-admin',
-      email: adminEmail,
-      name: 'Carlos Correa',
-      avatarUrl: getEmailAvatarUrl(adminEmail, 'Carlos Correa'),
-      phone: '+57 300 123 4567',
+      email: '',
+      name: '',
+      phone: '',
       city: 'Pereira',
       department: 'Risaralda',
       mode: 'client',
-      role: 'both',
-      isOnboarded: true,
-      hasChosenCity: true,
-      favorites: ['p1', 'p3'],
-      isVerified: true,
+      role: 'client',
+      isOnboarded: false,
+      hasChosenCity: false,
+      favorites: [],
+      isVerified: false,
       isActive: true,
-      isAdmin: true,
       fixedLocation: {
-        address: 'Carrera 15 # 12-45, Barrio Álamos',
-        neighborhood: 'Álamos',
+        address: '',
         city: 'Pereira',
         department: 'Risaralda',
-        coordinates: { lat: 4.8122, lng: -75.6934 },
+        coordinates: { lat: 4.81333, lng: -75.69611 },
         isPublicOnMap: true
       }
     };
@@ -125,6 +123,30 @@ export default function App() {
       setActiveTab('explore');
     }
   };
+
+  useEffect(() => {
+    if (isFirebaseConnected && auth) {
+      const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
+        if (firebaseUser && firebaseUser.email) {
+          if (!session.email || session.email.toLowerCase() !== firebaseUser.email.toLowerCase()) {
+            const dbUser = await getUserByEmail(firebaseUser.email);
+            if (dbUser && dbUser.isOnboarded) {
+              setSession(dbUser);
+            } else {
+              setSession(prev => ({
+                ...prev,
+                email: firebaseUser.email || '',
+                name: firebaseUser.displayName || prev.name || (firebaseUser.email ? firebaseUser.email.split('@')[0] : 'Usuario'),
+                avatarUrl: firebaseUser.photoURL || getEmailAvatarUrl(firebaseUser.email || ''),
+                isOnboarded: false
+              }));
+            }
+          }
+        }
+      });
+      return () => unsubscribe();
+    }
+  }, [isFirebaseConnected]);
 
   useEffect(() => {
     async function loadData() {
@@ -300,6 +322,9 @@ export default function App() {
   };
 
   const handleLogout = () => {
+    if (isFirebaseConnected && auth) {
+      auth.signOut().catch(e => console.error('Error signing out:', e));
+    }
     localStorage.removeItem(STORAGE_KEYS.SESSION);
     setSession({
       email: '',
@@ -324,10 +349,33 @@ export default function App() {
     });
   };
 
+  if (!session.email) {
+    return (
+      <AuthScreen
+        onAuthSuccess={async (authData) => {
+          const dbUser = await getUserByEmail(authData.email);
+          if (dbUser && dbUser.isOnboarded) {
+            setSession(dbUser);
+          } else {
+            setSession(prev => ({
+              ...prev,
+              email: authData.email,
+              name: authData.name || prev.name,
+              avatarUrl: authData.avatarUrl || prev.avatarUrl,
+              isOnboarded: false
+            }));
+          }
+        }}
+      />
+    );
+  }
+
   if (!session.isOnboarded) {
     return (
       <OnboardingScreen
         defaultEmail={session.email}
+        defaultName={session.name}
+        defaultAvatarUrl={session.avatarUrl}
         onComplete={handleCompleteOnboarding}
       />
     );

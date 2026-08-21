@@ -5,6 +5,8 @@ import { getEmailAvatarUrl } from '../utils/userUtils';
 
 interface OnboardingScreenProps {
   defaultEmail?: string;
+  defaultName?: string;
+  defaultAvatarUrl?: string;
   onComplete: (data: {
     email: string;
     name: string;
@@ -16,22 +18,28 @@ interface OnboardingScreenProps {
   }) => void;
 }
 
-export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ defaultEmail, onComplete }) => {
+export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ defaultEmail, defaultName, defaultAvatarUrl, onComplete }) => {
   const [step, setStep] = useState(1);
-  const [name, setName] = useState('Carlos Correa');
+  const [name, setName] = useState(defaultName || 'Carlos Correa');
   const [email, setEmail] = useState(defaultEmail || 'carloscorreaup@gmail.com');
   const [phone, setPhone] = useState('+57 300 123 4567');
   const [role, setRole] = useState<UserRole>('both');
   const [city, setCity] = useState('Pereira');
   const [address, setAddress] = useState('Carrera 15 # 12-45, Barrio Álamos');
 
-  // Automatic Avatar Preview derived from Email
-  const autoAvatarUrl = getEmailAvatarUrl(email, name);
+  useEffect(() => {
+    if (defaultEmail) setEmail(defaultEmail);
+    if (defaultName) setName(defaultName);
+  }, [defaultEmail, defaultName]);
+
+  // Automatic Avatar Preview derived from Email, or Google profile picture
+  const autoAvatarUrl = defaultAvatarUrl || getEmailAvatarUrl(email, name);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (step === 1) {
       setStep(2);
+
     } else if (step === 2) {
       setStep(3);
     } else {
