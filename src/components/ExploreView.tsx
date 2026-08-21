@@ -1,427 +1,306 @@
 import React, { useState, useMemo } from 'react';
-import { Category, Provider } from '../types';
-import { CATEGORIES } from '../data/mockData';
+import {
+  Search,
+  MapPin,
+  ShoppingBag,
+  Wrench,
+  Map,
+  Grid,
+  ShieldCheck,
+  X
+} from 'lucide-react';
+import { Provider, ProductItem, Category, UserSession } from '../types';
+import { INITIAL_CATEGORIES } from '../data/initialData';
 import { ProviderCard } from './ProviderCard';
-import { classifyTextToCategory, getSuggestedServicesForQuery } from '../utils/serviceClassifier';
+import { ProductCard } from './ProductCard';
+import { SnapMapView } from './SnapMapView';
 
 interface ExploreViewProps {
   currentCity: string;
   providers: Provider[];
-  onSwitchToProviderMode?: () => void;
-  onContactWhatsApp: (provider: Provider, message?: string) => void;
-  onViewDetails: (provider: Provider) => void;
+  products: ProductItem[];
+  userSession: UserSession;
+  onSelectProvider: (provider: Provider) => void;
+  onSelectProduct: (product: ProductItem) => void;
+  onContactWhatsApp: (provider: Provider, product?: ProductItem) => void;
+  onToggleFavorite: (id: string) => void;
+  onOpenCitySelector: () => void;
   favorites: string[];
-  onToggleFavorite: (providerId: string) => void;
 }
 
 export const ExploreView: React.FC<ExploreViewProps> = ({
   currentCity,
   providers,
-  onSwitchToProviderMode,
+  products,
+  userSession,
+  onSelectProvider,
+  onSelectProduct,
   onContactWhatsApp,
-  onViewDetails,
+  onToggleFavorite,
   favorites,
-  onToggleFavorite
 }) => {
+  const [activeTab, setActiveTab] = useState<'all' | 'products' | 'services'>('all');
+  const [selectedCategory, setSelectedCategory] = useState<string>('todos');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [showAllCategories, setShowAllCategories] = useState(false);
-  const [filterDomicilioOnly, setFilterDomicilioOnly] = useState(false);
-  const [filterVerifiedOnly, setFilterVerifiedOnly] = useState(false);
-  const [sortBy, setSortBy] = useState<'rating' | 'reviews' | 'name'>('rating');
-  const [showFilterDrawer, setShowFilterDrawer] = useState(false);
-  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
+  const [onlyVerified, setOnlyVerified] = useState(false);
 
-  // Intelligent category detection
-  const detectedCategory = useMemo(() => classifyTextToCategory(searchQuery), [searchQuery]);
-  const suggestedServices = useMemo(() => getSuggestedServicesForQuery(searchQuery), [searchQuery]);
-
-  // Filtered providers
   const filteredProviders = useMemo(() => {
-    return providers
-      .filter((p) => {
-        // City match or generic
-        const matchCity = !p.city || p.city.toLowerCase() === currentCity.toLowerCase();
-        if (!matchCity) return false;
+    return providers.filter((p) => {
+      if (p.city.toLowerCase() !== currentCity.toLowerCase()) return false;
+      if (selectedCategory !== 'todos' && p.category !== selectedCategory) return false;
+      if (onlyVerified && !p.verified) return false;
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        return (
+          p.name.toLowerCase().includes(q) ||
+          p.businessName.toLowerCase().includes(q) ||
+          p.description.toLowerCase().includes(q) ||
+          p.tags.some(t => t.toLowerCase().includes(q))
+        );
+      }
+      return true;
+    });
+  }, [providers, currentCity, selectedCategory, onlyVerified, searchQuery]);
 
-        // Search query match with smart classification fallback
-        if (searchQuery.trim()) {
-          const q = searchQuery.toLowerCase();
-          const matchName = p.name.toLowerCase().includes(q);
-          const matchBiz = p.businessName.toLowerCase().includes(q);
-          const matchCat = p.category.toLowerCase().includes(q);
-          const matchTags = p.tags.some((t) => t.toLowerCase().includes(q));
-          const matchServices = p.services.some((s) => s.name.toLowerCase().includes(q));
-          
-          // Smart classification match: if text matches a category knowledge base
-          const matchDetectedCategory = detectedCategory && p.category.toLowerCase() === detectedCategory.name.toLowerCase();
-
-          if (!matchName && !matchBiz && !matchCat && !matchTags && !matchServices && !matchDetectedCategory) {
-            return false;
-          }
-        }
-
-        // Category match
-        if (selectedCategory && p.category.toLowerCase() !== selectedCategory.toLowerCase()) {
-          return false;
-        }
-
-        // Domicilio filter
-        if (filterDomicilioOnly && !p.isDelivery) {
-          return false;
-        }
-
-        // Verified filter
-        if (filterVerifiedOnly && !p.verified) {
-          return false;
-        }
-
-        return true;
-      })
-      .sort((a, b) => {
-        if (sortBy === 'rating') return b.rating - a.rating;
-        if (sortBy === 'reviews') return b.reviewCount - a.reviewCount;
-        return a.name.localeCompare(b.name);
-      });
-  }, [providers, currentCity, searchQuery, selectedCategory, filterDomicilioOnly, filterVerifiedOnly, sortBy, detectedCategory]);
-
-  const visibleCategories = showAllCategories ? CATEGORIES : CATEGORIES.slice(0, 6);
+  const filteredProducts = useMemo(() => {
+    return products.filter((prod) => {
+      if (prod.city.toLowerCase() !== currentCity.toLowerCase()) return false;
+      if (selectedCategory !== 'todos' && prod.category !== selectedCategory) return false;
+      if (onlyVerified && !prod.verifiedSeller) return false;
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        return (
+          prod.name.toLowerCase().includes(q) ||
+          prod.description.toLowerCase().includes(q) ||
+          prod.tags.some(t => t.toLowerCase().includes(q))
+        );
+      }
+      return true;
+    });
+  }, [products, currentCity, selectedCategory, onlyVerified, searchQuery]);
 
   return (
-    <main className="max-w-7xl mx-auto px-4 md:px-6 pt-22 pb-24 md:pb-16 font-inter">
-      {/* Search Section */}
-      <section className="mb-10 text-center max-w-3xl mx-auto">
-        <h1 className="font-geist text-2xl md:text-4xl font-bold text-[#141b2b] mb-5 tracking-tight">
-          ¿Qué producto o servicio necesitas hoy?
-        </h1>
-        <div className="relative max-w-2xl mx-auto text-left">
-          <span className="material-symbols-outlined absolute left-4 top-4 text-[#737688] text-[22px]">
-            search
+    <div className="pb-24 max-w-7xl mx-auto px-4 pt-4 bg-pattern">
+      {/* Banner */}
+      <div className="bg-white border border-slate-200/80 rounded-3xl p-5 sm:p-6 mb-6 shadow-elevation-1 relative overflow-hidden">
+        <div className="max-w-2xl">
+          <span className="text-xs font-bold uppercase tracking-wider text-[#0052ff] bg-blue-50 px-3 py-1 rounded-full border border-blue-200 mb-2 inline-block">
+            Conexión Directa en {currentCity}
           </span>
-          <input 
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onFocus={() => setIsSearchFocused(true)}
-            onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
-            className="w-full pl-12 pr-10 py-4 rounded-2xl bg-white border border-[#c3c5d9]/60 focus:border-[#0052ff] focus:ring-4 focus:ring-[#0052ff]/15 transition-all text-base text-[#141b2b] shadow-elevation-1 outline-none placeholder:text-[#737688]" 
-            placeholder="Ej. baño de gatos, organizo neveras, plomero, clases de inglés..." 
-            type="text"
-          />
-          {searchQuery && (
-            <button
-              onClick={() => {
-                setSearchQuery('');
-                setSelectedCategory(null);
-              }}
-              className="absolute right-3.5 top-4 text-[#737688] hover:text-[#141b2b] p-1 cursor-pointer"
-            >
-              <span className="material-symbols-outlined text-[18px]">close</span>
-            </button>
-          )}
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#141b2b] tracking-tight mb-2 font-geist">
+            Productos y Servicios Verificados
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-600 mb-4">
+            Contacta directamente por WhatsApp con proveedores verificados, compra productos locales y ubícalos en el mapa interactivo.
+          </p>
 
-          {/* Smart Auto-Classification & Dropdown Menu */}
-          {searchQuery.trim().length > 1 && (isSearchFocused || true) && (
-            <div className="absolute z-40 mt-2 w-full bg-white rounded-2xl shadow-elevation-hover border border-[#0052ff]/30 overflow-hidden animate-in fade-in zoom-in-95 duration-150 p-3 space-y-3">
-              {/* Category Auto-Detection Banner */}
-              {detectedCategory && (
-                <div className="bg-[#e9edff] p-2.5 rounded-xl flex items-center justify-between border border-[#0052ff]/20">
-                  <div className="flex items-center gap-2">
-                    <span className="bg-[#0052ff] text-white text-xs px-2 py-0.5 rounded-full font-bold">
-                      Categoría detectada
-                    </span>
-                    <span className="text-xs font-bold text-[#003ec7]">
-                      {detectedCategory.name}
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => {
-                      setSelectedCategory(detectedCategory.name);
-                    }}
-                    className="text-xs text-[#0052ff] hover:underline font-semibold cursor-pointer"
-                  >
-                    Filtrar por {detectedCategory.name}
-                  </button>
-                </div>
-              )}
-
-              {/* Suggested Services Dropdown Items */}
-              {suggestedServices.length > 0 && (
-                <div>
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#737688] px-1 block mb-1.5">
-                    Servicios Sugeridos
-                  </span>
-                  <div className="space-y-1">
-                    {suggestedServices.slice(0, 3).map((item, idx) => (
-                      <div
-                        key={idx}
-                        onClick={() => {
-                          setSearchQuery(item.name);
-                          setSelectedCategory(item.category);
-                        }}
-                        className="p-2.5 rounded-xl hover:bg-[#f1f3ff] transition-colors cursor-pointer flex items-center justify-between text-xs md:text-sm"
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="material-symbols-outlined text-[#0052ff] text-[18px]">
-                            auto_awesome
-                          </span>
-                          <span className="font-medium text-[#141b2b]">{item.name}</span>
-                        </div>
-                        <span className="text-xs font-bold text-[#003ec7] bg-[#e9edff] px-2 py-0.5 rounded">
-                          {item.priceEstimate}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Direct Provider Matches Summary */}
-              <div className="pt-2 border-t border-[#f1f3ff] flex items-center justify-between text-xs text-[#737688]">
-                <span>Se encontraron <strong>{filteredProviders.length}</strong> profesionales relacionados</span>
-                <span className="text-[#0052ff] font-semibold">NexService.app</span>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Quick search tags */}
-        <div className="flex flex-wrap items-center justify-center gap-2 mt-3 text-xs text-[#737688]">
-          <span className="font-medium">Populares:</span>
-          {['Baño de gatos', 'Organizar neveras', 'Plomería', 'Electricista', 'IT / Computadores'].map((tag) => (
-            <button
-              key={tag}
-              onClick={() => setSearchQuery(tag)}
-              className="bg-white hover:bg-[#e9edff] text-[#003ec7] border border-[#c3c5d9]/40 px-2.5 py-1 rounded-full transition-colors cursor-pointer"
-            >
-              {tag}
-            </button>
-          ))}
-        </div>
-      </section>
-
-      {/* Quick Categories Bento Grid */}
-      <section className="mb-12">
-        <div className="flex justify-between items-end mb-5">
-          <div>
-            <h3 className="font-geist text-xl md:text-2xl font-bold text-[#141b2b]">
-              Categorías Populares
-            </h3>
-            <p className="text-xs md:text-sm text-[#737688]">
-              Explora profesionales especializados en cada área
-            </p>
+          <div className="relative">
+            <Search className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="¿Qué producto o servicio buscas? (ej: plomería, repuestos, soporte técnico)..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-12 pr-10 py-3 text-sm text-[#141b2b] placeholder-slate-400 focus:outline-none focus:border-[#0052ff] shadow-inner"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-800"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
-          <button 
-            onClick={() => setShowAllCategories(!showAllCategories)}
-            className="text-[#0052ff] font-semibold text-sm hover:underline cursor-pointer flex items-center gap-1"
+        </div>
+
+        {/* View Switcher (Grid vs Snap Map) */}
+        <div className="mt-4 sm:mt-0 sm:absolute sm:bottom-6 sm:right-6 flex items-center gap-1.5 bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
+          <button
+            onClick={() => setViewMode('grid')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all ${
+              viewMode === 'grid'
+                ? 'bg-[#0052ff] text-white shadow-sm'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
           >
-            <span>{showAllCategories ? 'Ver menos' : 'Ver todas'}</span>
-            <span className="material-symbols-outlined text-[16px]">
-              {showAllCategories ? 'expand_less' : 'chevron_right'}
-            </span>
+            <Grid className="w-4 h-4" />
+            <span>Cuadrícula</span>
+          </button>
+          <button
+            onClick={() => setViewMode('map')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all ${
+              viewMode === 'map'
+                ? 'bg-[#0052ff] text-white shadow-sm'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <Map className="w-4 h-4" />
+            <span>Snap Map</span>
           </button>
         </div>
+      </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4">
-          {visibleCategories.map((cat) => {
-            const isSelected = selectedCategory?.toLowerCase() === cat.name.toLowerCase();
-            return (
-              <button
-                key={cat.id}
-                onClick={() => {
-                  setSelectedCategory(isSelected ? null : cat.name);
-                }}
-                className={`bg-white rounded-2xl p-4 flex flex-col items-center justify-center gap-2.5 border transition-all shadow-elevation-1 hover:shadow-elevation-hover group h-32 text-center cursor-pointer ${
-                  isSelected
-                    ? 'border-2 border-[#0052ff] bg-[#f1f3ff] scale-[1.02]'
-                    : 'border-[#dce2f7] hover:border-[#0052ff]/40 hover:-translate-y-0.5'
-                }`}
-              >
-                <div 
-                  className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors ${
-                    isSelected
-                      ? 'bg-[#0052ff] text-white shadow-xs'
-                      : 'bg-[#0052ff]/10 text-[#0052ff] group-hover:bg-[#0052ff] group-hover:text-white'
-                  }`}
-                >
-                  <span className="material-symbols-outlined text-[24px]">
-                    {cat.icon}
-                  </span>
-                </div>
-                <span className={`text-sm font-semibold tracking-tight ${isSelected ? 'text-[#003ec7]' : 'text-[#141b2b]'}`}>
-                  {cat.name}
-                </span>
-                <span className="text-[11px] text-[#737688] -mt-1 font-normal">
-                  {cat.count} pros
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* Results Header & Filters */}
-      <section className="mb-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#e1e8fd]">
-          <div className="flex items-center gap-2">
-            <h3 className="font-geist text-xl md:text-2xl font-bold text-[#141b2b]">
-              Proveedores Destacados
-            </h3>
-            <span className="bg-[#e9edff] text-[#003ec7] text-xs font-bold px-2 py-0.5 rounded-full">
-              {filteredProviders.length} en {currentCity}
-            </span>
-          </div>
-
-          {/* Filter Pills & Toggle */}
-          <div className="flex items-center flex-wrap gap-2">
-            <button
-              onClick={() => setFilterDomicilioOnly(!filterDomicilioOnly)}
-              className={`text-xs px-3 py-1.5 rounded-full border transition-all flex items-center gap-1 cursor-pointer ${
-                filterDomicilioOnly
-                  ? 'bg-[#bf3003] text-white border-[#bf3003]'
-                  : 'bg-white text-[#434656] border-[#c3c5d9] hover:bg-[#f1f3ff]'
-              }`}
-            >
-              <span className="material-symbols-outlined text-[14px]">local_shipping</span>
-              A Domicilio
-            </button>
-
-            <button
-              onClick={() => setFilterVerifiedOnly(!filterVerifiedOnly)}
-              className={`text-xs px-3 py-1.5 rounded-full border transition-all flex items-center gap-1 cursor-pointer ${
-                filterVerifiedOnly
-                  ? 'bg-[#0052ff] text-white border-[#0052ff]'
-                  : 'bg-white text-[#434656] border-[#c3c5d9] hover:bg-[#f1f3ff]'
-              }`}
-            >
-              <span className="material-symbols-outlined text-[14px] filled">verified</span>
-              Verificados
-            </button>
-
-            <button
-              onClick={() => setShowFilterDrawer(!showFilterDrawer)}
-              className={`p-2 border rounded-xl hover:bg-[#f1f3ff] transition-colors flex items-center gap-1 text-xs font-medium cursor-pointer ${
-                showFilterDrawer ? 'bg-[#e9edff] border-[#0052ff] text-[#003ec7]' : 'border-[#c3c5d9] text-[#434656]'
-              }`}
-              title="Más filtros de ordenamiento"
-            >
-              <span className="material-symbols-outlined text-[18px]">filter_list</span>
-              <span className="hidden sm:inline">Ordenar</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Filter Drawer if open */}
-        {showFilterDrawer && (
-          <div className="bg-[#f1f3ff] p-4 rounded-xl mt-3 flex flex-wrap items-center justify-between gap-4 border border-[#c3c5d9]/40 animate-in fade-in duration-150">
-            <div className="flex items-center gap-3">
-              <span className="text-xs font-semibold text-[#434656]">Ordenar por:</span>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setSortBy('rating')}
-                  className={`text-xs px-3 py-1 rounded-lg font-medium cursor-pointer ${
-                    sortBy === 'rating' ? 'bg-[#0052ff] text-white' : 'bg-white text-[#434656]'
-                  }`}
-                >
-                  Mayor Calificación ★
-                </button>
-                <button
-                  onClick={() => setSortBy('reviews')}
-                  className={`text-xs px-3 py-1 rounded-lg font-medium cursor-pointer ${
-                    sortBy === 'reviews' ? 'bg-[#0052ff] text-white' : 'bg-white text-[#434656]'
-                  }`}
-                >
-                  Más Reseñas
-                </button>
-                <button
-                  onClick={() => setSortBy('name')}
-                  className={`text-xs px-3 py-1 rounded-lg font-medium cursor-pointer ${
-                    sortBy === 'name' ? 'bg-[#0052ff] text-white' : 'bg-white text-[#434656]'
-                  }`}
-                >
-                  Nombre (A-Z)
-                </button>
-              </div>
-            </div>
-
-            {(selectedCategory || searchQuery || filterDomicilioOnly || filterVerifiedOnly) && (
-              <button
-                onClick={() => {
-                  setSelectedCategory(null);
-                  setSearchQuery('');
-                  setFilterDomicilioOnly(false);
-                  setFilterVerifiedOnly(false);
-                }}
-                className="text-xs text-[#ba1a1a] hover:underline font-semibold flex items-center gap-1 cursor-pointer"
-              >
-                <span className="material-symbols-outlined text-[14px]">clear_all</span>
-                Limpiar filtros
-              </button>
-            )}
-          </div>
-        )}
-
-        {/* Active Filter Chips */}
-        {(selectedCategory || searchQuery) && (
-          <div className="flex items-center gap-2 mt-3 flex-wrap">
-            <span className="text-xs text-[#737688]">Filtros activos:</span>
-            {selectedCategory && (
-              <span className="bg-[#0052ff]/10 text-[#0052ff] text-xs font-semibold px-2.5 py-1 rounded-full flex items-center gap-1">
-                Categoría: {selectedCategory}
-                <button onClick={() => setSelectedCategory(null)} className="cursor-pointer hover:text-[#ba1a1a]">
-                  <span className="material-symbols-outlined text-[14px]">close</span>
-                </button>
-              </span>
-            )}
-            {searchQuery && (
-              <span className="bg-[#0052ff]/10 text-[#0052ff] text-xs font-semibold px-2.5 py-1 rounded-full flex items-center gap-1">
-                Búsqueda: "{searchQuery}"
-                <button onClick={() => setSearchQuery('')} className="cursor-pointer hover:text-[#ba1a1a]">
-                  <span className="material-symbols-outlined text-[14px]">close</span>
-                </button>
-              </span>
-            )}
-          </div>
-        )}
-      </section>
-
-      {/* Providers Grid */}
-      {filteredProviders.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredProviders.map((provider) => (
-            <ProviderCard
-              key={provider.id}
-              provider={provider}
-              onContactWhatsApp={onContactWhatsApp}
-              onViewDetails={onViewDetails}
-              isFavorite={favorites.includes(provider.id)}
-              onToggleFavorite={onToggleFavorite}
-            />
-          ))}
+      {/* MAP VIEW */}
+      {viewMode === 'map' ? (
+        <div className="rounded-3xl overflow-hidden border border-slate-200 shadow-elevation-1">
+          <SnapMapView
+            currentCity={currentCity}
+            providers={filteredProviders}
+            products={filteredProducts}
+            userSession={userSession}
+            onSelectProvider={onSelectProvider}
+            onContactWhatsApp={onContactWhatsApp}
+            onBack={() => setViewMode('grid')}
+          />
         </div>
       ) : (
-        <div className="bg-white rounded-2xl p-12 text-center border border-[#e1e8fd] max-w-lg mx-auto shadow-elevation-1">
-          <div className="w-16 h-16 rounded-full bg-[#f1f3ff] text-[#0052ff] flex items-center justify-center mx-auto mb-4">
-            <span className="material-symbols-outlined text-[32px]">search_off</span>
+        <>
+          {/* Main Filter Tabs */}
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
+            <div className="flex items-center gap-2 bg-white p-1.5 rounded-2xl border border-slate-200 shadow-sm">
+              <button
+                onClick={() => setActiveTab('all')}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                  activeTab === 'all'
+                    ? 'bg-[#0052ff] text-white shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                Todos ({filteredProducts.length + filteredProviders.length})
+              </button>
+              <button
+                onClick={() => setActiveTab('products')}
+                className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all ${
+                  activeTab === 'products'
+                    ? 'bg-emerald-600 text-white shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <ShoppingBag className="w-3.5 h-3.5" />
+                <span>Productos ({filteredProducts.length})</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('services')}
+                className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all ${
+                  activeTab === 'services'
+                    ? 'bg-[#0052ff] text-white shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <Wrench className="w-3.5 h-3.5" />
+                <span>Servicios ({filteredProviders.length})</span>
+              </button>
+            </div>
+
+            <button
+              onClick={() => setOnlyVerified(!onlyVerified)}
+              className={`text-xs font-semibold px-3 py-1.5 rounded-xl border flex items-center gap-1 transition-all ${
+                onlyVerified
+                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                  : 'bg-white text-slate-600 border-slate-200 hover:text-slate-900'
+              }`}
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Solo Verificados</span>
+            </button>
           </div>
-          <h4 className="font-geist text-lg font-bold text-[#141b2b] mb-1">
-            No se encontraron proveedores
-          </h4>
-          <p className="text-sm text-[#434656] mb-5">
-            No encontramos profesionales que coincidan con tus criterios de búsqueda en {currentCity}.
-          </p>
-          <button
-            onClick={() => {
-              setSearchQuery('');
-              setSelectedCategory(null);
-              setFilterDomicilioOnly(false);
-              setFilterVerifiedOnly(false);
-            }}
-            className="bg-[#0052ff] text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-[#003ec7] transition-colors cursor-pointer"
-          >
-            Ver todos los profesionales
-          </button>
-        </div>
+
+          {/* Categories */}
+          <div className="flex gap-2 overflow-x-auto pb-4 mb-6">
+            {INITIAL_CATEGORIES.map((cat) => {
+              const isSelected = selectedCategory === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => setSelectedCategory(cat.id)}
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-2xl text-xs font-semibold whitespace-nowrap border transition-all ${
+                    isSelected
+                      ? 'bg-[#0052ff] border-[#0052ff] text-white shadow-md'
+                      : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-base">{cat.icon}</span>
+                  <span>{cat.name}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Products List */}
+          {(activeTab === 'all' || activeTab === 'products') && filteredProducts.length > 0 && (
+            <div className="mb-10">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="p-2 rounded-xl bg-emerald-50 text-emerald-600">
+                  <ShoppingBag className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-[#141b2b] font-geist">Productos Disponibles</h2>
+                  <p className="text-xs text-slate-500">Venta y entrega directa en {currentCity}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                {filteredProducts.map((product) => (
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    onViewDetails={onSelectProduct}
+                    onContactWhatsApp={onContactWhatsApp}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Services List */}
+          {(activeTab === 'all' || activeTab === 'services') && filteredProviders.length > 0 && (
+            <div className="mb-10">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="p-2 rounded-xl bg-blue-50 text-[#0052ff]">
+                  <Wrench className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-[#141b2b] font-geist">Proveedores de Servicios</h2>
+                  <p className="text-xs text-slate-500">Profesionales verificados con atención directa</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                {filteredProviders.map((provider) => (
+                  <ProviderCard
+                    key={provider.id}
+                    provider={provider}
+                    onViewDetails={onSelectProvider}
+                    onContactWhatsApp={onContactWhatsApp}
+                    isFavorite={favorites.includes(provider.id)}
+                    onToggleFavorite={onToggleFavorite}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {filteredProducts.length === 0 && filteredProviders.length === 0 && (
+            <div className="text-center py-16 bg-white border border-slate-200 rounded-3xl p-8">
+              <p className="text-slate-500 text-sm mb-4">
+                No encontramos productos o servicios con ese filtro en {currentCity}.
+              </p>
+              <button
+                onClick={() => {
+                  setSearchQuery('');
+                  setSelectedCategory('todos');
+                  setOnlyVerified(false);
+                }}
+                className="px-5 py-2.5 rounded-2xl bg-[#0052ff] text-white text-xs font-bold"
+              >
+                Restablecer Filtros
+              </button>
+            </div>
+          )}
+        </>
       )}
-    </main>
+    </div>
   );
 };

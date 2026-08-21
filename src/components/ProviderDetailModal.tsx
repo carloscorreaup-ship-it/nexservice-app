@@ -1,228 +1,259 @@
 import React, { useState } from 'react';
-import { Provider, ServiceItem } from '../types';
+import {
+  Star,
+  ShieldCheck,
+  MapPin,
+  MessageSquare,
+  X,
+  ShoppingBag,
+  Wrench,
+  Calendar,
+  Clock,
+  CheckCircle2,
+  FileCheck,
+  ArrowLeft
+} from 'lucide-react';
+import { Provider, ProductItem, ServiceItem } from '../types';
+import { formatCurrencyCOP } from '../utils/userUtils';
 
 interface ProviderDetailModalProps {
-  provider: Provider | null;
-  onClose: () => void;
-  onBookService: (service: ServiceItem, date: string, time: string, notes: string) => void;
-  onContactWhatsApp: (provider: Provider, customMsg?: string) => void;
+  provider: Provider;
   currentCity: string;
+  onClose: () => void;
+  onContactWhatsApp: (provider: Provider, customMessage?: string) => void;
+  onBookService: (service: ServiceItem, date: string, time: string, notes: string) => void;
+  onSelectProduct?: (product: ProductItem) => void;
 }
 
 export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
   provider,
+  currentCity,
   onClose,
-  onBookService,
   onContactWhatsApp,
-  currentCity
+  onBookService,
 }) => {
+  const [activeTab, setActiveTab] = useState<'catalog' | 'services' | 'location' | 'reviews'>('catalog');
   const [selectedService, setSelectedService] = useState<ServiceItem | null>(null);
-  const [bookingDate, setBookingDate] = useState('2026-08-20');
-  const [bookingTime, setBookingTime] = useState('10:00 AM');
-  const [bookingNotes, setBookingNotes] = useState('');
+  const [bookDate, setBookDate] = useState('');
+  const [bookTime, setBookTime] = useState('10:00 AM');
+  const [bookNotes, setBookNotes] = useState('');
   const [showBookingForm, setShowBookingForm] = useState(false);
-  const [customWhatsAppMsg, setCustomWhatsAppMsg] = useState('');
-  const [activeTab, setActiveTab] = useState<'servicios' | 'resenas' | 'info'>('servicios');
 
-  if (!provider) return null;
-
-  const handleBookingSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedService) return;
-    onBookService(selectedService, bookingDate, bookingTime, bookingNotes);
+  const handleConfirmBooking = () => {
+    if (!selectedService || !bookDate) {
+      alert('Por favor selecciona la fecha para el servicio.');
+      return;
+    }
+    onBookService(selectedService, bookDate, bookTime, bookNotes);
     setShowBookingForm(false);
     setSelectedService(null);
   };
 
-  const handleDirectWhatsApp = (serviceName?: string) => {
-    const text = serviceName 
-      ? `Hola ${provider.name}, vi tu perfil en NexService.app en ${currentCity} y deseo cotizar el servicio de: "${serviceName}". ¿Tienes disponibilidad?`
-      : customWhatsAppMsg || `Hola ${provider.name}, vi tu perfil en NexService.app en ${currentCity} y me gustaría consultar información sobre tus servicios.`;
-    
-    onContactWhatsApp(provider, text);
-  };
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-6 bg-black/50 backdrop-blur-xs overflow-y-auto animate-in fade-in duration-200">
-      <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-elevation-hover border border-[#c3c5d9]/30 relative overflow-hidden my-auto">
-        {/* Modal Top Bar */}
-        <div className="flex items-center justify-between p-4 md:px-6 border-b border-[#e1e8fd] bg-[#f9f9ff]">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold uppercase tracking-wider text-[#0052ff] bg-[#0052ff]/10 px-2.5 py-1 rounded-full">
-              Perfil Profesional
-            </span>
-            <span className="text-xs text-[#737688] flex items-center gap-1">
-              <span className="material-symbols-outlined text-[14px]">location_on</span>
-              {provider.city}
-            </span>
-          </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm">
+      <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-3xl max-h-[92vh] overflow-y-auto shadow-2xl relative flex flex-col">
+        {/* Banner with Back Button */}
+        <div className="relative h-44 sm:h-52 bg-slate-200">
+          <img
+            src={provider.bannerUrl || 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=1000&h=400&fit=crop&q=80'}
+            alt="Banner"
+            className="w-full h-full object-cover"
+          />
 
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full flex items-center justify-center text-[#737688] hover:text-[#141b2b] hover:bg-[#e1e8fd] transition-colors cursor-pointer"
+            className="absolute top-4 left-4 flex items-center gap-1.5 px-3 py-1.5 bg-white/90 hover:bg-white text-slate-800 rounded-full shadow-md text-xs font-bold transition-all z-10"
           >
-            <span className="material-symbols-outlined text-[20px]">close</span>
+            <ArrowLeft className="w-4 h-4 text-[#0052ff]" />
+            <span>Volver</span>
           </button>
-        </div>
 
-        {/* Scrollable Body */}
-        <div className="p-4 md:p-6 overflow-y-auto space-y-6">
-          {/* Provider Bio Card */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-[#f1f3ff]/50 p-4 rounded-xl border border-[#e1e8fd]">
-            <div className="w-20 h-20 rounded-2xl bg-white overflow-hidden shrink-0 border-2 border-[#0052ff]/20 shadow-xs">
-              <img 
-                src={provider.avatarUrl} 
-                alt={provider.name} 
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 p-2 text-slate-700 bg-white/90 hover:bg-white rounded-full shadow-md z-10"
+          >
+            <X className="w-4 h-4" />
+          </button>
+
+          <div className="absolute -bottom-8 left-6 flex items-end gap-4">
+            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl overflow-hidden ring-4 ring-white bg-white shadow-lg">
+              <img
+                src={provider.avatarUrl}
+                alt={provider.name}
                 className="w-full h-full object-cover"
               />
             </div>
+          </div>
+        </div>
 
-            <div className="flex-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <h3 className="font-geist text-xl md:text-2xl font-bold text-[#141b2b]">
-                  {provider.name}
-                </h3>
+        {/* Content */}
+        <div className="pt-10 px-6 pb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-xl sm:text-2xl font-bold text-[#141b2b]">{provider.name}</h2>
                 {provider.verified && (
-                  <span className="bg-[#0052ff]/10 text-[#0052ff] text-xs font-semibold px-2 py-0.5 rounded-full flex items-center gap-1">
-                    <span className="material-symbols-outlined text-[13px] filled">verified</span>
-                    Verificado
+                  <span className="flex items-center gap-1 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                    <ShieldCheck className="w-3.5 h-3.5" /> Verificado Oficial
                   </span>
                 )}
               </div>
-
-              <p className="text-[#434656] font-medium text-sm mt-0.5">
-                {provider.businessName} • {provider.category}
-              </p>
-
-              <div className="flex flex-wrap items-center gap-4 mt-2 text-xs text-[#434656]">
-                <span className="flex items-center gap-1">
-                  <span className="material-symbols-outlined text-[16px] text-[#bf3003] filled">star</span>
-                  <strong className="text-[#141b2b] text-sm">{provider.rating.toFixed(1)}</strong> ({provider.reviewCount} opiniones)
-                </span>
-
-                <span className="flex items-center gap-1">
-                  <span className="material-symbols-outlined text-[16px] text-[#0052ff]">timer</span>
-                  Responde en {provider.responseTime || '< 20 mins'}
-                </span>
-
-                {provider.isDelivery && (
-                  <span className="text-[#952200] font-medium flex items-center gap-1">
-                    <span className="material-symbols-outlined text-[16px]">local_shipping</span>
-                    Atención a Domicilio
-                  </span>
-                )}
+              <p className="text-sm text-slate-500 font-medium">{provider.businessName}</p>
+              
+              <div className="flex items-center gap-3 mt-1 text-xs text-slate-500">
+                <div className="flex items-center gap-1 text-amber-500 font-bold">
+                  <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                  <span>{provider.rating.toFixed(1)}</span>
+                  <span className="text-slate-400 font-normal">({provider.reviewCount} reseñas)</span>
+                </div>
+                <span>•</span>
+                <div className="flex items-center gap-1">
+                  <MapPin className="w-3.5 h-3.5 text-[#0052ff]" />
+                  <span>{provider.address}, {provider.city}</span>
+                </div>
               </div>
             </div>
-          </div>
-
-          {/* Description */}
-          <div>
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-[#737688] mb-1.5">
-              Acerca del Profesional
-            </h4>
-            <p className="text-sm md:text-base text-[#434656] leading-relaxed">
-              {provider.description}
-            </p>
-          </div>
-
-          {/* Details pills */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="bg-[#f9f9ff] p-3 rounded-xl border border-[#e1e8fd] text-xs">
-              <span className="text-[#737688] block mb-1">Ubicación / Dirección</span>
-              <span className="font-semibold text-[#141b2b] flex items-center gap-1 truncate">
-                <span className="material-symbols-outlined text-[16px] text-[#0052ff]">pin_drop</span>
-                {provider.address || 'Pereira, Colombia'}
-              </span>
-            </div>
-
-            <div className="bg-[#f9f9ff] p-3 rounded-xl border border-[#e1e8fd] text-xs">
-              <span className="text-[#737688] block mb-1">WhatsApp de Contacto</span>
-              <span className="font-semibold text-[#25D366] flex items-center gap-1">
-                <span className="material-symbols-outlined text-[16px]">call</span>
-                +{provider.whatsapp}
-              </span>
-            </div>
-
-            <div className="bg-[#f9f9ff] p-3 rounded-xl border border-[#e1e8fd] text-xs">
-              <span className="text-[#737688] block mb-1">Sitio Web / Red Social</span>
-              <span className="font-semibold text-[#0052ff] flex items-center gap-1 truncate">
-                <span className="material-symbols-outlined text-[16px]">public</span>
-                {provider.social || provider.website?.replace('https://', '') || 'Verificado'}
-              </span>
-            </div>
-          </div>
-
-          {/* Navigation Tabs */}
-          <div className="flex border-b border-[#e1e8fd] gap-4">
-            <button
-              onClick={() => setActiveTab('servicios')}
-              className={`pb-2.5 text-sm font-semibold transition-colors relative cursor-pointer ${
-                activeTab === 'servicios' ? 'text-[#0052ff]' : 'text-[#737688] hover:text-[#141b2b]'
-              }`}
-            >
-              Servicios y Tarifas ({provider.services.length})
-              {activeTab === 'servicios' && (
-                <div className="absolute bottom-0 left-0 w-full h-0.5 bg-[#0052ff]"></div>
-              )}
-            </button>
 
             <button
-              onClick={() => setActiveTab('resenas')}
-              className={`pb-2.5 text-sm font-semibold transition-colors relative cursor-pointer ${
-                activeTab === 'resenas' ? 'text-[#0052ff]' : 'text-[#737688] hover:text-[#141b2b]'
-              }`}
+              onClick={() => onContactWhatsApp(provider)}
+              className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-2.5 px-4 rounded-2xl flex items-center justify-center gap-2 shadow-md shadow-emerald-600/20 transition-all self-start sm:self-auto"
             >
-              Opiniones ({provider.reviews.length})
-              {activeTab === 'resenas' && (
-                <div className="absolute bottom-0 left-0 w-full h-0.5 bg-[#0052ff]"></div>
-              )}
+              <MessageSquare className="w-4 h-4" />
+              <span>WhatsApp Directo</span>
             </button>
           </div>
 
-          {/* Tab 1: Services List */}
-          {activeTab === 'servicios' && (
+          <p className="text-xs sm:text-sm text-slate-600 leading-relaxed mb-4">
+            {provider.description}
+          </p>
+
+          {/* Badges */}
+          <div className="flex flex-wrap gap-2 mb-4 text-xs">
+            {provider.documentVerified && (
+              <span className="bg-slate-100 text-slate-700 px-3 py-1 rounded-xl border border-slate-200 flex items-center gap-1.5">
+                <FileCheck className="w-3.5 h-3.5 text-[#0052ff]" /> RUT Verificado
+              </span>
+            )}
+            {provider.yearsOfExperience && (
+              <span className="bg-slate-100 text-slate-700 px-3 py-1 rounded-xl border border-slate-200 flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-amber-600" /> {provider.yearsOfExperience} años de experiencia
+              </span>
+            )}
+            {provider.openHours && (
+              <span className="bg-slate-100 text-slate-700 px-3 py-1 rounded-xl border border-slate-200 flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-emerald-600" /> {provider.openHours}
+              </span>
+            )}
+          </div>
+
+          {/* Tabs */}
+          <div className="flex border-b border-slate-200 text-xs font-semibold mb-5 gap-4 overflow-x-auto">
+            <button
+              onClick={() => setActiveTab('catalog')}
+              className={`pb-2.5 flex items-center gap-2 border-b-2 transition-all whitespace-nowrap ${
+                activeTab === 'catalog'
+                  ? 'border-[#0052ff] text-[#0052ff] font-bold'
+                  : 'border-transparent text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              <ShoppingBag className="w-4 h-4" />
+              <span>Catálogo de Productos ({provider.products.length})</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('services')}
+              className={`pb-2.5 flex items-center gap-2 border-b-2 transition-all whitespace-nowrap ${
+                activeTab === 'services'
+                  ? 'border-[#0052ff] text-[#0052ff] font-bold'
+                  : 'border-transparent text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              <Wrench className="w-4 h-4" />
+              <span>Servicios ({provider.services.length})</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('location')}
+              className={`pb-2.5 flex items-center gap-2 border-b-2 transition-all whitespace-nowrap ${
+                activeTab === 'location'
+                  ? 'border-[#0052ff] text-[#0052ff] font-bold'
+                  : 'border-transparent text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              <MapPin className="w-4 h-4" />
+              <span>Ubicación Fija</span>
+            </button>
+          </div>
+
+          {/* TAB 1: PRODUCT CATALOG */}
+          {activeTab === 'catalog' && (
+            <div>
+              {provider.products.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {provider.products.map((prod) => (
+                    <div
+                      key={prod.id}
+                      className="bg-slate-50 border border-slate-200 rounded-2xl p-3 flex gap-3 items-center justify-between"
+                    >
+                      <img src={prod.images[0]} alt={prod.name} className="w-14 h-14 rounded-xl object-cover" />
+                      <div className="flex-1 min-w-0">
+                        <span className="text-[10px] text-[#0052ff] font-bold uppercase">{prod.condition}</span>
+                        <h4 className="text-xs font-bold text-slate-900 truncate">{prod.name}</h4>
+                        <div className="text-xs font-extrabold text-emerald-600 mt-0.5">
+                          {formatCurrencyCOP(prod.price)}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => onContactWhatsApp(provider, `Hola ${provider.name}, deseo comprar el producto "${prod.name}".`)}
+                        className="bg-emerald-600 hover:bg-emerald-500 text-white p-2 rounded-xl text-xs"
+                      >
+                        <MessageSquare className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 bg-slate-50 rounded-2xl text-slate-500 text-xs">
+                  Este proveedor se enfoca en servicios profesionales.
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* TAB 2: SERVICES */}
+          {activeTab === 'services' && (
             <div className="space-y-3">
-              {provider.services.map((service) => (
+              {provider.services.map((srv) => (
                 <div
-                  key={service.id}
-                  className="bg-white p-3.5 rounded-xl border border-[#e1e8fd] hover:border-[#0052ff] transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs"
+                  key={srv.id}
+                  className="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
                 >
-                  <div className="space-y-1">
-                    <h5 className="font-semibold text-sm md:text-base text-[#141b2b]">
-                      {service.name}
-                    </h5>
-                    <div className="flex items-center gap-3 text-xs text-[#737688]">
-                      {service.priceEstimate && (
-                        <span className="font-bold text-[#003ec7] bg-[#e9edff] px-2 py-0.5 rounded">
-                          {service.priceEstimate}
-                        </span>
-                      )}
-                      {service.duration && (
-                        <span className="flex items-center gap-1">
-                          <span className="material-symbols-outlined text-[14px]">schedule</span>
-                          {service.duration}
+                  <div>
+                    <h4 className="text-sm font-bold text-slate-900">{srv.name}</h4>
+                    <div className="flex items-center gap-3 mt-1.5 text-xs text-slate-600">
+                      <span className="font-extrabold text-emerald-600">{srv.priceEstimate}</span>
+                      {srv.duration && <span>• {srv.duration}</span>}
+                      {srv.isHomeService && (
+                        <span className="text-[#0052ff] bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
+                          A Domicilio
                         </span>
                       )}
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handleDirectWhatsApp(service.name)}
-                      className="bg-[#25D366]/10 hover:bg-[#25D366] text-[#25D366] hover:text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1 cursor-pointer"
-                    >
-                      <span className="material-symbols-outlined text-[15px]">chat</span>
-                      Cotizar WhatsApp
-                    </button>
-
+                  <div className="flex gap-2">
                     <button
                       onClick={() => {
-                        setSelectedService(service);
+                        setSelectedService(srv);
                         setShowBookingForm(true);
                       }}
-                      className="bg-[#0052ff] hover:bg-[#003ec7] text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+                      className="bg-[#0052ff] hover:bg-blue-600 text-white text-xs font-bold py-2 px-3 rounded-xl transition-all"
                     >
-                      Agendar Cita
+                      Reservar
+                    </button>
+                    <button
+                      onClick={() => onContactWhatsApp(provider, `Hola ${provider.name}, deseo cotizar el servicio "${srv.name}".`)}
+                      className="bg-emerald-600 hover:bg-emerald-500 text-white p-2 rounded-xl text-xs"
+                    >
+                      <MessageSquare className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
@@ -230,135 +261,84 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
             </div>
           )}
 
-          {/* Tab 2: Reviews List */}
-          {activeTab === 'resenas' && (
-            <div className="space-y-3">
-              {provider.reviews.map((rev) => (
-                <div key={rev.id} className="bg-[#f9f9ff] p-3.5 rounded-xl border border-[#e1e8fd]">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold text-sm text-[#141b2b]">{rev.author}</span>
-                      {rev.verifiedBooking && (
-                        <span className="bg-[#0052ff]/10 text-[#0052ff] text-[10px] font-semibold px-1.5 py-0.5 rounded flex items-center gap-0.5">
-                          <span className="material-symbols-outlined text-[12px] filled">check_circle</span>
-                          Cliente Verificado
-                        </span>
-                      )}
-                    </div>
-                    <span className="text-xs text-[#737688]">{rev.date}</span>
-                  </div>
-
-                  <div className="flex items-center gap-1 mb-1 text-[#bf3003]">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <span 
-                        key={i} 
-                        className={`material-symbols-outlined text-[14px] ${i < Math.floor(rev.rating) ? 'filled' : ''}`}
-                      >
-                        star
-                      </span>
-                    ))}
-                  </div>
-
-                  <p className="text-xs md:text-sm text-[#434656] leading-relaxed">
-                    "{rev.comment}"
-                  </p>
-                </div>
-              ))}
+          {/* TAB 3: LOCATION */}
+          {activeTab === 'location' && (
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2">
+              <h4 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
+                <MapPin className="w-4 h-4 text-[#0052ff]" />
+                Dirección Fija Registrada
+              </h4>
+              <p className="text-xs text-slate-700">{provider.address}, {provider.city}, Colombia</p>
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${provider.coordinates.lat},${provider.coordinates.lng}`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-block mt-2 text-xs font-bold text-[#0052ff] hover:underline"
+              >
+                Ver ruta en Google Maps →
+              </a>
             </div>
           )}
+        </div>
 
-          {/* Inline Booking Form Modal */}
-          {showBookingForm && selectedService && (
-            <form onSubmit={handleBookingSubmit} className="bg-[#e9edff]/40 p-4 rounded-xl border-2 border-[#0052ff] space-y-3 animate-in fade-in duration-150">
-              <div className="flex justify-between items-center">
-                <h5 className="font-semibold text-sm text-[#003ec7] flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[18px]">event_available</span>
-                  Agendar: {selectedService.name}
-                </h5>
-                <button
-                  type="button"
-                  onClick={() => setShowBookingForm(false)}
-                  className="text-xs text-[#737688] hover:text-[#141b2b] cursor-pointer"
-                >
-                  Cancelar
+        {/* BOOKING MODAL */}
+        {showBookingForm && selectedService && (
+          <div className="absolute inset-0 bg-white/95 z-20 p-6 flex flex-col justify-between overflow-y-auto">
+            <div>
+              <div className="flex items-center justify-between pb-3 border-b border-slate-200 mb-4">
+                <h3 className="text-base font-bold text-slate-900">Agendar {selectedService.name}</h3>
+                <button onClick={() => setShowBookingForm(false)} className="p-2 text-slate-500 hover:text-slate-900">
+                  <X className="w-5 h-5" />
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-3 text-xs">
                 <div>
-                  <label className="block text-xs font-semibold text-[#434656] mb-1">
-                    Fecha deseada
-                  </label>
+                  <label className="block text-slate-600 mb-1">Fecha</label>
                   <input
                     type="date"
-                    value={bookingDate}
-                    onChange={(e) => setBookingDate(e.target.value)}
-                    className="w-full bg-white border border-[#c3c5d9] rounded-lg px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-[#0052ff] outline-none"
-                    required
+                    value={bookDate}
+                    onChange={(e) => setBookDate(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900"
                   />
                 </div>
-
                 <div>
-                  <label className="block text-xs font-semibold text-[#434656] mb-1">
-                    Hora aproximada
-                  </label>
-                  <select
-                    value={bookingTime}
-                    onChange={(e) => setBookingTime(e.target.value)}
-                    className="w-full bg-white border border-[#c3c5d9] rounded-lg px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-[#0052ff] outline-none"
-                  >
-                    <option>08:00 AM</option>
-                    <option>10:00 AM</option>
-                    <option>02:00 PM</option>
-                    <option>04:00 PM</option>
-                    <option>06:00 PM</option>
-                  </select>
+                  <label className="block text-slate-600 mb-1">Hora</label>
+                  <input
+                    type="text"
+                    value={bookTime}
+                    onChange={(e) => setBookTime(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-600 mb-1">Detalles o requerimientos</label>
+                  <textarea
+                    value={bookNotes}
+                    onChange={(e) => setBookNotes(e.target.value)}
+                    rows={3}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900"
+                  />
                 </div>
               </div>
+            </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-[#434656] mb-1">
-                  Detalles del problema o requerimiento
-                </label>
-                <textarea
-                  rows={2}
-                  value={bookingNotes}
-                  onChange={(e) => setBookingNotes(e.target.value)}
-                  placeholder="Describe brevemente lo que necesitas para que el profesional prepare materiales..."
-                  className="w-full bg-white border border-[#c3c5d9] rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-[#0052ff] outline-none"
-                ></textarea>
-              </div>
-
+            <div className="flex gap-2 pt-4 border-t border-slate-200">
               <button
-                type="submit"
-                className="w-full bg-[#0052ff] hover:bg-[#003ec7] text-white py-2.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
+                onClick={() => setShowBookingForm(false)}
+                className="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 text-xs font-semibold"
               >
-                <span className="material-symbols-outlined text-[16px]">send</span>
-                Confirmar Solicitud de Cita
+                Volver
               </button>
-            </form>
-          )}
-        </div>
-
-        {/* Modal Bottom Actions */}
-        <div className="p-4 md:px-6 bg-[#f9f9ff] border-t border-[#e1e8fd] flex flex-col sm:flex-row gap-3 items-center justify-between">
-          <button
-            onClick={() => handleDirectWhatsApp()}
-            className="w-full sm:w-auto flex-1 bg-[#25D366] hover:bg-[#20B056] active:scale-[0.98] text-white py-3 px-5 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 shadow-xs transition-all cursor-pointer"
-          >
-            <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
-              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-            </svg>
-            <span>Escribir por WhatsApp</span>
-          </button>
-
-          <button
-            onClick={onClose}
-            className="w-full sm:w-auto px-5 py-3 rounded-xl border border-[#c3c5d9] hover:bg-[#f1f3ff] text-[#434656] text-sm font-medium transition-colors cursor-pointer"
-          >
-            Cerrar
-          </button>
-        </div>
+              <button
+                onClick={handleConfirmBooking}
+                className="flex-1 bg-[#0052ff] hover:bg-blue-600 text-white text-xs font-bold py-2.5 rounded-xl shadow-md shadow-blue-500/20"
+              >
+                Confirmar Solicitud
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

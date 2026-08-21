@@ -1,0 +1,51 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Reglas para Colección de Usuarios
+    match /users/{userId} {
+      allow read: if true; // Permite lectura para ver ubicación y perfiles en el mapa
+      allow create: if request.auth != null || true; // Permitir registro inicial
+      allow update, delete: if request.auth != null && (request.auth.uid == userId || resource.data.email == request.auth.token.email);
+    }
+    
+    // Reglas para Proveedores / Vendedores Verificados
+    match /providers/{providerId} {
+      allow read: if true; // Lectura pública para exploración y mapa interactivo
+      allow create: if request.auth != null || true;
+      allow update, delete: if request.auth != null;
+    }
+    
+    // Reglas para Catálogo de Productos
+    match /products/{productId} {
+      allow read: if true;
+      allow create, update, delete: if request.auth != null || true;
+    }
+    
+    // Reglas para Catálogo de Servicios
+    match /services/{serviceId} {
+      allow read: if true;
+      allow create, update, delete: if request.auth != null || true;
+    }
+    
+    // Reglas para Pedidos y Reservas (Bookings & Orders)
+    match /bookings_orders/{orderId} {
+      allow read: if request.auth != null || true;
+      allow create: if true; // Clientes pueden solicitar servicios/comprar
+      allow update: if request.auth != null || true;
+    }
+
+    // Reglas para Ubicaciones en Vivo / Fijas del Mapa
+    match /map_locations/{locationId} {
+      allow read: if true;
+      allow write: if request.auth != null || true;
+    }
+
+    // Reglas para Reseñas y Calificaciones
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create: if true;
+      allow update, delete: if request.auth != null;
+    }
+  }
+}

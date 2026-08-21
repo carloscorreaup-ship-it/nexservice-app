@@ -1,25 +1,39 @@
 import React, { useState, useEffect } from 'react';
-import { UserSession, Provider, Booking, ServiceItem } from './types';
-import { INITIAL_PROVIDERS, INITIAL_BOOKINGS } from './data/mockData';
+import { UserSession, Provider, ProductItem, BookingOrOrder, ServiceItem, UserRole } from './types';
+import { INITIAL_PROVIDERS, INITIAL_PRODUCTS, INITIAL_BOOKINGS, INITIAL_USERS } from './data/initialData';
 import { Header } from './components/Header';
 import { BottomNavBar } from './components/BottomNavBar';
 import { OnboardingScreen } from './components/OnboardingScreen';
 import { CitySelectScreen } from './components/CitySelectScreen';
 import { ExploreView } from './components/ExploreView';
+import { SnapMapView } from './components/SnapMapView';
 import { ProviderModeView } from './components/ProviderModeView';
 import { BookingsView } from './components/BookingsView';
 import { ProfileView } from './components/ProfileView';
+import { AdminDashboardView } from './components/AdminDashboardView';
 import { ProviderDetailModal } from './components/ProviderDetailModal';
+import { ProductDetailModal } from './components/ProductDetailModal';
 import { WhatsAppModal } from './components/WhatsAppModal';
+import { FirebaseConfigModal } from './components/FirebaseConfigModal';
+import {
+  getProvidersFromDB,
+  getProductsFromDB,
+  getBookingsFromDB,
+  getUsersFromDB,
+  saveProviderToDB,
+  saveProductToDB,
+  saveBookingToDB,
+  updateBookingStatusInDB,
+  toggleUserStatusInDB,
+  saveUserToDB
+} from './services/firestoreService';
+import { getEmailAvatarUrl } from './utils/userUtils';
 
 const STORAGE_KEYS = {
-  SESSION: 'nexservice_session_v1',
-  PROVIDERS: 'nexservice_providers_v1',
-  BOOKINGS: 'nexservice_bookings_v1',
+  SESSION: 'nexservice_session_v4',
 };
 
 export default function App() {
-  // Load session from storage or start clean
   const [session, setSession] = useState<UserSession>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.SESSION);
@@ -27,82 +41,159 @@ export default function App() {
     } catch (e) {
       console.error(e);
     }
+    const adminEmail = 'carloscorreaup@gmail.com';
     return {
-      email: '',
-      name: '',
-      avatarUrl: '',
-      phone: '',
+      id: 'usr-admin',
+      email: adminEmail,
+      name: 'Carlos Correa',
+      avatarUrl: getEmailAvatarUrl(adminEmail, 'Carlos Correa'),
+      phone: '+57 300 123 4567',
       city: 'Pereira',
+      department: 'Risaralda',
       mode: 'client',
-      isOnboarded: false,
-      hasChosenCity: false,
+      role: 'both',
+      isOnboarded: true,
+      hasChosenCity: true,
       favorites: ['p1', 'p3'],
+      isVerified: true,
+      isActive: true,
+      isAdmin: true,
+      fixedLocation: {
+        address: 'Carrera 15 # 12-45, Barrio Álamos',
+        neighborhood: 'Álamos',
+        city: 'Pereira',
+        department: 'Risaralda',
+        coordinates: { lat: 4.8122, lng: -75.6934 },
+        isPublicOnMap: true
+      }
     };
   });
 
-  // Providers state
-  const [providers, setProviders] = useState<Provider[]>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEYS.PROVIDERS);
-      if (saved) return JSON.parse(saved);
-    } catch (e) {
-      console.error(e);
-    }
-    return INITIAL_PROVIDERS;
-  });
+  const [providers, setProviders] = useState<Provider[]>(INITIAL_PROVIDERS);
+  const [products, setProducts] = useState<ProductItem[]>(INITIAL_PRODUCTS);
+  const [bookings, setBookings] = useState<BookingOrOrder[]>(INITIAL_BOOKINGS);
+  const [users, setUsers] = useState<UserSession[]>(INITIAL_USERS);
 
-  // Bookings state
-  const [bookings, setBookings] = useState<Booking[]>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEYS.BOOKINGS);
-      if (saved) return JSON.parse(saved);
-    } catch (e) {
-      console.error(e);
-    }
-    return INITIAL_BOOKINGS;
-  });
+  // Navigation state & history stack for Back Button
+  const [activeTab, setActiveTab] = useState<'explore' | 'map' | 'provider' | 'bookings' | 'profile' | 'admin'>('explore');
+  const [tabHistory, setTabHistory] = useState<Array<'explore' | 'map' | 'provider' | 'bookings' | 'profile' | 'admin'>>(['explore']);
 
-  // UI Navigation states
-  const [activeTab, setActiveTab] = useState<'explore' | 'provider' | 'bookings' | 'profile'>('explore');
   const [showCityModal, setShowCityModal] = useState(false);
+  const [showFirebaseModal, setShowFirebaseModal] = useState(false);
   const [selectedProviderDetail, setSelectedProviderDetail] = useState<Provider | null>(null);
-  const [whatsAppModalData, setWhatsAppModalData] = useState<{ provider: Provider; message?: string } | null>(null);
+  const [selectedProductDetail, setSelectedProductDetail] = useState<ProductItem | null>(null);
+  const [whatsAppModalData, setWhatsAppModalData] = useState<{ provider: Provider; product?: ProductItem; message?: string } | null>(null);
 
-  // Sync to localStorage
+  const isSuperAdmin = session.email.toLowerCase() === 'carloscorreaup@gmail.com';
+
+  const navigateToTab = (newTab: 'explore' | 'map' | 'provider' | 'bookings' | 'profile' | 'admin') => {
+    if (newTab !== activeTab) {
+      setTabHistory(prev => [...prev, newTab]);
+      setActiveTab(newTab);
+    }
+  };
+
+  const handleGoBack = () => {
+    if (selectedProviderDetail) {
+      setSelectedProviderDetail(null);
+      return;
+    }
+    if (selectedProductDetail) {
+      setSelectedProductDetail(null);
+      return;
+    }
+    if (whatsAppModalData) {
+      setWhatsAppModalData(null);
+      return;
+    }
+    if (showCityModal) {
+      setShowCityModal(false);
+      return;
+    }
+    if (showFirebaseModal) {
+      setShowFirebaseModal(false);
+      return;
+    }
+
+    if (tabHistory.length > 1) {
+      const newHistory = [...tabHistory];
+      newHistory.pop(); // remove current
+      const prevTab = newHistory[newHistory.length - 1];
+      setTabHistory(newHistory);
+      setActiveTab(prevTab);
+    } else {
+      setActiveTab('explore');
+    }
+  };
+
+  useEffect(() => {
+    async function loadData() {
+      const dbProviders = await getProvidersFromDB(session.city);
+      const dbProducts = await getProductsFromDB(session.city);
+      const dbBookings = await getBookingsFromDB(session.email);
+      const dbUsers = await getUsersFromDB();
+      setProviders(dbProviders);
+      setProducts(dbProducts);
+      setBookings(dbBookings);
+      setUsers(dbUsers);
+    }
+    loadData();
+  }, [session.city, session.email]);
+
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.SESSION, JSON.stringify(session));
   }, [session]);
 
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.PROVIDERS, JSON.stringify(providers));
-  }, [providers]);
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.BOOKINGS, JSON.stringify(bookings));
-  }, [bookings]);
-
-  // Handle Onboarding / Auth Completion (Step 1)
-  const handleCompleteOnboarding = (data: { email: string; name?: string; avatarUrl?: string; mode?: 'client' | 'provider' } | string) => {
-    const email = typeof data === 'string' ? data : data.email;
-    const customName = typeof data === 'object' ? data.name : undefined;
-    const customAvatar = typeof data === 'object' ? data.avatarUrl : undefined;
-    const customMode = typeof data === 'object' ? data.mode : undefined;
-
-    const isSpecialProvider = email.toLowerCase().includes('plomero') || email.toLowerCase().includes('proveedor');
-    
-    setSession((prev) => ({
-      ...prev,
-      email,
-      name: customName?.trim() || prev.name || 'Usuario NexService',
-      avatarUrl: customAvatar || prev.avatarUrl,
-      isOnboarded: true,
-      mode: customMode || (isSpecialProvider ? 'provider' : 'client')
-    }));
+  const handleToggleUserStatus = async (email: string, currentStatus: boolean) => {
+    const nextStatus = !currentStatus;
+    await toggleUserStatusInDB(email, nextStatus);
+    setUsers(prev =>
+      prev.map(u => (u.email.toLowerCase() === email.toLowerCase() ? { ...u, isActive: nextStatus } : u))
+    );
   };
 
-  // Handle City Selection (Step 2 or Modal)
+  const handleToggleProviderVerification = (providerId: string, currentStatus: boolean) => {
+    const nextStatus = !currentStatus;
+    setProviders(prev =>
+      prev.map(p => (p.id === providerId ? { ...p, verified: nextStatus } : p))
+    );
+  };
+
+  const handleCompleteOnboarding = async (data: {
+    email: string;
+    name: string;
+    phone: string;
+    role: UserRole;
+    address: string;
+    city: string;
+    avatarUrl: string;
+  }) => {
+    const newSession: UserSession = {
+      ...session,
+      email: data.email,
+      name: data.name,
+      phone: data.phone,
+      role: data.role,
+      city: data.city,
+      avatarUrl: data.avatarUrl,
+      isOnboarded: true,
+      hasChosenCity: true,
+      isActive: true,
+      isAdmin: data.email.toLowerCase() === 'carloscorreaup@gmail.com',
+      mode: data.role === 'provider' ? 'provider' : 'client',
+      fixedLocation: {
+        ...session.fixedLocation,
+        address: data.address,
+        city: data.city
+      }
+    };
+    setSession(newSession);
+    await saveUserToDB(newSession);
+    setUsers(prev => [newSession, ...prev.filter(u => u.email !== newSession.email)]);
+  };
+
   const handleSelectCity = (cityName: string) => {
-    setSession((prev) => ({
+    setSession(prev => ({
       ...prev,
       city: cityName,
       hasChosenCity: true
@@ -110,168 +201,138 @@ export default function App() {
     setShowCityModal(false);
   };
 
-  // Mode Toggle (Client <-> Provider)
   const handleToggleProviderMode = () => {
-    setSession((prev) => {
-      const newMode = prev.mode === 'client' ? 'provider' : 'client';
-      if (newMode === 'provider') {
-        setActiveTab('provider');
+    setSession(prev => {
+      const nextMode = prev.mode === 'client' ? 'provider' : 'client';
+      if (nextMode === 'provider') {
+        navigateToTab('provider');
       } else {
-        setActiveTab('explore');
+        navigateToTab('explore');
       }
-      return {
-        ...prev,
-        mode: newMode
-      };
+      return { ...prev, mode: nextMode };
     });
   };
 
-  // Add / Toggle Favorite Provider
-  const handleToggleFavorite = (providerId: string) => {
-    setSession((prev) => {
-      const exists = prev.favorites.includes(providerId);
-      const favorites = exists
-        ? prev.favorites.filter((id) => id !== providerId)
-        : [...prev.favorites, providerId];
+  const handleToggleFavorite = (id: string) => {
+    setSession(prev => {
+      const exists = prev.favorites.includes(id);
+      const favorites = exists ? prev.favorites.filter(item => item !== id) : [...prev.favorites, id];
       return { ...prev, favorites };
     });
   };
 
-  // Handle Saving / Publishing New Provider Profile
-  const handleSaveProviderProfile = (profileData: Partial<Provider>) => {
-    const existingIndex = providers.findIndex((p) => p.id === 'my-provider-id' || p.businessName === profileData.businessName);
-    
-    if (existingIndex >= 0) {
-      const updated = [...providers];
-      updated[existingIndex] = { ...updated[existingIndex], ...profileData } as Provider;
-      setProviders(updated);
-    } else {
-      const newProvider: Provider = {
-        id: `p-custom-${Date.now()}`,
-        name: profileData.name || 'Mi Negocio',
-        businessName: profileData.businessName || 'Servicio Profesional',
-        category: profileData.category || 'Reparaciones',
-        rating: 5.0,
-        reviewCount: 1,
-        tags: profileData.tags || ['Profesional', 'Pereira'],
-        phone: profileData.phone || '+57 300 000 0000',
-        whatsapp: profileData.whatsapp || '573000000000',
-        address: profileData.address || `${session.city}, Colombia`,
-        website: profileData.website,
-        social: profileData.social,
-        verified: true,
-        avatarUrl: profileData.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=256&h=256&fit=crop&crop=faces&q=80',
-        description: profileData.description || 'Servicios profesionales de alta calidad.',
-        city: session.city,
-        services: profileData.services || [],
-        reviews: [
-          {
-            id: `r-init-${Date.now()}`,
-            author: 'NexService Auditoría',
-            rating: 5,
-            date: 'Hoy',
-            comment: 'Perfil verificado y aprobado para operar en la red NexService.',
-            verifiedBooking: true
-          }
-        ],
-        isDelivery: profileData.isDelivery ?? true,
-        isFeatured: true,
-        yearsOfExperience: 5,
-        responseTime: '< 15 mins'
-      };
-      setProviders([newProvider, ...providers]);
-    }
+  const handleSaveProviderProfile = async (profileData: Partial<Provider>) => {
+    const updatedProvider: Provider = {
+      id: profileData.id || 'my-provider-id',
+      name: profileData.name || session.name,
+      businessName: profileData.businessName || 'Mi Negocio Local',
+      category: profileData.category || 'reparaciones',
+      offerType: profileData.offerType || 'both',
+      rating: 5.0,
+      reviewCount: 1,
+      tags: profileData.tags || ['Verificado', session.city],
+      phone: profileData.phone || session.phone,
+      whatsapp: profileData.whatsapp || session.phone,
+      address: profileData.address || session.fixedLocation.address,
+      coordinates: session.fixedLocation.coordinates,
+      city: session.city,
+      department: session.department,
+      isFixedLocationVisibleOnMap: true,
+      verified: true,
+      verifiedBadgeType: 'oficial',
+      avatarUrl: profileData.avatarUrl || session.avatarUrl || getEmailAvatarUrl(session.email, session.name),
+      description: profileData.description || 'Ofrecemos los mejores productos y servicios.',
+      services: profileData.services || [],
+      products: profileData.products || [],
+      reviews: [],
+      isDelivery: true
+    };
 
-    setSession((prev) => ({
+    await saveProviderToDB(updatedProvider);
+    setProviders(prev => {
+      const idx = prev.findIndex(p => p.id === updatedProvider.id);
+      if (idx >= 0) {
+        const copy = [...prev];
+        copy[idx] = updatedProvider;
+        return copy;
+      }
+      return [updatedProvider, ...prev];
+    });
+
+    setSession(prev => ({
       ...prev,
       providerProfile: profileData
     }));
   };
 
-  // Direct WhatsApp contact handler
-  const handleContactWhatsApp = (provider: Provider, customMessage?: string) => {
-    setWhatsAppModalData({ provider, message: customMessage });
-  };
-
-  // Book a service from provider details
-  const handleBookService = (service: ServiceItem, date: string, time: string, notes: string) => {
+  const handleBookService = async (service: ServiceItem, date: string, time: string, notes: string) => {
     if (!selectedProviderDetail) return;
-
-    const newBooking: Booking = {
+    const newBooking: BookingOrOrder = {
       id: `b-${Date.now()}`,
+      type: 'servicio',
       providerId: selectedProviderDetail.id,
       providerName: `${selectedProviderDetail.name} (${selectedProviderDetail.businessName})`,
       providerAvatar: selectedProviderDetail.avatarUrl,
-      serviceName: service.name,
-      category: selectedProviderDetail.category,
+      itemName: service.name,
+      category: service.category,
       date,
       time,
       status: 'pendiente',
-      priceEstimate: service.priceEstimate,
+      totalAmount: service.priceEstimate,
       notes,
       clientName: session.name,
       clientPhone: session.phone,
       clientEmail: session.email,
-      address: `Pereira, Risaralda`,
+      clientAddress: session.fixedLocation.address,
+      clientCoordinates: session.fixedLocation.coordinates,
       createdAt: new Date().toISOString().split('T')[0]
     };
 
-    setBookings([newBooking, ...bookings]);
+    await saveBookingToDB(newBooking);
+    setBookings(prev => [newBooking, ...prev]);
     setSelectedProviderDetail(null);
-    setActiveTab('bookings');
+    navigateToTab('bookings');
   };
 
-  // Update status of a booking
-  const handleUpdateBookingStatus = (id: string, newStatus: Booking['status']) => {
-    setBookings((prev) =>
-      prev.map((b) => (b.id === id ? { ...b, status: newStatus } : b))
-    );
-  };
-
-  // Reset demo dataset
   const handleResetData = () => {
-    setProviders(INITIAL_PROVIDERS);
-    setBookings(INITIAL_BOOKINGS);
-    setSession({
-      email: 'carloscorreaup@gmail.com',
-      name: 'Carlos Correa',
-      phone: '+57 300 123 4567',
-      city: 'Pereira',
-      mode: 'client',
-      isOnboarded: true,
-      hasChosenCity: true,
-      favorites: ['p1', 'p3'],
-    });
-    alert('Datos restablecidos correctamente a la configuración inicial.');
+    localStorage.clear();
+    window.location.reload();
   };
 
-  // Logout
   const handleLogout = () => {
     localStorage.removeItem(STORAGE_KEYS.SESSION);
     setSession({
       email: '',
       name: '',
-      avatarUrl: '',
       phone: '',
       city: 'Pereira',
+      department: 'Risaralda',
       mode: 'client',
+      role: 'client',
       isOnboarded: false,
       hasChosenCity: false,
       favorites: [],
+      isVerified: false,
+      isActive: true,
+      fixedLocation: {
+        address: '',
+        city: 'Pereira',
+        department: 'Risaralda',
+        coordinates: { lat: 4.81333, lng: -75.69611 },
+        isPublicOnMap: true
+      }
     });
   };
 
-  // 1. First Screen: Onboarding if not completed
   if (!session.isOnboarded) {
     return (
       <OnboardingScreen
-        defaultEmail={session.email || ''}
+        defaultEmail={session.email}
         onComplete={handleCompleteOnboarding}
       />
     );
   }
 
-  // 2. Second Screen: City Selection if not yet chosen
   if (!session.hasChosenCity) {
     return (
       <CitySelectScreen
@@ -281,51 +342,59 @@ export default function App() {
     );
   }
 
-  // 3. Main App Canvas
   return (
     <div className="bg-[#f9f9ff] min-h-screen text-[#141b2b] flex flex-col font-inter selection:bg-[#0052ff] selection:text-white">
-      {/* Top App Bar */}
+      {/* Header */}
       <Header
         currentCity={session.city}
         onOpenCitySelector={() => setShowCityModal(true)}
+        onOpenFirebaseConfig={() => setShowFirebaseModal(true)}
         activeTab={activeTab}
-        setActiveTab={(tab) => {
-          setActiveTab(tab);
-          if (tab === 'provider' && session.mode !== 'provider') {
-            setSession((p) => ({ ...p, mode: 'provider' }));
-          }
-        }}
+        setActiveTab={navigateToTab}
         isProviderMode={session.mode === 'provider'}
         onToggleProviderMode={handleToggleProviderMode}
-        bookingsCount={bookings.filter((b) => b.status === 'pendiente').length}
+        ordersCount={bookings.filter(b => b.status === 'pendiente' || b.status === 'en_camino').length}
         userAvatarUrl={session.avatarUrl}
+        isAdmin={isSuperAdmin}
+        onBack={tabHistory.length > 1 ? handleGoBack : undefined}
       />
 
-      {/* Main Views Container */}
-      <div className="flex-grow">
+      <main className="flex-1">
         {activeTab === 'explore' && (
           <ExploreView
             currentCity={session.city}
             providers={providers}
-            onSwitchToProviderMode={() => {
-              setSession((p) => ({ ...p, mode: 'provider' }));
-              setActiveTab('provider');
-            }}
-            onContactWhatsApp={handleContactWhatsApp}
-            onViewDetails={(p) => setSelectedProviderDetail(p)}
-            favorites={session.favorites}
+            products={products}
+            userSession={session}
+            onSelectProvider={p => setSelectedProviderDetail(p)}
+            onSelectProduct={prod => setSelectedProductDetail(prod)}
+            onContactWhatsApp={(p, prod) => setWhatsAppModalData({ provider: p, product: prod })}
             onToggleFavorite={handleToggleFavorite}
+            onOpenCitySelector={() => setShowCityModal(true)}
+            favorites={session.favorites}
+          />
+        )}
+
+        {activeTab === 'map' && (
+          <SnapMapView
+            currentCity={session.city}
+            providers={providers}
+            products={products}
+            userSession={session}
+            onSelectProvider={p => setSelectedProviderDetail(p)}
+            onContactWhatsApp={p => setWhatsAppModalData({ provider: p })}
+            onBack={handleGoBack}
           />
         )}
 
         {activeTab === 'provider' && (
           <ProviderModeView
             currentCity={session.city}
-            existingProfile={session.providerProfile}
+            userSession={session}
             onSaveProviderProfile={handleSaveProviderProfile}
             onSwitchToClientMode={() => {
-              setSession((p) => ({ ...p, mode: 'client' }));
-              setActiveTab('explore');
+              setSession(p => ({ ...p, mode: 'client' }));
+              navigateToTab('explore');
             }}
           />
         )}
@@ -333,12 +402,24 @@ export default function App() {
         {activeTab === 'bookings' && (
           <BookingsView
             bookings={bookings}
-            onUpdateBookingStatus={handleUpdateBookingStatus}
-            onExploreServices={() => setActiveTab('explore')}
-            onOpenWhatsApp={(phone, text) => {
-              window.open(`https://wa.me/${phone.replace(/\D/g, '')}?text=${encodeURIComponent(text)}`, '_blank');
+            onUpdateBookingStatus={(id, st) => updateBookingStatusInDB(id, st)}
+            onExploreServices={() => navigateToTab('explore')}
+            onOpenWhatsApp={(phone, msg) => {
+              window.open(`https://wa.me/${phone.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`, '_blank');
             }}
             currentCity={session.city}
+          />
+        )}
+
+        {activeTab === 'admin' && isSuperAdmin && (
+          <AdminDashboardView
+            users={users}
+            providers={providers}
+            products={products}
+            bookings={bookings}
+            onToggleUserStatus={handleToggleUserStatus}
+            onToggleProviderVerification={handleToggleProviderVerification}
+            onBack={handleGoBack}
           />
         )}
 
@@ -347,29 +428,27 @@ export default function App() {
             userSession={session}
             providers={providers}
             onOpenCitySelector={() => setShowCityModal(true)}
+            onOpenFirebaseConfig={() => setShowFirebaseModal(true)}
             onToggleProviderMode={handleToggleProviderMode}
-            onViewProvider={(p) => setSelectedProviderDetail(p)}
+            onViewProvider={p => setSelectedProviderDetail(p)}
+            onOpenAdminPanel={() => navigateToTab('admin')}
             onLogout={handleLogout}
             onResetData={handleResetData}
+            onBack={handleGoBack}
           />
         )}
-      </div>
+      </main>
 
-      {/* Mobile Bottom Navigation Bar */}
+      {/* Mobile Bottom Navigation */}
       <BottomNavBar
         activeTab={activeTab}
-        setActiveTab={(tab) => {
-          setActiveTab(tab);
-          if (tab === 'provider' && session.mode !== 'provider') {
-            setSession((p) => ({ ...p, mode: 'provider' }));
-          }
-        }}
+        setActiveTab={navigateToTab}
         isProviderMode={session.mode === 'provider'}
-        onToggleProviderMode={handleToggleProviderMode}
-        bookingsCount={bookings.filter((b) => b.status === 'pendiente').length}
+        ordersCount={bookings.filter(b => b.status === 'pendiente' || b.status === 'en_camino').length}
+        isAdmin={isSuperAdmin}
       />
 
-      {/* City Switcher Modal */}
+      {/* MODALS */}
       {showCityModal && (
         <CitySelectScreen
           isModal={true}
@@ -379,46 +458,74 @@ export default function App() {
         />
       )}
 
-      {/* Provider Details Modal */}
+      {showFirebaseModal && (
+        <FirebaseConfigModal
+          onClose={() => setShowFirebaseModal(false)}
+          onConfigSaved={() => setShowFirebaseModal(false)}
+        />
+      )}
+
       {selectedProviderDetail && (
         <ProviderDetailModal
           provider={selectedProviderDetail}
+          currentCity={session.city}
           onClose={() => setSelectedProviderDetail(null)}
-          onBookService={handleBookService}
           onContactWhatsApp={(p, msg) => {
             setSelectedProviderDetail(null);
             setWhatsAppModalData({ provider: p, message: msg });
           }}
-          currentCity={session.city}
+          onBookService={handleBookService}
+          onSelectProduct={prod => setSelectedProductDetail(prod)}
         />
       )}
 
-      {/* WhatsApp Action Modal */}
+      {selectedProductDetail && (
+        <ProductDetailModal
+          product={selectedProductDetail}
+          onClose={() => setSelectedProductDetail(null)}
+          onContactWhatsApp={prod => {
+            const prov = providers.find(p => p.id === prod.providerId) || INITIAL_PROVIDERS[0];
+            setSelectedProductDetail(null);
+            setWhatsAppModalData({ provider: prov, product: prod });
+          }}
+          onViewProvider={providerId => {
+            const prov = providers.find(p => p.id === providerId);
+            if (prov) {
+              setSelectedProductDetail(null);
+              setSelectedProviderDetail(prov);
+            }
+          }}
+        />
+      )}
+
       {whatsAppModalData && (
         <WhatsAppModal
           provider={whatsAppModalData.provider}
+          product={whatsAppModalData.product}
           initialMessage={whatsAppModalData.message}
           onClose={() => setWhatsAppModalData(null)}
-          onSendBookingConfirmation={(p, msg) => {
-            // Register an inquiry in bookings
-            const newBooking: Booking = {
-              id: `b-wa-${Date.now()}`,
-              providerId: p.id,
-              providerName: `${p.name} (${p.businessName})`,
-              providerAvatar: p.avatarUrl,
-              serviceName: 'Consulta / Cotización vía WhatsApp',
-              category: p.category,
+          onSendBookingConfirmation={async (prov, msg) => {
+            const order: BookingOrOrder = {
+              id: `ord-wa-${Date.now()}`,
+              type: whatsAppModalData.product ? 'producto' : 'consulta',
+              providerId: prov.id,
+              providerName: prov.name,
+              providerAvatar: prov.avatarUrl,
+              itemName: whatsAppModalData.product ? whatsAppModalData.product.name : 'Consulta WhatsApp',
+              category: prov.category,
               date: new Date().toISOString().split('T')[0],
               time: 'Inmediata',
               status: 'pendiente',
+              totalAmount: whatsAppModalData.product ? `$${whatsAppModalData.product.price.toLocaleString('es-CO')} COP` : 'Por cotizar',
               notes: msg,
               clientName: session.name,
               clientPhone: session.phone,
               clientEmail: session.email,
+              clientAddress: session.fixedLocation.address,
               createdAt: new Date().toISOString().split('T')[0]
             };
-            setBookings([newBooking, ...bookings]);
-            setWhatsAppModalData(null);
+            await saveBookingToDB(order);
+            setBookings(prev => [order, ...prev]);
           }}
         />
       )}

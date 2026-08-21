@@ -1,34 +1,96 @@
+// ==========================================
+// NEXSERVICE.APP-1 - DEFINICIONES DE TIPOS
+// ==========================================
+
+export type UserRole = 'client' | 'provider' | 'seller' | 'both' | 'admin';
+
+export interface Coordinates {
+  lat: number;
+  lng: number;
+}
+
+export interface FixedLocation {
+  address: string;
+  neighborhood?: string;
+  city: string;
+  department: string;
+  coordinates: Coordinates;
+  isPublicOnMap: boolean;
+  notes?: string;
+}
+
 export interface City {
   id: string;
   name: string;
   department: string;
   isPopular?: boolean;
+  coordinates: Coordinates;
 }
 
 export interface Category {
   id: string;
   name: string;
-  icon: string; // Material symbol or lucide
+  icon: string;
   count: number;
+  type: 'all' | 'producto' | 'servicio' | 'both';
   description?: string;
   color?: string;
 }
 
+export interface ProductItem {
+  id: string;
+  providerId: string;
+  providerName: string;
+  providerBusinessName?: string;
+  providerAvatar?: string;
+  providerPhone?: string;
+  providerWhatsapp?: string;
+  name: string;
+  description: string;
+  price: number;
+  originalPrice?: number;
+  category: string;
+  tags: string[];
+  images: string[];
+  inStock: boolean;
+  stockQuantity?: number;
+  condition: 'nuevo' | 'usado' | 'reacondicionado';
+  brand?: string;
+  deliveryAvailable: boolean;
+  deliveryFee?: number;
+  warranty?: string;
+  city: string;
+  location?: FixedLocation;
+  verifiedSeller?: boolean;
+  rating?: number;
+  reviewsCount?: number;
+  createdAt?: string;
+}
+
 export interface ServiceItem {
   id: string;
+  providerId: string;
   name: string;
   description?: string;
-  priceEstimate?: string;
+  priceEstimate: string;
   duration?: string;
+  category: string;
+  tags?: string[];
+  isHomeService: boolean;
+  warranty?: string;
 }
 
 export interface Review {
   id: string;
   author: string;
+  authorAvatar?: string;
   rating: number;
   date: string;
   comment: string;
   verifiedBooking?: boolean;
+  targetType?: 'producto' | 'servicio' | 'proveedor';
+  targetId?: string;
+  helpfulCount?: number;
 }
 
 export interface Provider {
@@ -36,56 +98,111 @@ export interface Provider {
   name: string;
   businessName: string;
   category: string;
+  offerType: 'products' | 'services' | 'both';
   rating: number;
   reviewCount: number;
   tags: string[];
   phone: string;
   whatsapp: string;
-  address?: string;
+  email?: string;
+  address: string;
+  coordinates: Coordinates;
+  city: string;
+  department: string;
+  isFixedLocationVisibleOnMap: boolean;
   website?: string;
   social?: string;
   verified: boolean;
+  verifiedBadgeType?: 'oficial' | 'destacado' | 'verificado';
   avatarUrl: string;
-  coverUrl?: string;
+  bannerUrl?: string;
   description: string;
-  city: string;
   services: ServiceItem[];
+  products: ProductItem[];
   reviews: Review[];
   isDelivery: boolean;
   isFeatured?: boolean;
   yearsOfExperience?: number;
   responseTime?: string;
   priceRange?: string;
+  openHours?: string;
+  documentVerified?: boolean;
+  rutVerified?: boolean;
+  isActive?: boolean;
 }
 
-export interface Booking {
+export interface MapMarkerItem {
   id: string;
+  type: 'provider' | 'seller' | 'client' | 'product';
+  name: string;
+  businessName?: string;
+  avatarUrl: string;
+  category: string;
+  rating?: number;
+  reviewCount?: number;
+  coordinates: Coordinates;
+  address: string;
+  city: string;
+  verified: boolean;
+  phone?: string;
+  whatsapp?: string;
+  priceSnippet?: string;
+  itemCountSnippet?: string;
+  offerType?: 'products' | 'services' | 'both';
+  rawObject?: Provider | ProductItem | UserSession;
+}
+
+export interface BookingOrOrder {
+  id: string;
+  type: 'servicio' | 'producto' | 'consulta';
   providerId: string;
   providerName: string;
   providerAvatar: string;
-  serviceName: string;
+  itemId?: string;
+  itemName: string;
   category: string;
   date: string;
   time: string;
-  status: 'pendiente' | 'confirmada' | 'completada' | 'cancelada';
-  priceEstimate?: string;
+  status: 'pendiente' | 'confirmada' | 'en_camino' | 'completada' | 'cancelada';
+  totalAmount?: number | string;
   notes?: string;
   clientName: string;
   clientPhone: string;
   clientEmail: string;
-  address?: string;
+  clientAddress: string;
+  clientCoordinates?: Coordinates;
   createdAt: string;
+  isDeliveryRequested?: boolean;
+  quantity?: number;
 }
 
 export interface UserSession {
+  id?: string;
   email: string;
   name: string;
   avatarUrl?: string;
   phone: string;
   city: string;
+  department: string;
   mode: 'client' | 'provider';
+  role: UserRole;
   isOnboarded: boolean;
   hasChosenCity: boolean;
   favorites: string[];
+  fixedLocation: FixedLocation;
+  isVerified: boolean;
+  isActive: boolean;
+  isAdmin?: boolean;
   providerProfile?: Partial<Provider>;
+  createdAt?: string;
+}
+
+export interface FirebaseConfig {
+  apiKey: string;
+  authDomain: string;
+  projectId: string;
+  storageBucket: string;
+  messagingSenderId: string;
+  appId: string;
+  measurementId?: string;
 }
