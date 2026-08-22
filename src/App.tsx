@@ -351,22 +351,31 @@ export default function App() {
 
   if (!session.email) {
     return (
-      <AuthScreen
-        onAuthSuccess={async (authData) => {
-          const dbUser = await getUserByEmail(authData.email);
-          if (dbUser && dbUser.isOnboarded) {
-            setSession(dbUser);
-          } else {
-            setSession(prev => ({
-              ...prev,
-              email: authData.email,
-              name: authData.name || prev.name,
-              avatarUrl: authData.avatarUrl || prev.avatarUrl,
-              isOnboarded: false
-            }));
-          }
-        }}
-      />
+      <>
+        <AuthScreen
+          onAuthSuccess={async (authData) => {
+            const dbUser = await getUserByEmail(authData.email);
+            if (dbUser && dbUser.isOnboarded) {
+              setSession(dbUser);
+            } else {
+              setSession(prev => ({
+                ...prev,
+                email: authData.email,
+                name: authData.name || prev.name,
+                avatarUrl: authData.avatarUrl || prev.avatarUrl,
+                isOnboarded: false
+              }));
+            }
+          }}
+          onOpenFirebaseConfig={() => setShowFirebaseModal(true)}
+        />
+        {showFirebaseModal && (
+          <FirebaseConfigModal
+            onClose={() => setShowFirebaseModal(false)}
+            onConfigSaved={() => setShowFirebaseModal(false)}
+          />
+        )}
+      </>
     );
   }
 
