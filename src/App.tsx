@@ -19,6 +19,7 @@ import { ReportModal } from './components/ReportModal';
 import { RatingReviewModal } from './components/RatingReviewModal';
 import { AuthScreen } from './components/AuthScreen';
 import { SplashScreen } from './components/SplashScreen';
+import { PWAInstallBanner } from './components/PWAInstallBanner';
 import { auth, isFirebaseConnected } from './services/firebase';
 import { AlertTriangle, ShieldAlert, Scale, Clock, CheckCircle2 } from 'lucide-react';
 import {
@@ -809,6 +810,9 @@ export default function App() {
           onSubmitReview={handleSubmitReview}
         />
       )}
+
+      {/* PWA SMART INSTALL BANNER */}
+      <PWAInstallBanner />
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, MapPin, ShieldCheck, Flame, RefreshCw, LogOut, Store, ShieldAlert, ArrowLeft, FileText, Crosshair, Navigation, CheckCircle2, Chrome, Star } from 'lucide-react';
+import { User, MapPin, ShieldCheck, Flame, RefreshCw, LogOut, Store, ShieldAlert, ArrowLeft, FileText, Crosshair, Navigation, CheckCircle2, Chrome, Star, Download, Smartphone } from 'lucide-react';
 import { UserSession, Provider } from '../types';
 import { DataPolicyModal } from './DataPolicyModal';
 import { requestUserCoordinates, reverseGeocodeAddress, findNearestCity } from '../utils/geoUtils';
@@ -231,6 +231,34 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               <div className="text-xs text-slate-500">Actual: {userSession.city}</div>
             </div>
           </div>
+        </button>
+
+        <button
+          onClick={() => {
+            const installEvent = (window as any).__pwaInstallPrompt;
+            if (installEvent) {
+              installEvent.prompt();
+            } else {
+              alert('Para instalar en tu celular:\n\n📱 En Android / Chrome: Toca los 3 puntos (⋮) arriba a la derecha y selecciona "Instalar aplicación" o "Agregar a la pantalla principal".\n\n🍏 En iPhone / Safari: Toca el botón Compartir (cuadrado con flecha hacia arriba) y selecciona "Agregar al inicio".');
+            }
+          }}
+          className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-gradient-to-r from-blue-50/80 to-indigo-50/80 hover:from-blue-100 hover:to-indigo-100 text-left transition-all border border-blue-200/80 cursor-pointer"
+        >
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-[#0052ff] text-white shadow-sm shadow-blue-500/30">
+              <Smartphone className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="font-bold text-sm text-slate-900 flex items-center gap-1.5">
+                <span>Instalar App en el Celular</span>
+                <span className="bg-emerald-500 text-white text-[9px] font-black px-1.5 py-0.2 rounded-full">
+                  PWA
+                </span>
+              </div>
+              <div className="text-xs text-slate-500">Acceso rápido directo con el logo oficial en tu pantalla</div>
+            </div>
+          </div>
+          <Download className="w-4 h-4 text-[#0052ff]" />
         </button>
 
         <button

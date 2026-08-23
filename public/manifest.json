@@ -1,0 +1,50 @@
+{
+  "name": "NexService.app - Red de Servicios y Proveedores",
+  "short_name": "NexService",
+  "description": "Encuentra y ofrece productos y servicios profesionales en tu ciudad a un clic. Red de proveedores verificados.",
+  "start_url": "/",
+  "id": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "window-controls-overlay", "minimal-ui"],
+  "orientation": "portrait",
+  "background_color": "#0a0f1d",
+  "theme_color": "#0052ff",
+  "categories": ["business", "shopping", "lifestyle", "utilities"],
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Explorar Servicios",
+      "short_name": "Explorar",
+      "description": "Busca servicios y productos cerca de ti",
+      "url": "/?tab=explore",
+      "icons": [{ "src": "/logo.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Mapa GPS",
+      "short_name": "Mapa",
+      "description": "Ver mapa interactivo de proveedores",
+      "url": "/?tab=map",
+      "icons": [{ "src": "/logo.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Modo Proveedor",
+      "short_name": "Vender",
+      "description": "Publicar productos y servicios",
+      "url": "/?tab=provider",
+      "icons": [{ "src": "/logo.png", "sizes": "192x192" }]
+    }
+  ]
+}
