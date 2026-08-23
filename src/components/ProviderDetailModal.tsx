@@ -25,6 +25,15 @@ interface ProviderDetailModalProps {
   onBookService: (service: ServiceItem, date: string, time: string, notes: string) => void;
   onSelectProduct?: (product: ProductItem) => void;
   onOpenReportModal?: (target: { id: string; name: string; email: string; avatarUrl?: string; type: 'provider' | 'client' }) => void;
+  onOpenRatingModal?: (target: {
+    id: string;
+    name: string;
+    email?: string;
+    avatarUrl?: string;
+    type: 'provider' | 'client';
+    currentRating?: number;
+    reviewCount?: number;
+  }) => void;
 }
 
 export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
@@ -34,6 +43,7 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
   onContactWhatsApp,
   onBookService,
   onOpenReportModal,
+  onOpenRatingModal,
 }) => {
   const [activeTab, setActiveTab] = useState<'catalog' | 'services' | 'location' | 'reviews'>('catalog');
   const [selectedService, setSelectedService] = useState<ServiceItem | null>(null);
@@ -65,7 +75,7 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
 
           <button
             onClick={onClose}
-            className="absolute top-4 left-4 flex items-center gap-1.5 px-3 py-1.5 bg-white/90 hover:bg-white text-slate-800 rounded-full shadow-md text-xs font-bold transition-all z-10"
+            className="absolute top-4 left-4 flex items-center gap-1.5 px-3 py-1.5 bg-white/90 hover:bg-white text-slate-800 rounded-full shadow-md text-xs font-bold transition-all z-10 cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4 text-[#0052ff]" />
             <span>Volver</span>
@@ -73,7 +83,7 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
 
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 p-2 text-slate-700 bg-white/90 hover:bg-white rounded-full shadow-md z-10"
+            className="absolute top-4 right-4 p-2 text-slate-700 bg-white/90 hover:bg-white rounded-full shadow-md z-10 cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -104,11 +114,15 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
               <p className="text-sm text-slate-500 font-medium">{provider.businessName}</p>
               
               <div className="flex items-center gap-3 mt-1 text-xs text-slate-500">
-                <div className="flex items-center gap-1 text-amber-500 font-bold">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('reviews')}
+                  className="flex items-center gap-1 text-amber-500 font-bold hover:underline cursor-pointer"
+                >
                   <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
                   <span>{provider.rating.toFixed(1)}</span>
                   <span className="text-slate-400 font-normal">({provider.reviewCount} reseñas)</span>
-                </div>
+                </button>
                 <span>•</span>
                 <div className="flex items-center gap-1">
                   <MapPin className="w-3.5 h-3.5 text-[#0052ff]" />
@@ -125,6 +139,26 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
                 <MessageSquare className="w-4 h-4" />
                 <span>WhatsApp Directo</span>
               </button>
+
+              {onOpenRatingModal && (
+                <button
+                  type="button"
+                  onClick={() => onOpenRatingModal({
+                    id: provider.id,
+                    name: provider.name,
+                    email: provider.email,
+                    avatarUrl: provider.avatarUrl,
+                    type: 'provider',
+                    currentRating: provider.rating,
+                    reviewCount: provider.reviewCount
+                  })}
+                  className="flex items-center gap-1.5 px-3 py-2.5 rounded-2xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold transition-all cursor-pointer shadow-xs"
+                  title="Calificar a este proveedor con estrellas"
+                >
+                  <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                  <span>Calificar (1-5 ⭐)</span>
+                </button>
+              )}
 
               {onOpenReportModal && (
                 <button
@@ -186,7 +220,7 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
           <div className="flex border-b border-slate-200 text-xs font-semibold mb-5 gap-4 overflow-x-auto">
             <button
               onClick={() => setActiveTab('catalog')}
-              className={`pb-2.5 flex items-center gap-2 border-b-2 transition-all whitespace-nowrap ${
+              className={`pb-2.5 flex items-center gap-2 border-b-2 transition-all whitespace-nowrap cursor-pointer ${
                 activeTab === 'catalog'
                   ? 'border-[#0052ff] text-[#0052ff] font-bold'
                   : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -197,7 +231,7 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
             </button>
             <button
               onClick={() => setActiveTab('services')}
-              className={`pb-2.5 flex items-center gap-2 border-b-2 transition-all whitespace-nowrap ${
+              className={`pb-2.5 flex items-center gap-2 border-b-2 transition-all whitespace-nowrap cursor-pointer ${
                 activeTab === 'services'
                   ? 'border-[#0052ff] text-[#0052ff] font-bold'
                   : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -207,8 +241,19 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
               <span>Servicios ({provider.services.length})</span>
             </button>
             <button
+              onClick={() => setActiveTab('reviews')}
+              className={`pb-2.5 flex items-center gap-2 border-b-2 transition-all whitespace-nowrap cursor-pointer ${
+                activeTab === 'reviews'
+                  ? 'border-[#0052ff] text-[#0052ff] font-bold'
+                  : 'border-transparent text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+              <span>Reseñas ({provider.reviews?.length || 0})</span>
+            </button>
+            <button
               onClick={() => setActiveTab('location')}
-              className={`pb-2.5 flex items-center gap-2 border-b-2 transition-all whitespace-nowrap ${
+              className={`pb-2.5 flex items-center gap-2 border-b-2 transition-all whitespace-nowrap cursor-pointer ${
                 activeTab === 'location'
                   ? 'border-[#0052ff] text-[#0052ff] font-bold'
                   : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -239,7 +284,7 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
                       </div>
                       <button
                         onClick={() => onContactWhatsApp(provider, `Hola ${provider.name}, deseo comprar el producto "${prod.name}".`)}
-                        className="bg-emerald-600 hover:bg-emerald-500 text-white p-2 rounded-xl text-xs"
+                        className="bg-emerald-600 hover:bg-emerald-500 text-white p-2 rounded-xl text-xs cursor-pointer"
                       >
                         <MessageSquare className="w-4 h-4" />
                       </button>
@@ -281,13 +326,13 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
                         setSelectedService(srv);
                         setShowBookingForm(true);
                       }}
-                      className="bg-[#0052ff] hover:bg-blue-600 text-white text-xs font-bold py-2 px-3 rounded-xl transition-all"
+                      className="bg-[#0052ff] hover:bg-blue-600 text-white text-xs font-bold py-2 px-3 rounded-xl transition-all cursor-pointer"
                     >
                       Reservar
                     </button>
                     <button
                       onClick={() => onContactWhatsApp(provider, `Hola ${provider.name}, deseo cotizar el servicio "${srv.name}".`)}
-                      className="bg-emerald-600 hover:bg-emerald-500 text-white p-2 rounded-xl text-xs"
+                      className="bg-emerald-600 hover:bg-emerald-500 text-white p-2 rounded-xl text-xs cursor-pointer"
                     >
                       <MessageSquare className="w-4 h-4" />
                     </button>
@@ -297,7 +342,88 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
             </div>
           )}
 
-          {/* TAB 3: LOCATION */}
+          {/* TAB 3: REVIEWS & 1-5 STARS */}
+          {activeTab === 'reviews' && (
+            <div className="space-y-4">
+              {/* Summary card */}
+              <div className="bg-gradient-to-r from-amber-50 to-blue-50 border border-amber-200/80 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="text-3xl sm:text-4xl font-black text-amber-500 flex items-center gap-1 font-geist">
+                    <Star className="w-8 h-8 fill-amber-400 text-amber-400" />
+                    <span>{provider.rating.toFixed(1)}</span>
+                  </div>
+                  <div>
+                    <div className="text-xs font-extrabold text-slate-900">Promedio de Calificación</div>
+                    <div className="text-[11px] text-slate-500">Basado en {provider.reviewCount} calificaciones de clientes</div>
+                  </div>
+                </div>
+
+                {onOpenRatingModal && (
+                  <button
+                    type="button"
+                    onClick={() => onOpenRatingModal({
+                      id: provider.id,
+                      name: provider.name,
+                      email: provider.email,
+                      avatarUrl: provider.avatarUrl,
+                      type: 'provider',
+                      currentRating: provider.rating,
+                      reviewCount: provider.reviewCount
+                    })}
+                    className="bg-[#0052ff] hover:bg-blue-700 text-white font-bold text-xs py-2.5 px-4 rounded-xl flex items-center justify-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                  >
+                    <Star className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
+                    <span>Calificar (1 a 5 ⭐)</span>
+                  </button>
+                )}
+              </div>
+
+              {/* Reviews List */}
+              {provider.reviews && provider.reviews.length > 0 ? (
+                <div className="space-y-3">
+                  {provider.reviews.map((rev) => (
+                    <div key={rev.id} className="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-full bg-blue-100 text-[#0052ff] text-xs font-bold flex items-center justify-center">
+                            {rev.author.substring(0, 2).toUpperCase()}
+                          </div>
+                          <div>
+                            <span className="text-xs font-bold text-slate-900">{rev.author}</span>
+                            <span className="text-[10px] text-slate-400 ml-2">{rev.date}</span>
+                          </div>
+                        </div>
+
+                        {/* Stars */}
+                        <div className="flex items-center gap-0.5">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star
+                              key={star}
+                              className={`w-3.5 h-3.5 ${
+                                star <= rev.rating
+                                  ? 'text-amber-400 fill-amber-400'
+                                  : 'text-slate-200'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      </div>
+
+                      <p className="text-xs text-slate-700 leading-relaxed italic">
+                        "{rev.comment}"
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 bg-slate-50 rounded-2xl text-slate-500 text-xs">
+                  Aún no hay reseñas escritas. ¡Sé el primero en calificar a este proveedor!
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* TAB 4: LOCATION */}
           {activeTab === 'location' && (
             <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2">
               <h4 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">

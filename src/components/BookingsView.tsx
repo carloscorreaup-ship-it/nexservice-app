@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar, ShoppingBag, Wrench, MessageSquare, CheckCircle, Clock, AlertCircle, Flag } from 'lucide-react';
+import { Calendar, ShoppingBag, Wrench, MessageSquare, CheckCircle, Clock, AlertCircle, Flag, Star } from 'lucide-react';
 import { BookingOrOrder } from '../types';
 
 interface BookingsViewProps {
@@ -9,6 +9,14 @@ interface BookingsViewProps {
   onOpenWhatsApp: (phone: string, text: string) => void;
   currentCity: string;
   onOpenReportModal?: (target: { id: string; name: string; email: string; avatarUrl?: string; type: 'provider' | 'client' }) => void;
+  onOpenRatingModal?: (target: {
+    id: string;
+    name: string;
+    email?: string;
+    avatarUrl?: string;
+    type: 'provider' | 'client';
+    itemName?: string;
+  }) => void;
 }
 
 export const BookingsView: React.FC<BookingsViewProps> = ({
@@ -18,6 +26,7 @@ export const BookingsView: React.FC<BookingsViewProps> = ({
   onOpenWhatsApp,
   currentCity,
   onOpenReportModal,
+  onOpenRatingModal,
 }) => {
   return (
     <div className="pb-24 max-w-4xl mx-auto px-4 pt-4">
@@ -79,14 +88,32 @@ export const BookingsView: React.FC<BookingsViewProps> = ({
               <p className="text-xs text-slate-500 mb-3 italic">"{b.notes}"</p>
             )}
 
-            <div className="flex gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <button
                 onClick={() => onOpenWhatsApp(b.clientPhone, `Hola, sobre mi solicitud #${b.id} de "${b.itemName}"...`)}
                 className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold py-2.5 px-3 rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer"
               >
                 <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />
-                <span>Contactar por WhatsApp</span>
+                <span>WhatsApp</span>
               </button>
+
+              {onOpenRatingModal && (
+                <button
+                  type="button"
+                  onClick={() => onOpenRatingModal({
+                    id: b.providerId,
+                    name: b.providerName,
+                    avatarUrl: b.providerAvatar,
+                    type: 'provider',
+                    itemName: b.itemName
+                  })}
+                  className="px-3.5 py-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
+                  title="Calificar este servicio/producto con estrellas (1 a 5)"
+                >
+                  <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                  <span>Calificar (1-5 ⭐)</span>
+                </button>
+              )}
 
               {onOpenReportModal && (
                 <button

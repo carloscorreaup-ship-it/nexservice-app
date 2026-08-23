@@ -86,12 +86,13 @@ export interface ServiceItem {
 export interface Review {
   id: string;
   author: string;
+  authorEmail?: string;
   authorAvatar?: string;
-  rating: number;
+  rating: number; // 1 to 5
   date: string;
   comment: string;
   verifiedBooking?: boolean;
-  targetType?: 'producto' | 'servicio' | 'proveedor';
+  targetType?: 'producto' | 'servicio' | 'proveedor' | 'cliente';
   targetId?: string;
   helpfulCount?: number;
 }
@@ -201,6 +202,9 @@ export interface UserSession {
   warningsCount?: number;
   sanctionUntil?: string;
   sanctionReason?: string;
+  rating?: number;
+  reviewCount?: number;
+  reviews?: Review[];
   createdAt?: string;
 }
 

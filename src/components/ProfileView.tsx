@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, MapPin, ShieldCheck, Flame, RefreshCw, LogOut, Store, ShieldAlert, ArrowLeft, FileText, Crosshair, Navigation, CheckCircle2, Chrome } from 'lucide-react';
+import { User, MapPin, ShieldCheck, Flame, RefreshCw, LogOut, Store, ShieldAlert, ArrowLeft, FileText, Crosshair, Navigation, CheckCircle2, Chrome, Star } from 'lucide-react';
 import { UserSession, Provider } from '../types';
 import { DataPolicyModal } from './DataPolicyModal';
 import { requestUserCoordinates, reverseGeocodeAddress, findNearestCity } from '../utils/geoUtils';
@@ -36,6 +36,8 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
 
   const isAdmin = userSession.email.toLowerCase() === 'carloscorreaup@gmail.com';
   const effectiveAvatar = userSession.avatarUrl || getEmailAvatarUrl(userSession.email, userSession.name);
+  const clientRating = userSession.rating || 5.0;
+  const clientReviewsCount = userSession.reviewCount || 0;
 
   const handleSyncGpsLocation = async () => {
     setIsSyncingGps(true);
@@ -108,6 +110,18 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               </span>
             )}
           </div>
+
+          {/* Star Rating of User */}
+          <div className="flex items-center gap-2 mt-1">
+            <div className="flex items-center gap-1 text-amber-500 font-extrabold text-xs">
+              <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+              <span>{clientRating.toFixed(1)} / 5.0</span>
+            </div>
+            <span className="text-[11px] text-slate-400">
+              ({clientReviewsCount > 0 ? `${clientReviewsCount} calificaciones de proveedores` : 'Cliente Verificado'})
+            </span>
+          </div>
+
           <div className="flex items-center gap-1.5 text-xs text-slate-500 truncate mt-0.5">
             <Chrome className="w-3 h-3 text-[#0052ff] shrink-0" />
             <span className="truncate">{userSession.email}</span>

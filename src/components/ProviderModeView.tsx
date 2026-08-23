@@ -15,25 +15,39 @@ import {
   AlertCircle,
   Building2,
   Truck,
-  Navigation
+  Navigation,
+  Star,
+  UserCheck,
+  MessageSquare
 } from 'lucide-react';
-import { Provider, ProductItem, ServiceItem, UserSession, ServiceModality } from '../types';
+import { Provider, ProductItem, ServiceItem, UserSession, ServiceModality, BookingOrOrder } from '../types';
 import { formatCurrencyCOP } from '../utils/userUtils';
 
 interface ProviderModeViewProps {
   currentCity: string;
   userSession: UserSession;
+  bookings?: BookingOrOrder[];
   onSaveProviderProfile: (profile: Partial<Provider>) => void;
   onSwitchToClientMode: () => void;
+  onOpenRatingModal?: (target: {
+    id: string;
+    name: string;
+    email?: string;
+    avatarUrl?: string;
+    type: 'provider' | 'client';
+    itemName?: string;
+  }) => void;
 }
 
 export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
   currentCity,
   userSession,
+  bookings = [],
   onSaveProviderProfile,
   onSwitchToClientMode,
+  onOpenRatingModal,
 }) => {
-  const [activeTab, setActiveTab] = useState<'products' | 'services' | 'location' | 'verification'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'services' | 'location' | 'verification' | 'orders'>('products');
   
   // Profile state
   const [businessName, setBusinessName] = useState(userSession.providerProfile?.businessName || userSession.name || 'Mi Negocio');
@@ -181,6 +195,17 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
         >
           <MapPin className="w-4 h-4" />
           <span>Ubicación en Mapa</span>
+        </button>
+        <button
+          onClick={() => setActiveTab('orders')}
+          className={`px-4 py-2 rounded-2xl flex items-center gap-2 transition-all ${
+            activeTab === 'orders'
+              ? 'bg-indigo-600 text-white shadow-md'
+              : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
+          }`}
+        >
+          <Calendar className="w-4 h-4" />
+          <span>Pedidos & Clientes ({bookings.length})</span>
         </button>
         <button
           onClick={() => setActiveTab('verification')}
@@ -438,6 +463,83 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
             <Check className="w-5 h-5 text-emerald-400 shrink-0" />
             <span>Tu cuenta cuenta con insignia de verificación oficial activa para operar en {currentCity}.</span>
           </div>
+        </div>
+      )}
+
+      {/* TAB 5: ORDERS & CLIENT RATINGS */}
+      {activeTab === 'orders' && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between mb-2">
+            <div>
+              <h2 className="text-base font-bold text-white">Pedidos y Clientes Atendidos</h2>
+              <p className="text-xs text-slate-400">Califica a tus clientes de 1 a 5 estrellas para premiar su puntualidad y trato</p>
+            </div>
+          </div>
+
+          {bookings && bookings.length > 0 ? (
+            <div className="space-y-3">
+              {bookings.map((ord) => (
+                <div key={ord.id} className="bg-slate-900 border border-slate-800 rounded-3xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-md">
+                  <div className="flex items-start gap-3">
+                    <div className="w-11 h-11 rounded-2xl bg-indigo-950/80 border border-indigo-500/30 text-indigo-400 font-black flex items-center justify-center text-sm shrink-0">
+                      {ord.clientName ? ord.clientName.substring(0, 2).toUpperCase() : 'CL'}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="text-sm font-bold text-white">{ord.clientName || 'Cliente NexService'}</h4>
+                        <span className="text-[10px] bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-full border border-indigo-500/30 font-semibold">
+                          Cliente
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-300 mt-0.5">
+                        Solicitó: <strong>{ord.itemName}</strong> • <span className="text-emerald-400">{ord.totalAmount}</span>
+                      </p>
+                      <div className="text-[11px] text-slate-400 mt-1 flex items-center gap-2">
+                        <span>📅 {ord.date} {ord.time}</span>
+                        <span>•</span>
+                        <span>📍 {ord.clientAddress}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 self-end sm:self-auto flex-wrap">
+                    {onOpenRatingModal && (
+                      <button
+                        type="button"
+                        onClick={() => onOpenRatingModal({
+                          id: ord.clientEmail || `client-${ord.id}`,
+                          name: ord.clientName || 'Cliente',
+                          email: ord.clientEmail,
+                          type: 'client',
+                          itemName: ord.itemName
+                        })}
+                        className="bg-amber-500 hover:bg-amber-400 text-amber-950 font-extrabold text-xs py-2.5 px-4 rounded-xl flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                      >
+                        <Star className="w-3.5 h-3.5 fill-amber-950 text-amber-950" />
+                        <span>Calificar Cliente (1-5 ⭐)</span>
+                      </button>
+                    )}
+
+                    {ord.clientPhone && (
+                      <button
+                        type="button"
+                        onClick={() => window.open(`https://wa.me/${ord.clientPhone.replace(/\D/g, '')}?text=Hola+${encodeURIComponent(ord.clientName || 'estimado cliente')},+te+contacto+sobre+tu+pedido+de+${encodeURIComponent(ord.itemName)}`, '_blank')}
+                        className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-2.5 px-3 rounded-xl flex items-center gap-1 transition-all cursor-pointer"
+                      >
+                        <MessageSquare className="w-3.5 h-3.5" />
+                        <span>WhatsApp</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12 bg-slate-900 border border-slate-800 rounded-3xl p-8 text-slate-400 text-xs">
+              <UserCheck className="w-10 h-10 text-slate-600 mx-auto mb-2" />
+              Aún no tienes solicitudes directas registradas. Cuando un cliente te contacte o agende, podrás calificarlo aquí con 1 a 5 estrellas.
+            </div>
+          )}
         </div>
       )}
 

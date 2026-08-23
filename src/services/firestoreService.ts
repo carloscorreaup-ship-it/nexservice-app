@@ -451,4 +451,50 @@ export async function resolveReportInDB(
   return updatedReport;
 }
 
+/**
+ * REVIEWS & 1-5 STAR RATINGS SYSTEM (PROVIDERS & CLIENTS)
+ */
+export async function addReviewToTargetInDB(
+  newReview: Review,
+  targetType: 'provider' | 'cliente',
+  targetId: string
+): Promise<{ updatedProvider?: Provider; updatedUser?: UserSession }> {
+  if (targetType === 'provider') {
+    const providers = await getProvidersFromDB();
+    const prov = providers.find(p => p.id === targetId);
+    if (prov) {
+      const existingReviews = prov.reviews || [];
+      const updatedReviews = [newReview, ...existingReviews];
+      const sum = updatedReviews.reduce((acc, r) => acc + (r.rating || 5), 0);
+      const newRating = Number((sum / updatedReviews.length).toFixed(1));
+      const updatedProvider: Provider = {
+        ...prov,
+        reviews: updatedReviews,
+        rating: newRating,
+        reviewCount: updatedReviews.length,
+      };
+      await saveProviderToDB(updatedProvider);
+      return { updatedProvider };
+    }
+  } else if (targetType === 'cliente') {
+    const users = await getUsersFromDB();
+    const user = users.find(u => u.email.toLowerCase() === targetId.toLowerCase());
+    if (user) {
+      const existingReviews = user.reviews || [];
+      const updatedReviews = [newReview, ...existingReviews];
+      const sum = updatedReviews.reduce((acc, r) => acc + (r.rating || 5), 0);
+      const newRating = Number((sum / updatedReviews.length).toFixed(1));
+      const updatedUser: UserSession = {
+        ...user,
+        reviews: updatedReviews,
+        rating: newRating,
+        reviewCount: updatedReviews.length,
+      };
+      await saveUserToDB(updatedUser);
+      return { updatedUser };
+    }
+  }
+  return {};
+}
+
 

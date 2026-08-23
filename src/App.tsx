@@ -16,6 +16,7 @@ import { ProductDetailModal } from './components/ProductDetailModal';
 import { WhatsAppModal } from './components/WhatsAppModal';
 import { FirebaseConfigModal } from './components/FirebaseConfigModal';
 import { ReportModal } from './components/ReportModal';
+import { RatingReviewModal } from './components/RatingReviewModal';
 import { AuthScreen } from './components/AuthScreen';
 import { SplashScreen } from './components/SplashScreen';
 import { auth, isFirebaseConnected } from './services/firebase';
@@ -34,7 +35,8 @@ import {
   getUserByEmail,
   getReportsFromDB,
   saveReportToDB,
-  resolveReportInDB
+  resolveReportInDB,
+  addReviewToTargetInDB
 } from './services/firestoreService';
 import { getEmailAvatarUrl } from './utils/userUtils';
 import { requestUserCoordinates, reverseGeocodeAddress, findNearestCity, DEFAULT_COLOMBIA_COORDS, calculateDistanceKm } from './utils/geoUtils';
@@ -91,6 +93,16 @@ export default function App() {
   const [selectedProductDetail, setSelectedProductDetail] = useState<ProductItem | null>(null);
   const [whatsAppModalData, setWhatsAppModalData] = useState<{ provider: Provider; product?: ProductItem; message?: string } | null>(null);
   const [reportModalData, setReportModalData] = useState<{ id: string; name: string; email: string; avatarUrl?: string; type: 'provider' | 'client' } | null>(null);
+  const [ratingModalTarget, setRatingModalTarget] = useState<{
+    id: string;
+    name: string;
+    email?: string;
+    avatarUrl?: string;
+    type: 'provider' | 'client';
+    currentRating?: number;
+    reviewCount?: number;
+    itemName?: string;
+  } | null>(null);
 
   const isSuperAdmin = session.email.toLowerCase() === 'carloscorreaup@gmail.com';
 
@@ -238,6 +250,26 @@ export default function App() {
       const myUser = freshUsers.find(u => u.email.toLowerCase() === session.email.toLowerCase());
       if (myUser) {
         setSession(myUser);
+      }
+    }
+  };
+
+  const handleSubmitReview = async (
+    review: import('./types').Review,
+    targetType: 'provider' | 'cliente',
+    targetId: string
+  ) => {
+    const { updatedProvider, updatedUser } = await addReviewToTargetInDB(review, targetType, targetId);
+    if (updatedProvider) {
+      setProviders(prev => prev.map(p => (p.id === updatedProvider.id ? updatedProvider : p)));
+      if (selectedProviderDetail && selectedProviderDetail.id === updatedProvider.id) {
+        setSelectedProviderDetail(updatedProvider);
+      }
+    }
+    if (updatedUser) {
+      setUsers(prev => prev.map(u => (u.email.toLowerCase() === updatedUser.email.toLowerCase() ? updatedUser : u)));
+      if (session.email.toLowerCase() === updatedUser.email.toLowerCase()) {
+        setSession(updatedUser);
       }
     }
   };
@@ -566,11 +598,13 @@ export default function App() {
           <ProviderModeView
             currentCity={session.city}
             userSession={session}
+            bookings={bookings}
             onSaveProviderProfile={handleSaveProviderProfile}
             onSwitchToClientMode={() => {
               setSession(p => ({ ...p, mode: 'client' }));
               navigateToTab('explore');
             }}
+            onOpenRatingModal={target => setRatingModalTarget(target)}
           />
         )}
 
@@ -584,6 +618,7 @@ export default function App() {
             }}
             currentCity={session.city}
             onOpenReportModal={target => setReportModalData(target)}
+            onOpenRatingModal={target => setRatingModalTarget(target)}
           />
         )}
 
@@ -663,6 +698,10 @@ export default function App() {
             setSelectedProviderDetail(null);
             setReportModalData(target);
           }}
+          onOpenRatingModal={target => {
+            setSelectedProviderDetail(null);
+            setRatingModalTarget(target);
+          }}
         />
       )}
 
@@ -723,6 +762,15 @@ export default function App() {
           targetUser={reportModalData}
           onClose={() => setReportModalData(null)}
           onSubmitReport={handleSubmitReport}
+        />
+      )}
+
+      {ratingModalTarget && (
+        <RatingReviewModal
+          currentUser={session}
+          target={ratingModalTarget}
+          onClose={() => setRatingModalTarget(null)}
+          onSubmitReview={handleSubmitReview}
         />
       )}
     </div>
