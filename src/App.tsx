@@ -98,7 +98,7 @@ export default function App() {
     name: string;
     email?: string;
     avatarUrl?: string;
-    type: 'provider' | 'client';
+    type: 'provider' | 'client' | 'product';
     currentRating?: number;
     reviewCount?: number;
     itemName?: string;
@@ -256,10 +256,10 @@ export default function App() {
 
   const handleSubmitReview = async (
     review: import('./types').Review,
-    targetType: 'provider' | 'cliente',
+    targetType: 'provider' | 'cliente' | 'producto',
     targetId: string
   ) => {
-    const { updatedProvider, updatedUser } = await addReviewToTargetInDB(review, targetType, targetId);
+    const { updatedProvider, updatedUser, updatedProduct } = await addReviewToTargetInDB(review, targetType, targetId);
     if (updatedProvider) {
       setProviders(prev => prev.map(p => (p.id === updatedProvider.id ? updatedProvider : p)));
       if (selectedProviderDetail && selectedProviderDetail.id === updatedProvider.id) {
@@ -270,6 +270,12 @@ export default function App() {
       setUsers(prev => prev.map(u => (u.email.toLowerCase() === updatedUser.email.toLowerCase() ? updatedUser : u)));
       if (session.email.toLowerCase() === updatedUser.email.toLowerCase()) {
         setSession(updatedUser);
+      }
+    }
+    if (updatedProduct) {
+      setProducts(prev => prev.map(p => (p.id === updatedProduct.id ? updatedProduct : p)));
+      if (selectedProductDetail && selectedProductDetail.id === updatedProduct.id) {
+        setSelectedProductDetail(updatedProduct);
       }
     }
   };
@@ -720,6 +726,10 @@ export default function App() {
               setSelectedProductDetail(null);
               setSelectedProviderDetail(prov);
             }
+          }}
+          onOpenRatingModal={target => {
+            setSelectedProductDetail(null);
+            setRatingModalTarget(target);
           }}
         />
       )}

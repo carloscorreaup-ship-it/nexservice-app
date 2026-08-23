@@ -452,13 +452,13 @@ export async function resolveReportInDB(
 }
 
 /**
- * REVIEWS & 1-5 STAR RATINGS SYSTEM (PROVIDERS & CLIENTS)
+ * REVIEWS & 1-5 STAR RATINGS SYSTEM (PROVIDERS, CLIENTS & PRODUCTS)
  */
 export async function addReviewToTargetInDB(
   newReview: Review,
-  targetType: 'provider' | 'cliente',
+  targetType: 'provider' | 'cliente' | 'producto',
   targetId: string
-): Promise<{ updatedProvider?: Provider; updatedUser?: UserSession }> {
+): Promise<{ updatedProvider?: Provider; updatedUser?: UserSession; updatedProduct?: ProductItem }> {
   if (targetType === 'provider') {
     const providers = await getProvidersFromDB();
     const prov = providers.find(p => p.id === targetId);
@@ -492,6 +492,23 @@ export async function addReviewToTargetInDB(
       };
       await saveUserToDB(updatedUser);
       return { updatedUser };
+    }
+  } else if (targetType === 'producto') {
+    const products = await getProductsFromDB();
+    const prod = products.find(p => p.id === targetId);
+    if (prod) {
+      const existingReviews = prod.reviews || [];
+      const updatedReviews = [newReview, ...existingReviews];
+      const sum = updatedReviews.reduce((acc, r) => acc + (r.rating || 5), 0);
+      const newRating = Number((sum / updatedReviews.length).toFixed(1));
+      const updatedProduct: ProductItem = {
+        ...prod,
+        reviews: updatedReviews,
+        rating: newRating,
+        reviewsCount: updatedReviews.length,
+      };
+      await saveProductToDB(updatedProduct);
+      return { updatedProduct };
     }
   }
   return {};

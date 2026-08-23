@@ -51,6 +51,7 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
   const [bookTime, setBookTime] = useState('10:00 AM');
   const [bookNotes, setBookNotes] = useState('');
   const [showBookingForm, setShowBookingForm] = useState(false);
+  const [previewZoomImage, setPreviewZoomImage] = useState<string | null>(null);
 
   const handleConfirmBooking = () => {
     if (!selectedService || !bookDate) {
@@ -412,6 +413,26 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
                       <p className="text-xs text-slate-700 leading-relaxed italic">
                         "{rev.comment}"
                       </p>
+
+                      {/* Attached Photo */}
+                      {(rev.imageUrl || (rev.images && rev.images[0])) && (
+                        <div className="pt-1">
+                          <button
+                            type="button"
+                            onClick={() => setPreviewZoomImage(rev.imageUrl || (rev.images && rev.images[0]) || null)}
+                            className="group relative rounded-xl overflow-hidden border border-slate-200 max-w-[120px] aspect-square block cursor-pointer"
+                          >
+                            <img
+                              src={rev.imageUrl || (rev.images && rev.images[0])}
+                              alt="Foto del servicio/trabajo"
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                            />
+                            <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-[10px] font-bold transition-opacity">
+                              Ver foto
+                            </div>
+                          </button>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -442,6 +463,24 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
             </div>
           )}
         </div>
+
+        {/* IMAGE ZOOM MODAL */}
+        {previewZoomImage && (
+          <div
+            className="fixed inset-0 z-60 bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
+            onClick={() => setPreviewZoomImage(null)}
+          >
+            <div className="relative max-w-lg max-h-[85vh] rounded-2xl overflow-hidden bg-black shadow-2xl">
+              <img src={previewZoomImage} alt="Zoom" className="w-full h-full object-contain max-h-[80vh]" />
+              <button
+                onClick={() => setPreviewZoomImage(null)}
+                className="absolute top-3 right-3 p-2 bg-white/80 hover:bg-white text-slate-900 rounded-full cursor-pointer shadow-md"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* BOOKING MODAL */}
         {showBookingForm && selectedService && (

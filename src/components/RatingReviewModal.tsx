@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { X, Star, Sparkles, CheckCircle2, MessageSquare, Send, ThumbsUp } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { X, Star, Sparkles, CheckCircle2, MessageSquare, Send, Camera, Image, Trash2, Link as LinkIcon, UploadCloud } from 'lucide-react';
 import { UserSession, Review } from '../types';
 
 interface RatingReviewModalProps {
@@ -9,13 +9,13 @@ interface RatingReviewModalProps {
     name: string;
     email?: string;
     avatarUrl?: string;
-    type: 'provider' | 'client';
+    type: 'provider' | 'client' | 'product';
     currentRating?: number;
     reviewCount?: number;
     itemName?: string;
   };
   onClose: () => void;
-  onSubmitReview: (review: Review, targetType: 'provider' | 'cliente', targetId: string) => Promise<void>;
+  onSubmitReview: (review: Review, targetType: 'provider' | 'cliente' | 'producto', targetId: string) => Promise<void>;
 }
 
 const RATING_LEVELS = [
@@ -35,10 +35,31 @@ export const RatingReviewModal: React.FC<RatingReviewModalProps> = ({
   const [rating, setRating] = useState<number>(5);
   const [hoverRating, setHoverRating] = useState<number | null>(null);
   const [comment, setComment] = useState('');
+  const [imageUrl, setImageUrl] = useState<string>('');
+  const [showUrlInput, setShowUrlInput] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
   const currentLevel = RATING_LEVELS.find(r => r.value === (hoverRating || rating)) || RATING_LEVELS[4];
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        alert('La imagen no debe superar los 5MB.');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (typeof reader.result === 'string') {
+          setImageUrl(reader.result);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,14 +79,19 @@ export const RatingReviewModal: React.FC<RatingReviewModalProps> = ({
           day: 'numeric',
         }),
         comment: comment.trim() || `Calificación de ${rating} estrellas otorgada con éxito.`,
+        imageUrl: imageUrl.trim() || undefined,
+        images: imageUrl.trim() ? [imageUrl.trim()] : undefined,
         verifiedBooking: true,
-        targetType: target.type === 'provider' ? 'proveedor' : 'cliente',
+        targetType: target.type === 'provider' ? 'proveedor' : target.type === 'product' ? 'producto' : 'cliente',
         targetId: target.id,
       };
 
+      const mappedTargetType: 'provider' | 'cliente' | 'producto' =
+        target.type === 'provider' ? 'provider' : target.type === 'product' ? 'producto' : 'cliente';
+
       await onSubmitReview(
         newReview,
-        target.type === 'provider' ? 'provider' : 'cliente',
+        mappedTargetType,
         target.id
       );
 
@@ -75,6 +101,12 @@ export const RatingReviewModal: React.FC<RatingReviewModalProps> = ({
     } finally {
       setLoading(false);
     }
+  };
+
+  const getTargetTypeLabel = () => {
+    if (target.type === 'provider') return 'Proveedor';
+    if (target.type === 'product') return 'Producto';
+    return 'Cliente';
   };
 
   return (
@@ -88,9 +120,9 @@ export const RatingReviewModal: React.FC<RatingReviewModalProps> = ({
             </div>
             <div>
               <h3 className="font-black text-base sm:text-lg">
-                Calificar a {target.type === 'provider' ? 'Proveedor' : 'Cliente'}
+                Calificar {getTargetTypeLabel()}
               </h3>
-              <p className="text-xs text-white/80">Evaluación de 1 a 5 estrellas</p>
+              <p className="text-xs text-white/80">Comentario con foto o solo texto (1 a 5 ⭐)</p>
             </div>
           </div>
           <button
@@ -109,7 +141,7 @@ export const RatingReviewModal: React.FC<RatingReviewModalProps> = ({
             </div>
             <h4 className="text-xl font-bold text-slate-900">¡Calificación Publicada!</h4>
             <p className="text-xs text-slate-600 leading-relaxed max-w-sm mx-auto">
-              Tu valoración de <strong>{rating} estrellas ⭐</strong> para <strong className="text-slate-900">{target.name}</strong> ha sido registrada y sumada al promedio oficial de reputación.
+              Tu valoración de <strong>{rating} estrellas ⭐</strong> {imageUrl ? 'con foto adjunta' : 'en texto'} para <strong className="text-slate-900">{target.name}</strong> ha sido guardada con éxito.
             </p>
 
             <button
@@ -133,7 +165,7 @@ export const RatingReviewModal: React.FC<RatingReviewModalProps> = ({
               </div>
               <div className="min-w-0 flex-1">
                 <div className="text-[10px] uppercase font-bold tracking-wider text-[#0052ff]">
-                  {target.type === 'provider' ? 'Proveedor' : 'Cliente'}:
+                  {getTargetTypeLabel()}:
                 </div>
                 <div className="font-black text-sm text-slate-900 truncate">{target.name}</div>
                 {target.itemName && (
@@ -143,7 +175,7 @@ export const RatingReviewModal: React.FC<RatingReviewModalProps> = ({
             </div>
 
             {/* Interactive Stars Selector */}
-            <div className="bg-gradient-to-b from-amber-50/70 to-white border border-amber-200/80 rounded-2xl p-4 text-center space-y-2">
+            <div className="bg-gradient-to-b from-amber-50/70 to-white border border-amber-200/80 rounded-2xl p-3.5 text-center space-y-2">
               <label className="block text-xs font-bold text-slate-700">
                 Selecciona tu puntuación (1 a 5 estrellas):
               </label>
@@ -162,7 +194,7 @@ export const RatingReviewModal: React.FC<RatingReviewModalProps> = ({
                       title={`${starVal} de 5 estrellas`}
                     >
                       <Star
-                        className={`w-9 h-9 sm:w-10 sm:h-10 transition-colors ${
+                        className={`w-8 h-8 sm:w-9 sm:h-9 transition-colors ${
                           isFilled
                             ? 'text-amber-400 fill-amber-400 drop-shadow-[0_2px_8px_rgba(251,191,36,0.5)]'
                             : 'text-slate-300 hover:text-amber-300'
@@ -174,7 +206,7 @@ export const RatingReviewModal: React.FC<RatingReviewModalProps> = ({
               </div>
 
               {/* Dynamic feedback label */}
-              <div className="pt-1">
+              <div className="pt-0.5">
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-amber-300 rounded-full text-xs font-extrabold text-amber-950 shadow-xs">
                   <span>{currentLevel.emoji}</span>
                   <span>{currentLevel.value} Estrellas • {currentLevel.label}</span>
@@ -183,18 +215,101 @@ export const RatingReviewModal: React.FC<RatingReviewModalProps> = ({
               </div>
             </div>
 
-            {/* Comment Area */}
+            {/* Comment Area (Text Only or with Photo) */}
             <div>
-              <label className="block text-xs font-bold text-slate-800 mb-1">
-                Comentario u opinión sobre la experiencia (opcional):
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-xs font-bold text-slate-800">
+                  Comentario u opinión:
+                </label>
+                <span className="text-[10px] text-slate-400">Texto o con foto</span>
+              </div>
               <textarea
                 value={comment}
                 onChange={e => setComment(e.target.value)}
-                placeholder={`Cuenta tu experiencia con ${target.name}: puntualidad, amabilidad, calidad...`}
+                placeholder={`Cuenta tu experiencia con ${target.name}: calidad, puntualidad, atención...`}
                 rows={3}
                 className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#0052ff] focus:ring-2 focus:ring-blue-100 transition-all resize-none"
               />
+            </div>
+
+            {/* Photo / Image Attachment Section */}
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
+                  <Camera className="w-3.5 h-3.5 text-[#0052ff]" />
+                  <span>Foto del Servicio o Producto (Opcional)</span>
+                </div>
+                <span className="text-[10px] text-slate-400">Evidencia real</span>
+              </div>
+
+              {imageUrl ? (
+                /* Preview Attached Image */
+                <div className="relative rounded-xl overflow-hidden border border-slate-200 bg-white p-2 flex items-center gap-3">
+                  <img src={imageUrl} alt="Evidencia" className="w-16 h-16 rounded-lg object-cover" />
+                  <div className="flex-1 min-w-0">
+                    <span className="text-xs font-bold text-emerald-600 flex items-center gap-1">
+                      <CheckCircle2 className="w-3.5 h-3.5" /> Foto adjunta
+                    </span>
+                    <p className="text-[10px] text-slate-500 truncate">Se publicará junto a tu reseña</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setImageUrl('')}
+                    className="p-2 text-rose-600 hover:bg-rose-50 rounded-xl transition-all cursor-pointer"
+                    title="Eliminar foto"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                /* Upload Buttons */
+                <div className="flex gap-2">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex-1 py-2 px-3 bg-white hover:bg-blue-50 border border-slate-200 hover:border-[#0052ff] rounded-xl text-xs font-bold text-slate-700 hover:text-[#0052ff] flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                  >
+                    <UploadCloud className="w-3.5 h-3.5" />
+                    <span>Subir Foto / Captura</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowUrlInput(!showUrlInput)}
+                    className="py-2 px-3 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl text-xs font-semibold text-slate-600 flex items-center gap-1 transition-all cursor-pointer"
+                    title="Pegar enlace de imagen"
+                  >
+                    <LinkIcon className="w-3.5 h-3.5" />
+                    <span>Enlace</span>
+                  </button>
+                </div>
+              )}
+
+              {showUrlInput && !imageUrl && (
+                <div className="pt-1 flex gap-2">
+                  <input
+                    type="url"
+                    placeholder="https://ejemplo.com/foto.jpg"
+                    value={imageUrl}
+                    onChange={e => setImageUrl(e.target.value)}
+                    className="flex-1 bg-white border border-slate-200 rounded-xl p-2 text-xs text-slate-900 focus:outline-none focus:border-[#0052ff]"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowUrlInput(false)}
+                    className="px-2.5 py-2 bg-slate-200 text-slate-700 text-xs font-bold rounded-xl"
+                  >
+                    OK
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Actions */}

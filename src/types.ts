@@ -67,6 +67,7 @@ export interface ProductItem {
   verifiedSeller?: boolean;
   rating?: number;
   reviewsCount?: number;
+  reviews?: Review[];
   createdAt?: string;
 }
 
@@ -81,6 +82,7 @@ export interface ServiceItem {
   tags?: string[];
   isHomeService: boolean;
   warranty?: string;
+  reviews?: Review[];
 }
 
 export interface Review {
@@ -91,6 +93,8 @@ export interface Review {
   rating: number; // 1 to 5
   date: string;
   comment: string;
+  imageUrl?: string; // Optional image attached by user
+  images?: string[];
   verifiedBooking?: boolean;
   targetType?: 'producto' | 'servicio' | 'proveedor' | 'cliente';
   targetId?: string;
