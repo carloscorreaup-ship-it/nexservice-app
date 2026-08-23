@@ -198,7 +198,50 @@ export interface UserSession {
   isActive: boolean;
   isAdmin?: boolean;
   providerProfile?: Partial<Provider>;
+  warningsCount?: number;
+  sanctionUntil?: string;
+  sanctionReason?: string;
   createdAt?: string;
+}
+
+export type ReportReason =
+  | 'fraude_estafa'
+  | 'mal_servicio'
+  | 'incumplimiento'
+  | 'acoso_maltrato'
+  | 'producto_defectuoso'
+  | 'suplantacion'
+  | 'otro';
+
+export type ReportResolutionType =
+  | 'ban_definitivo'
+  | 'sancion_temporal'
+  | 'advertencia_denunciante'
+  | 'desestimada_sin_sancion';
+
+export interface UserReport {
+  id: string;
+  reporterEmail: string;
+  reporterName: string;
+  reporterAvatar?: string;
+  targetId: string;
+  targetEmail: string;
+  targetName: string;
+  targetAvatar?: string;
+  targetType: 'provider' | 'client';
+  reason: ReportReason;
+  reasonLabel: string;
+  explanation: string;
+  evidenceNotes?: string;
+  status: 'pendiente' | 'en_evaluacion' | 'resuelto';
+  resolution?: ReportResolutionType;
+  resolutionNotes?: string;
+  sanctionDays?: number;
+  sanctionUntil?: string;
+  createdAt: string;
+  deadlineDate: string; // 5 días hábiles a partir de la fecha
+  resolvedAt?: string;
+  adminEmail?: string;
 }
 
 export interface FirebaseConfig {

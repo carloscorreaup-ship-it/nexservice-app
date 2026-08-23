@@ -11,7 +11,8 @@ import {
   Clock,
   CheckCircle2,
   FileCheck,
-  ArrowLeft
+  ArrowLeft,
+  Flag
 } from 'lucide-react';
 import { Provider, ProductItem, ServiceItem } from '../types';
 import { formatCurrencyCOP } from '../utils/userUtils';
@@ -23,6 +24,7 @@ interface ProviderDetailModalProps {
   onContactWhatsApp: (provider: Provider, customMessage?: string) => void;
   onBookService: (service: ServiceItem, date: string, time: string, notes: string) => void;
   onSelectProduct?: (product: ProductItem) => void;
+  onOpenReportModal?: (target: { id: string; name: string; email: string; avatarUrl?: string; type: 'provider' | 'client' }) => void;
 }
 
 export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
@@ -31,6 +33,7 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
   onClose,
   onContactWhatsApp,
   onBookService,
+  onOpenReportModal,
 }) => {
   const [activeTab, setActiveTab] = useState<'catalog' | 'services' | 'location' | 'reviews'>('catalog');
   const [selectedService, setSelectedService] = useState<ServiceItem | null>(null);
@@ -114,13 +117,33 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
               </div>
             </div>
 
-            <button
-              onClick={() => onContactWhatsApp(provider)}
-              className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-2.5 px-4 rounded-2xl flex items-center justify-center gap-2 shadow-md shadow-emerald-600/20 transition-all self-start sm:self-auto"
-            >
-              <MessageSquare className="w-4 h-4" />
-              <span>WhatsApp Directo</span>
-            </button>
+            <div className="flex items-center gap-2 flex-wrap self-start sm:self-auto">
+              <button
+                onClick={() => onContactWhatsApp(provider)}
+                className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-2.5 px-4 rounded-2xl flex items-center justify-center gap-2 shadow-md shadow-emerald-600/20 transition-all cursor-pointer"
+              >
+                <MessageSquare className="w-4 h-4" />
+                <span>WhatsApp Directo</span>
+              </button>
+
+              {onOpenReportModal && (
+                <button
+                  type="button"
+                  onClick={() => onOpenReportModal({
+                    id: provider.id,
+                    name: provider.name,
+                    email: provider.email || `${provider.id}@nexservice.app`,
+                    avatarUrl: provider.avatarUrl,
+                    type: 'provider'
+                  })}
+                  className="flex items-center gap-1.5 px-3 py-2.5 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold transition-all cursor-pointer"
+                  title="Denunciar este proveedor ante el Super Administrador"
+                >
+                  <Flag className="w-3.5 h-3.5 text-rose-600" />
+                  <span>Denunciar</span>
+                </button>
+              )}
+            </div>
           </div>
 
           <p className="text-xs sm:text-sm text-slate-600 leading-relaxed mb-4">

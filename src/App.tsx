@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { UserSession, Provider, ProductItem, BookingOrOrder, ServiceItem, UserRole, Coordinates, ServiceModality } from './types';
+import { UserSession, Provider, ProductItem, BookingOrOrder, ServiceItem, UserRole, Coordinates, ServiceModality, UserReport, ReportResolutionType } from './types';
 import { INITIAL_PROVIDERS, INITIAL_PRODUCTS, INITIAL_BOOKINGS, INITIAL_USERS } from './data/initialData';
 import { Header } from './components/Header';
 import { BottomNavBar } from './components/BottomNavBar';
@@ -15,9 +15,11 @@ import { ProviderDetailModal } from './components/ProviderDetailModal';
 import { ProductDetailModal } from './components/ProductDetailModal';
 import { WhatsAppModal } from './components/WhatsAppModal';
 import { FirebaseConfigModal } from './components/FirebaseConfigModal';
+import { ReportModal } from './components/ReportModal';
 import { AuthScreen } from './components/AuthScreen';
 import { SplashScreen } from './components/SplashScreen';
 import { auth, isFirebaseConnected } from './services/firebase';
+import { AlertTriangle, ShieldAlert, Scale, Clock, CheckCircle2 } from 'lucide-react';
 import {
   getProvidersFromDB,
   getProductsFromDB,
@@ -29,7 +31,10 @@ import {
   updateBookingStatusInDB,
   toggleUserStatusInDB,
   saveUserToDB,
-  getUserByEmail
+  getUserByEmail,
+  getReportsFromDB,
+  saveReportToDB,
+  resolveReportInDB
 } from './services/firestoreService';
 import { getEmailAvatarUrl } from './utils/userUtils';
 import { requestUserCoordinates, reverseGeocodeAddress, findNearestCity, DEFAULT_COLOMBIA_COORDS, calculateDistanceKm } from './utils/geoUtils';
@@ -74,6 +79,7 @@ export default function App() {
   const [products, setProducts] = useState<ProductItem[]>(INITIAL_PRODUCTS);
   const [bookings, setBookings] = useState<BookingOrOrder[]>(INITIAL_BOOKINGS);
   const [users, setUsers] = useState<UserSession[]>(INITIAL_USERS);
+  const [reports, setReports] = useState<UserReport[]>([]);
 
   // Navigation state & history stack for Back Button
   const [activeTab, setActiveTab] = useState<'explore' | 'map' | 'provider' | 'bookings' | 'profile' | 'admin'>('explore');
@@ -84,6 +90,7 @@ export default function App() {
   const [selectedProviderDetail, setSelectedProviderDetail] = useState<Provider | null>(null);
   const [selectedProductDetail, setSelectedProductDetail] = useState<ProductItem | null>(null);
   const [whatsAppModalData, setWhatsAppModalData] = useState<{ provider: Provider; product?: ProductItem; message?: string } | null>(null);
+  const [reportModalData, setReportModalData] = useState<{ id: string; name: string; email: string; avatarUrl?: string; type: 'provider' | 'client' } | null>(null);
 
   const isSuperAdmin = session.email.toLowerCase() === 'carloscorreaup@gmail.com';
 
@@ -157,10 +164,12 @@ export default function App() {
       const dbProducts = await getProductsFromDB(session.city);
       const dbBookings = await getBookingsFromDB(session.email);
       const dbUsers = await getUsersFromDB();
+      const dbReports = await getReportsFromDB();
       setProviders(dbProviders);
       setProducts(dbProducts);
       setBookings(dbBookings);
       setUsers(dbUsers);
+      setReports(dbReports);
     }
     loadData();
   }, [session.city, session.email]);
@@ -208,6 +217,29 @@ export default function App() {
     setProviders(prev =>
       prev.map(p => (p.id === providerId ? { ...p, verified: nextStatus } : p))
     );
+  };
+
+  const handleSubmitReport = async (newReport: UserReport) => {
+    await saveReportToDB(newReport);
+    setReports(prev => [newReport, ...prev]);
+  };
+
+  const handleResolveReport = async (
+    reportId: string,
+    resolution: ReportResolutionType,
+    notes: string,
+    sanctionDays?: number
+  ) => {
+    const updated = await resolveReportInDB(reportId, resolution, notes, session.email, sanctionDays);
+    if (updated) {
+      setReports(prev => prev.map(r => r.id === reportId ? updated : r));
+      const freshUsers = await getUsersFromDB();
+      setUsers(freshUsers);
+      const myUser = freshUsers.find(u => u.email.toLowerCase() === session.email.toLowerCase());
+      if (myUser) {
+        setSession(myUser);
+      }
+    }
   };
 
   const handleCompleteOnboarding = async (data: {
@@ -453,6 +485,10 @@ export default function App() {
     );
   }
 
+  const activeReportAgainstMe = reports.find(
+    r => r.targetEmail.toLowerCase() === session.email.toLowerCase() && r.status === 'pendiente'
+  );
+
   return (
     <div className="bg-[#f9f9ff] min-h-screen text-[#141b2b] flex flex-col font-inter selection:bg-[#0052ff] selection:text-white">
       {/* Header */}
@@ -470,6 +506,33 @@ export default function App() {
         isAdmin={isSuperAdmin}
         onBack={tabHistory.length > 1 ? handleGoBack : undefined}
       />
+
+      {/* Official Notice Banner for Reported User */}
+      {activeReportAgainstMe && (
+        <div className="bg-gradient-to-r from-amber-500 via-rose-500 to-red-600 text-white px-4 py-3 shadow-md border-b border-red-700">
+          <div className="max-w-6xl mx-auto flex items-start justify-between gap-3 text-xs">
+            <div className="flex items-start gap-2.5">
+              <AlertTriangle className="w-5 h-5 shrink-0 text-white animate-pulse mt-0.5" />
+              <div>
+                <div className="font-black uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+                  <span>Notificación Oficial: Denuncia en Evaluación Administrativa</span>
+                </div>
+                <p className="mt-0.5 leading-relaxed text-white/95 text-xs">
+                  El usuario <strong>"{activeReportAgainstMe.reporterName}"</strong> te denunció ante el Administrador ({activeReportAgainstMe.reasonLabel}), quien evaluará la situación en un plazo de <strong>5 días hábiles</strong> (fecha límite: {activeReportAgainstMe.deadlineDate}). Recibirás una resolución oficial una vez concluya el proceso de revisión.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Warning banner if warned */}
+      {session.warningsCount !== undefined && session.warningsCount > 0 && !activeReportAgainstMe && (
+        <div className="bg-amber-500 text-white px-4 py-2 text-xs font-bold text-center flex items-center justify-center gap-2 shadow-xs">
+          <AlertTriangle className="w-4 h-4" />
+          <span>Tienes {session.warningsCount} advertencia{session.warningsCount > 1 ? 's' : ''} administrativa{session.warningsCount > 1 ? 's' : ''} registrada{session.warningsCount > 1 ? 's' : ''} por el Administrador.</span>
+        </div>
+      )}
 
       <main className="flex-1">
         {activeTab === 'explore' && (
@@ -520,6 +583,7 @@ export default function App() {
               window.open(`https://wa.me/${phone.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`, '_blank');
             }}
             currentCity={session.city}
+            onOpenReportModal={target => setReportModalData(target)}
           />
         )}
 
@@ -529,8 +593,10 @@ export default function App() {
             providers={providers}
             products={products}
             bookings={bookings}
+            reports={reports}
             onToggleUserStatus={handleToggleUserStatus}
             onToggleProviderVerification={handleToggleProviderVerification}
+            onResolveReport={handleResolveReport}
             onBack={handleGoBack}
           />
         )}
@@ -593,6 +659,10 @@ export default function App() {
           }}
           onBookService={handleBookService}
           onSelectProduct={prod => setSelectedProductDetail(prod)}
+          onOpenReportModal={target => {
+            setSelectedProviderDetail(null);
+            setReportModalData(target);
+          }}
         />
       )}
 
@@ -644,6 +714,15 @@ export default function App() {
             await saveBookingToDB(order);
             setBookings(prev => [order, ...prev]);
           }}
+        />
+      )}
+
+      {reportModalData && (
+        <ReportModal
+          currentUser={session}
+          targetUser={reportModalData}
+          onClose={() => setReportModalData(null)}
+          onSubmitReport={handleSubmitReport}
         />
       )}
     </div>

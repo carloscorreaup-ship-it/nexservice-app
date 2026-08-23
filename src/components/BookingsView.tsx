@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar, ShoppingBag, Wrench, MessageSquare, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { Calendar, ShoppingBag, Wrench, MessageSquare, CheckCircle, Clock, AlertCircle, Flag } from 'lucide-react';
 import { BookingOrOrder } from '../types';
 
 interface BookingsViewProps {
@@ -8,6 +8,7 @@ interface BookingsViewProps {
   onExploreServices: () => void;
   onOpenWhatsApp: (phone: string, text: string) => void;
   currentCity: string;
+  onOpenReportModal?: (target: { id: string; name: string; email: string; avatarUrl?: string; type: 'provider' | 'client' }) => void;
 }
 
 export const BookingsView: React.FC<BookingsViewProps> = ({
@@ -16,17 +17,18 @@ export const BookingsView: React.FC<BookingsViewProps> = ({
   onExploreServices,
   onOpenWhatsApp,
   currentCity,
+  onOpenReportModal,
 }) => {
   return (
     <div className="pb-24 max-w-4xl mx-auto px-4 pt-4">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-white">Mis Pedidos y Servicios</h1>
-          <p className="text-xs text-slate-400">Historial y seguimiento en tiempo real</p>
+          <h1 className="text-2xl font-bold text-[#141b2b]">Mis Pedidos y Servicios</h1>
+          <p className="text-xs text-slate-500">Historial y seguimiento en tiempo real</p>
         </div>
         <button
           onClick={onExploreServices}
-          className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2.5 px-4 rounded-xl transition-all"
+          className="bg-[#0052ff] hover:bg-blue-700 text-white text-xs font-bold py-2.5 px-4 rounded-xl transition-all cursor-pointer"
         >
           Explorar Más
         </button>
@@ -34,57 +36,75 @@ export const BookingsView: React.FC<BookingsViewProps> = ({
 
       <div className="space-y-4">
         {bookings.map((b) => (
-          <div key={b.id} className="bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-lg">
+          <div key={b.id} className="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm">
             <div className="flex items-start justify-between gap-3 mb-3">
               <div className="flex items-center gap-3">
-                <img src={b.providerAvatar} alt={b.providerName} className="w-12 h-12 rounded-2xl object-cover" />
+                <img src={b.providerAvatar} alt={b.providerName} className="w-12 h-12 rounded-2xl object-cover ring-2 ring-slate-100" />
                 <div>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/20">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#0052ff] bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
                     {b.type === 'producto' ? 'Pedido de Producto' : 'Reserva de Servicio'}
                   </span>
-                  <h3 className="text-sm font-bold text-white mt-1">{b.itemName}</h3>
-                  <p className="text-xs text-slate-400">Con: {b.providerName}</p>
+                  <h3 className="text-sm font-bold text-slate-900 mt-1">{b.itemName}</h3>
+                  <p className="text-xs text-slate-500">Con: {b.providerName}</p>
                 </div>
               </div>
 
               <span className={`text-[11px] font-bold px-3 py-1 rounded-full border capitalize ${
                 b.status === 'confirmada' || b.status === 'completada'
-                  ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                   : b.status === 'en_camino'
-                  ? 'bg-blue-500/20 text-blue-400 border-blue-500/30 animate-pulse'
-                  : 'bg-amber-500/20 text-amber-400 border-amber-500/30'
+                  ? 'bg-blue-50 text-[#0052ff] border-blue-200 animate-pulse'
+                  : 'bg-amber-50 text-amber-800 border-amber-200'
               }`}>
                 {b.status}
               </span>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 bg-slate-800/50 p-3 rounded-2xl text-xs text-slate-300 mb-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 bg-slate-50 p-3 rounded-2xl text-xs text-slate-700 mb-3 border border-slate-100">
               <div>
-                <span className="text-slate-500 block">Fecha & Hora:</span>
+                <span className="text-slate-400 block">Fecha & Hora:</span>
                 <strong>{b.date} • {b.time}</strong>
               </div>
               <div>
-                <span className="text-slate-500 block">Monto Total:</span>
-                <strong className="text-emerald-400">{b.totalAmount || 'Por cotizar'}</strong>
+                <span className="text-slate-400 block">Monto Total:</span>
+                <strong className="text-emerald-600">{b.totalAmount || 'Por cotizar'}</strong>
               </div>
               <div className="col-span-2 sm:col-span-1">
-                <span className="text-slate-500 block">Dirección de Entrega:</span>
+                <span className="text-slate-400 block">Dirección de Entrega:</span>
                 <strong className="truncate block">{b.clientAddress}</strong>
               </div>
             </div>
 
             {b.notes && (
-              <p className="text-xs text-slate-400 mb-3 italic">"{b.notes}"</p>
+              <p className="text-xs text-slate-500 mb-3 italic">"{b.notes}"</p>
             )}
 
             <div className="flex gap-2">
               <button
                 onClick={() => onOpenWhatsApp(b.clientPhone, `Hola, sobre mi solicitud #${b.id} de "${b.itemName}"...`)}
-                className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold py-2.5 px-3 rounded-xl flex items-center justify-center gap-1.5 transition-all"
+                className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold py-2.5 px-3 rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer"
               >
-                <MessageSquare className="w-3.5 h-3.5 text-emerald-400" />
+                <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />
                 <span>Contactar por WhatsApp</span>
               </button>
+
+              {onOpenReportModal && (
+                <button
+                  type="button"
+                  onClick={() => onOpenReportModal({
+                    id: b.providerId,
+                    name: b.providerName,
+                    email: b.clientEmail || 'soporte@nexservice.app',
+                    avatarUrl: b.providerAvatar,
+                    type: 'provider'
+                  })}
+                  className="px-3 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold flex items-center gap-1 transition-all cursor-pointer"
+                  title="Denunciar este pedido/servicio ante el Super Administrador"
+                >
+                  <Flag className="w-3.5 h-3.5 text-rose-600" />
+                  <span className="hidden sm:inline">Denunciar</span>
+                </button>
+              )}
             </div>
           </div>
         ))}

@@ -12,7 +12,7 @@ import {
   onSnapshot,
 } from 'firebase/firestore';
 import { db, isFirebaseConnected } from './firebase';
-import { Provider, ProductItem, ServiceItem, BookingOrOrder, UserSession, Review, MapMarkerItem } from '../types';
+import { Provider, ProductItem, ServiceItem, BookingOrOrder, UserSession, Review, MapMarkerItem, UserReport, ReportResolutionType } from '../types';
 import { INITIAL_PROVIDERS, INITIAL_PRODUCTS, INITIAL_BOOKINGS, INITIAL_USERS } from '../data/initialData';
 
 const LOCAL_STORAGE_KEYS = {
@@ -20,6 +20,7 @@ const LOCAL_STORAGE_KEYS = {
   PRODUCTS: 'nexservice_store_products_v2',
   BOOKINGS: 'nexservice_store_bookings_v2',
   USERS: 'nexservice_store_users_v2',
+  REPORTS: 'nexservice_store_reports_v1',
 };
 
 function getLocal<T>(key: string, defaultVal: T): T {
@@ -317,4 +318,137 @@ export async function getUserByEmail(email: string): Promise<UserSession | null>
   const found = list.find(u => u.email.toLowerCase() === email.toLowerCase());
   return found || null;
 }
+
+/**
+ * REPORT / DENUNCIA SYSTEM (SUPER ADMIN ONLY)
+ */
+
+export function calculateBusinessDaysDeadline(startDate: Date = new Date(), businessDays: number = 5): string {
+  let count = 0;
+  const cur = new Date(startDate);
+  while (count < businessDays) {
+    cur.setDate(cur.getDate() + 1);
+    const dayOfWeek = cur.getDay(); // 0 is Sunday, 6 is Saturday
+    if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+      count++;
+    }
+  }
+  return cur.toLocaleDateString('es-CO', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+}
+
+export async function getReportsFromDB(): Promise<UserReport[]> {
+  if (db && isFirebaseConnected) {
+    try {
+      const colRef = collection(db, 'reports');
+      const snap = await getDocs(colRef);
+      if (!snap.empty) {
+        return snap.docs.map(d => ({ id: d.id, ...d.data() } as UserReport));
+      }
+    } catch (e) {
+      console.warn('Firestore getReports error, using local fallback:', e);
+    }
+  }
+
+  return getLocal<UserReport[]>(LOCAL_STORAGE_KEYS.REPORTS, []);
+}
+
+export async function saveReportToDB(report: UserReport): Promise<void> {
+  if (db && isFirebaseConnected) {
+    try {
+      const docRef = doc(db, 'reports', report.id);
+      await setDoc(docRef, report, { merge: true });
+    } catch (e) {
+      console.warn('Firestore saveReport error, saving locally:', e);
+    }
+  }
+
+  const list = getLocal<UserReport[]>(LOCAL_STORAGE_KEYS.REPORTS, []);
+  const idx = list.findIndex(r => r.id === report.id);
+  if (idx >= 0) {
+    list[idx] = report;
+  } else {
+    list.unshift(report);
+  }
+  setLocal(LOCAL_STORAGE_KEYS.REPORTS, list);
+}
+
+export async function resolveReportInDB(
+  reportId: string,
+  resolution: ReportResolutionType,
+  resolutionNotes: string,
+  adminEmail: string = 'carloscorreaup@gmail.com',
+  sanctionDays?: number
+): Promise<UserReport | null> {
+  const reports = await getReportsFromDB();
+  const report = reports.find(r => r.id === reportId);
+  if (!report) return null;
+
+  const now = new Date();
+  let sanctionUntil: string | undefined = undefined;
+
+  if (resolution === 'sancion_temporal' && sanctionDays) {
+    const untilDate = new Date(now);
+    untilDate.setDate(untilDate.getDate() + sanctionDays);
+    sanctionUntil = untilDate.toISOString();
+  }
+
+  const updatedReport: UserReport = {
+    ...report,
+    status: 'resuelto',
+    resolution,
+    resolutionNotes,
+    adminEmail,
+    sanctionDays: resolution === 'sancion_temporal' ? sanctionDays : undefined,
+    sanctionUntil,
+    resolvedAt: now.toLocaleDateString('es-CO', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }),
+  };
+
+  // 1. Save updated report
+  await saveReportToDB(updatedReport);
+
+  // 2. Apply sanction / ban / warning to target user or reporter user
+  const users = await getUsersFromDB();
+
+  if (resolution === 'ban_definitivo') {
+    // Disable target user permanently
+    await toggleUserStatusInDB(report.targetEmail, false);
+  } else if (resolution === 'sancion_temporal') {
+    // Temporarily suspend target user
+    const targetUser = users.find(u => u.email.toLowerCase() === report.targetEmail.toLowerCase());
+    if (targetUser) {
+      const suspendedUser: UserSession = {
+        ...targetUser,
+        isActive: false,
+        sanctionUntil,
+        sanctionReason: resolutionNotes,
+      };
+      await saveUserToDB(suspendedUser);
+    }
+  } else if (resolution === 'advertencia_denunciante') {
+    // Add warning to reporter user
+    const reporterUser = users.find(u => u.email.toLowerCase() === report.reporterEmail.toLowerCase());
+    if (reporterUser) {
+      const warnedUser: UserSession = {
+        ...reporterUser,
+        warningsCount: (reporterUser.warningsCount || 0) + 1,
+        sanctionReason: `Advertencia administrativa: ${resolutionNotes}`,
+      };
+      await saveUserToDB(warnedUser);
+    }
+  }
+
+  return updatedReport;
+}
+
 
