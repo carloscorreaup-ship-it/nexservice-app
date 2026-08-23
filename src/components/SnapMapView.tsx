@@ -681,6 +681,24 @@ export const SnapMapView: React.FC<SnapMapViewProps> = ({
             </button>
           </div>
 
+          {/* Modality and Address */}
+          <div className="flex items-center gap-1.5 text-xs text-slate-600 my-2 bg-slate-50 p-2 rounded-xl border border-slate-100">
+            {selectedEntity.serviceModality === 'home_delivery' ? (
+              <span className="text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded-lg shrink-0">
+                🛵 Solo a Domicilio
+              </span>
+            ) : selectedEntity.serviceModality === 'mobile_street' ? (
+              <span className="text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 px-2 py-0.5 rounded-lg shrink-0">
+                🚐 Puesto Ambulante Móvil
+              </span>
+            ) : (
+              <span className="text-[10px] font-bold bg-blue-50 text-[#0052ff] border border-blue-200 px-2 py-0.5 rounded-lg shrink-0">
+                🏢 Local Físico
+              </span>
+            )}
+            <span className="text-[11px] truncate text-slate-600">{selectedEntity.address}</span>
+          </div>
+
           {/* Action buttons */}
           <div className="flex items-center gap-2 pt-3 border-t border-slate-100">
             <button

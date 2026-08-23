@@ -4,6 +4,8 @@
 
 export type UserRole = 'client' | 'provider' | 'seller' | 'both' | 'admin';
 
+export type ServiceModality = 'physical_store' | 'home_delivery' | 'mobile_street';
+
 export interface Coordinates {
   lat: number;
   lng: number;
@@ -16,6 +18,7 @@ export interface FixedLocation {
   department: string;
   coordinates: Coordinates;
   isPublicOnMap: boolean;
+  serviceModality?: ServiceModality;
   notes?: string;
 }
 
@@ -121,6 +124,7 @@ export interface Provider {
   products: ProductItem[];
   reviews: Review[];
   isDelivery: boolean;
+  serviceModality?: ServiceModality;
   isFeatured?: boolean;
   yearsOfExperience?: number;
   responseTime?: string;

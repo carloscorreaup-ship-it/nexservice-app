@@ -551,7 +551,19 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
                             </span>
                             <span className="text-slate-400 text-[11px]">({prov.reviewCount} reseñas)</span>
                             <span className="text-slate-300">•</span>
-                            <span className="text-slate-500 text-[11px] capitalize truncate">{prov.category}</span>
+                            {prov.serviceModality === 'home_delivery' ? (
+                              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded-md">
+                                🛵 Domicilio
+                              </span>
+                            ) : prov.serviceModality === 'mobile_street' ? (
+                              <span className="text-[10px] font-bold text-amber-800 bg-amber-50 border border-amber-200 px-1.5 py-0.2 rounded-md">
+                                🚐 Ambulante
+                              </span>
+                            ) : (
+                              <span className="text-[10px] font-bold text-[#0052ff] bg-blue-50 border border-blue-200 px-1.5 py-0.2 rounded-md">
+                                🏢 Local Físico
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>

@@ -129,6 +129,19 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
 
           {/* Badges */}
           <div className="flex flex-wrap gap-2 mb-4 text-xs">
+            {provider.serviceModality === 'home_delivery' ? (
+              <span className="bg-emerald-50 text-emerald-800 px-3 py-1 rounded-xl border border-emerald-200 flex items-center gap-1.5 font-bold">
+                🛵 Atención Exclusiva a Domicilio
+              </span>
+            ) : provider.serviceModality === 'mobile_street' ? (
+              <span className="bg-amber-50 text-amber-800 px-3 py-1 rounded-xl border border-amber-200 flex items-center gap-1.5 font-bold">
+                🚐 Puesto / Servicio Ambulante Móvil
+              </span>
+            ) : (
+              <span className="bg-blue-50 text-[#0052ff] px-3 py-1 rounded-xl border border-blue-200 flex items-center gap-1.5 font-bold">
+                🏢 Local Físico Abierto al Público
+              </span>
+            )}
             {provider.documentVerified && (
               <span className="bg-slate-100 text-slate-700 px-3 py-1 rounded-xl border border-slate-200 flex items-center gap-1.5">
                 <FileCheck className="w-3.5 h-3.5 text-[#0052ff]" /> RUT Verificado

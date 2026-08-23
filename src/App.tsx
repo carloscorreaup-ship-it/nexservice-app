@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { UserSession, Provider, ProductItem, BookingOrOrder, ServiceItem, UserRole, Coordinates } from './types';
+import { UserSession, Provider, ProductItem, BookingOrOrder, ServiceItem, UserRole, Coordinates, ServiceModality } from './types';
 import { INITIAL_PROVIDERS, INITIAL_PRODUCTS, INITIAL_BOOKINGS, INITIAL_USERS } from './data/initialData';
 import { Header } from './components/Header';
 import { BottomNavBar } from './components/BottomNavBar';
@@ -220,9 +220,11 @@ export default function App() {
     department?: string;
     coordinates?: Coordinates;
     avatarUrl: string;
+    serviceModality?: ServiceModality;
   }) => {
     const coords = data.coordinates || session.fixedLocation?.coordinates || DEFAULT_COLOMBIA_COORDS[data.city] || DEFAULT_COLOMBIA_COORDS['Pereira'] || { lat: 4.81333, lng: -75.69611 };
     const dept = data.department || session.fixedLocation?.department || 'Risaralda';
+    const modality = data.serviceModality || 'physical_store';
     const newSession: UserSession = {
       ...session,
       email: data.email,
@@ -243,6 +245,7 @@ export default function App() {
         department: dept,
         coordinates: coords,
         isPublicOnMap: true,
+        serviceModality: modality,
       },
     };
     setSession(newSession);
@@ -313,7 +316,8 @@ export default function App() {
       services: profileData.services || [],
       products: profileData.products || [],
       reviews: [],
-      isDelivery: true
+      isDelivery: true,
+      serviceModality: profileData.serviceModality || session.fixedLocation?.serviceModality || 'physical_store',
     };
 
     await saveProviderToDB(updatedProvider);

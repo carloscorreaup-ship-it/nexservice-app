@@ -12,9 +12,12 @@ import {
   Calendar,
   DollarSign,
   Camera,
-  AlertCircle
+  AlertCircle,
+  Building2,
+  Truck,
+  Navigation
 } from 'lucide-react';
-import { Provider, ProductItem, ServiceItem, UserSession } from '../types';
+import { Provider, ProductItem, ServiceItem, UserSession, ServiceModality } from '../types';
 import { formatCurrencyCOP } from '../utils/userUtils';
 
 interface ProviderModeViewProps {
@@ -35,10 +38,12 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
   // Profile state
   const [businessName, setBusinessName] = useState(userSession.providerProfile?.businessName || userSession.name || 'Mi Negocio');
   const [category, setCategory] = useState(userSession.providerProfile?.category || 'reparaciones');
+  const [serviceModality, setServiceModality] = useState<ServiceModality>(userSession.fixedLocation?.serviceModality || 'physical_store');
   const [address, setAddress] = useState(userSession.providerProfile?.address || userSession.fixedLocation?.address || 'Calle 14 # 15-20, Pereira');
   const [phone, setPhone] = useState(userSession.providerProfile?.phone || userSession.phone || '+57 300 000 0000');
   const [whatsapp, setWhatsapp] = useState(userSession.providerProfile?.whatsapp || userSession.phone || '573000000000');
   const [description, setDescription] = useState(userSession.providerProfile?.description || 'Ofrecemos los mejores productos y servicios con garantía.');
+  const [savedSuccess, setSavedSuccess] = useState(false);
 
   // Products state
   const [products, setProducts] = useState<ProductItem[]>(userSession.providerProfile?.products || []);
@@ -293,10 +298,61 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
       {activeTab === 'location' && (
         <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4">
           <div>
-            <h3 className="text-base font-bold text-white mb-1">Dirección Fija y Posición en el Mapa</h3>
+            <h3 className="text-base font-bold text-white mb-1">Modalidad de Atención y Posición en el Mapa</h3>
             <p className="text-xs text-slate-400">
-              Permite que los clientes vean tu taller, tienda o consultorio en el mapa de {currentCity}.
+              Define si operas con local físico, a domicilio o como vendedor ambulante en {currentCity}.
             </p>
+          </div>
+
+          {/* Selector de Modalidad */}
+          <div>
+            <label className="block text-slate-300 font-semibold mb-2 text-xs">Modalidad de Servicio / Venta</label>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+              <div
+                onClick={() => setServiceModality('physical_store')}
+                className={`p-3 rounded-2xl border cursor-pointer transition-all flex flex-col justify-between ${
+                  serviceModality === 'physical_store'
+                    ? 'bg-blue-600/20 border-blue-500 text-white'
+                    : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-750'
+                }`}
+              >
+                <div className="flex items-center gap-2 font-bold mb-1">
+                  <Building2 className="w-4 h-4 text-blue-400" />
+                  <span>🏢 Local Físico</span>
+                </div>
+                <p className="text-[10px] text-slate-400">Tienda o taller físico con atención presencial.</p>
+              </div>
+
+              <div
+                onClick={() => setServiceModality('home_delivery')}
+                className={`p-3 rounded-2xl border cursor-pointer transition-all flex flex-col justify-between ${
+                  serviceModality === 'home_delivery'
+                    ? 'bg-emerald-600/20 border-emerald-500 text-white'
+                    : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-750'
+                }`}
+              >
+                <div className="flex items-center gap-2 font-bold mb-1">
+                  <Truck className="w-4 h-4 text-emerald-400" />
+                  <span>🛵 A Domicilio</span>
+                </div>
+                <p className="text-[10px] text-slate-400">Entrega o servicio directo en casa del cliente.</p>
+              </div>
+
+              <div
+                onClick={() => setServiceModality('mobile_street')}
+                className={`p-3 rounded-2xl border cursor-pointer transition-all flex flex-col justify-between ${
+                  serviceModality === 'mobile_street'
+                    ? 'bg-amber-600/20 border-amber-500 text-white'
+                    : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-750'
+                }`}
+              >
+                <div className="flex items-center gap-2 font-bold mb-1">
+                  <Navigation className="w-4 h-4 text-amber-400" />
+                  <span>🚐 Ambulante / Móvil</span>
+                </div>
+                <p className="text-[10px] text-slate-400">Food truck o técnico móvil itinerante.</p>
+              </div>
+            </div>
           </div>
 
           <div className="space-y-3 text-xs">
@@ -310,12 +366,23 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
               />
             </div>
             <div>
-              <label className="block text-slate-300 font-semibold mb-1">Dirección Física Exacta</label>
+              <label className="block text-slate-300 font-semibold mb-1">
+                {serviceModality === 'physical_store'
+                  ? 'Dirección Física Exacta (Obligatorio para local)'
+                  : serviceModality === 'home_delivery'
+                  ? 'Zona o Barrio Base de Domicilios'
+                  : 'Punto o Zona Ambulante'}
+              </label>
               <input
                 type="text"
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
                 className="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white"
+                placeholder={
+                  serviceModality === 'physical_store'
+                    ? 'Ej: Carrera 15 # 12-45, Local 102'
+                    : 'Ej: Cobertura en toda la ciudad / Zona Álamos'
+                }
               />
             </div>
             <div>
@@ -327,6 +394,29 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
                 className="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white font-mono"
               />
             </div>
+
+            <button
+              onClick={() => {
+                onSaveProviderProfile({
+                  businessName,
+                  address,
+                  whatsapp,
+                  serviceModality,
+                });
+                setSavedSuccess(true);
+                setTimeout(() => setSavedSuccess(false), 3000);
+              }}
+              className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl transition-all shadow-md shadow-blue-500/20 cursor-pointer flex items-center justify-center gap-2"
+            >
+              <Check className="w-4 h-4" />
+              <span>Guardar Ubicación y Modalidad</span>
+            </button>
+
+            {savedSuccess && (
+              <div className="p-3 bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 rounded-xl text-center font-semibold">
+                ✓ Ubicación y modalidad actualizadas correctamente.
+              </div>
+            )}
           </div>
         </div>
       )}
