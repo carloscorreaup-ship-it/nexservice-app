@@ -716,7 +716,33 @@ export default function App() {
           product={selectedProductDetail}
           onClose={() => setSelectedProductDetail(null)}
           onContactWhatsApp={prod => {
-            const prov = providers.find(p => p.id === prod.providerId) || INITIAL_PROVIDERS[0];
+            const prov = providers.find(p => p.id === prod.providerId) || {
+              id: prod.providerId,
+              name: prod.providerName,
+              businessName: prod.providerBusinessName || prod.providerName,
+              phone: prod.providerPhone || '+57 300 000 0000',
+              whatsapp: prod.providerWhatsapp || '573000000000',
+              avatarUrl: prod.providerAvatar,
+              category: prod.category,
+              offerType: 'products' as const,
+              rating: prod.rating || 5.0,
+              reviewCount: prod.reviewsCount || 0,
+              tags: prod.tags || [],
+              address: `${prod.city}, Colombia`,
+              city: prod.city,
+              department: 'Colombia',
+              description: 'Vendedor y comercio verificado en NexService App.',
+              coordinates: prod.location?.coordinates || { lat: 4.8145, lng: -75.6948 },
+              isFixedLocationVisibleOnMap: true,
+              verified: !!prod.verifiedSeller,
+              verifiedBadgeType: 'oficial' as const,
+              documentVerified: true,
+              rutVerified: true,
+              services: [],
+              products: [prod],
+              reviews: [],
+              isDelivery: prod.deliveryAvailable
+            };
             setSelectedProductDetail(null);
             setWhatsAppModalData({ provider: prov, product: prod });
           }}
