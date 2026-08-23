@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { Provider, ProductItem, UserSession } from '../types';
 import { calculateDistanceKm, formatDistance, DEFAULT_COLOMBIA_COORDS } from '../utils/geoUtils';
+import { getEmailAvatarUrl } from '../utils/userUtils';
 
 interface SnapMapViewProps {
   currentCity: string;
@@ -168,17 +169,16 @@ export const SnapMapView: React.FC<SnapMapViewProps> = ({
     }).addTo(map);
     circleLayerRef.current = circle;
 
-    // User marker
+    // User marker with Google/Gmail Profile Picture
+    const userAvatar = userSession.avatarUrl || getEmailAvatarUrl(userSession.email, userSession.name);
     const userIconHtml = `
-      <div style="position: relative; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; transform: translate(-50%, -50%);">
-        <div style="position: absolute; width: 44px; height: 44px; border-radius: 9999px; background-color: rgba(0, 82, 255, 0.25); border: 2px solid rgba(0, 82, 255, 0.5);" class="pulse-radar"></div>
-        <div style="position: relative; width: 30px; height: 30px; border-radius: 9999px; background-color: #0052ff; border: 2.5px solid #ffffff; box-shadow: 0 4px 14px rgba(0,82,255,0.4); display: flex; align-items: center; justify-content: center; color: white;">
-          <svg style="width: 15px; height: 15px;" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-          </svg>
+      <div style="position: relative; display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; transform: translate(-50%, -50%);">
+        <div style="position: absolute; width: 48px; height: 48px; border-radius: 9999px; background-color: rgba(0, 82, 255, 0.25); border: 2px solid rgba(0, 82, 255, 0.6);" class="pulse-radar"></div>
+        <div style="position: relative; width: 34px; height: 34px; border-radius: 9999px; overflow: hidden; background-color: #0052ff; border: 2.5px solid #ffffff; box-shadow: 0 4px 14px rgba(0,82,255,0.45); display: flex; align-items: center; justify-content: center; color: white;">
+          <img src="${userAvatar}" alt="${userSession.name || 'Tú'}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(userSession.name || 'Tú')}&background=0052ff&color=fff&size=128&bold=true';" />
         </div>
-        <div style="position: absolute; bottom: -8px; background: white; border: 1px solid #e2e8f0; color: #0f172a; font-size: 9px; font-weight: 800; padding: 1px 6px; border-radius: 9999px; box-shadow: 0 2px 6px rgba(0,0,0,0.12); white-space: nowrap;">
-          Tú
+        <div style="position: absolute; bottom: -8px; background: white; border: 1.5px solid #0052ff; color: #0052ff; font-size: 9.5px; font-weight: 900; padding: 1px 6px; border-radius: 9999px; box-shadow: 0 2px 6px rgba(0,0,0,0.15); white-space: nowrap;">
+          Tú (GPS)
         </div>
       </div>
     `;
@@ -241,13 +241,31 @@ export const SnapMapView: React.FC<SnapMapViewProps> = ({
 
     if (userMarkerRef.current) {
       userMarkerRef.current.setLatLng(centerLatLng);
+      const userAvatar = userSession.avatarUrl || getEmailAvatarUrl(userSession.email, userSession.name);
+      const updatedUserIcon = L.divIcon({
+        html: `
+          <div style="position: relative; display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; transform: translate(-50%, -50%);">
+            <div style="position: absolute; width: 48px; height: 48px; border-radius: 9999px; background-color: rgba(0, 82, 255, 0.25); border: 2px solid rgba(0, 82, 255, 0.6);" class="pulse-radar"></div>
+            <div style="position: relative; width: 34px; height: 34px; border-radius: 9999px; overflow: hidden; background-color: #0052ff; border: 2.5px solid #ffffff; box-shadow: 0 4px 14px rgba(0,82,255,0.45); display: flex; align-items: center; justify-content: center; color: white;">
+              <img src="${userAvatar}" alt="${userSession.name || 'Tú'}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(userSession.name || 'Tú')}&background=0052ff&color=fff&size=128&bold=true';" />
+            </div>
+            <div style="position: absolute; bottom: -8px; background: white; border: 1.5px solid #0052ff; color: #0052ff; font-size: 9.5px; font-weight: 900; padding: 1px 6px; border-radius: 9999px; box-shadow: 0 2px 6px rgba(0,0,0,0.15); white-space: nowrap;">
+              Tú (GPS)
+            </div>
+          </div>
+        `,
+        className: 'custom-leaflet-marker',
+        iconSize: [0, 0],
+        iconAnchor: [0, 0],
+      });
+      userMarkerRef.current.setIcon(updatedUserIcon);
     }
 
     if (circleLayerRef.current) {
       circleLayerRef.current.setLatLng(centerLatLng);
       circleLayerRef.current.setRadius(rangeKm * 1000);
     }
-  }, [userCoords, rangeKm]);
+  }, [userCoords, rangeKm, userSession.avatarUrl, userSession.name, userSession.email]);
 
   // Center on city changes
   useEffect(() => {

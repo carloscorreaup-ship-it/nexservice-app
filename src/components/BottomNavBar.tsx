@@ -7,6 +7,7 @@ interface BottomNavBarProps {
   isProviderMode: boolean;
   ordersCount: number;
   isAdmin?: boolean;
+  userAvatarUrl?: string;
 }
 
 export const BottomNavBar: React.FC<BottomNavBarProps> = ({
@@ -15,6 +16,7 @@ export const BottomNavBar: React.FC<BottomNavBarProps> = ({
   isProviderMode,
   ordersCount,
   isAdmin = false,
+  userAvatarUrl,
 }) => {
   const navItems = [
     { id: 'explore', label: 'Explorar', icon: Compass },
@@ -47,7 +49,13 @@ export const BottomNavBar: React.FC<BottomNavBarProps> = ({
               }`}
             >
               <div className={`p-1 rounded-xl relative ${isActive ? (item.adminBadge ? 'bg-red-50' : 'bg-blue-50') : ''}`}>
-                <Icon className="w-5 h-5" />
+                {item.id === 'profile' && userAvatarUrl ? (
+                  <div className={`w-5 h-5 rounded-full overflow-hidden ring-2 ${isActive ? 'ring-[#0052ff]' : 'ring-slate-200'}`}>
+                    <img src={userAvatarUrl} alt="Perfil" className="w-full h-full object-cover" />
+                  </div>
+                ) : (
+                  <Icon className="w-5 h-5" />
+                )}
                 {item.badge !== undefined && item.badge > 0 && (
                   <span className="absolute -top-1 -right-1 bg-[#0052ff] text-white text-[9px] font-bold w-3.5 h-3.5 rounded-full flex items-center justify-center">
                     {item.badge}

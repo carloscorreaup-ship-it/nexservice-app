@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { User, MapPin, ShieldCheck, Flame, RefreshCw, LogOut, Store, ShieldAlert, ArrowLeft, FileText, Crosshair, Navigation, CheckCircle2 } from 'lucide-react';
+import { User, MapPin, ShieldCheck, Flame, RefreshCw, LogOut, Store, ShieldAlert, ArrowLeft, FileText, Crosshair, Navigation, CheckCircle2, Chrome } from 'lucide-react';
 import { UserSession, Provider } from '../types';
 import { DataPolicyModal } from './DataPolicyModal';
 import { requestUserCoordinates, reverseGeocodeAddress, findNearestCity } from '../utils/geoUtils';
+import { getEmailAvatarUrl } from '../utils/userUtils';
 
 interface ProfileViewProps {
   userSession: UserSession;
@@ -34,6 +35,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   const [syncStatus, setSyncStatus] = useState<string | null>(null);
 
   const isAdmin = userSession.email.toLowerCase() === 'carloscorreaup@gmail.com';
+  const effectiveAvatar = userSession.avatarUrl || getEmailAvatarUrl(userSession.email, userSession.name);
 
   const handleSyncGpsLocation = async () => {
     setIsSyncingGps(true);
@@ -86,12 +88,15 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
 
       {/* Profile Header */}
       <div className="bg-white border border-slate-200 rounded-3xl p-6 mb-6 shadow-elevation-1 flex items-center gap-4">
-        <div className="w-16 h-16 rounded-3xl overflow-hidden bg-slate-100 ring-4 ring-blue-100 flex items-center justify-center text-xl font-bold text-[#0052ff] shrink-0">
-          {userSession.avatarUrl ? (
-            <img src={userSession.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-          ) : (
-            'CC'
-          )}
+        <div className="relative w-16 h-16 rounded-3xl overflow-hidden bg-slate-100 ring-4 ring-blue-100 flex items-center justify-center shrink-0 shadow-sm">
+          <img
+            src={effectiveAvatar}
+            alt={userSession.name || 'Avatar'}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(userSession.name || 'Usuario')}&background=0052ff&color=fff&size=256&bold=true`;
+            }}
+          />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
@@ -103,7 +108,10 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               </span>
             )}
           </div>
-          <p className="text-xs text-slate-500 truncate">{userSession.email}</p>
+          <div className="flex items-center gap-1.5 text-xs text-slate-500 truncate mt-0.5">
+            <Chrome className="w-3 h-3 text-[#0052ff] shrink-0" />
+            <span className="truncate">{userSession.email}</span>
+          </div>
           <div className="flex items-center gap-1.5 text-xs text-[#0052ff] mt-1">
             <MapPin className="w-3.5 h-3.5 shrink-0" />
             <span className="truncate">{userSession.fixedLocation?.address || `${userSession.city}, Colombia`}</span>

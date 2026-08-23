@@ -562,6 +562,7 @@ export default function App() {
         isProviderMode={session.mode === 'provider'}
         ordersCount={bookings.filter(b => b.status === 'pendiente' || b.status === 'en_camino').length}
         isAdmin={isSuperAdmin}
+        userAvatarUrl={session.avatarUrl || getEmailAvatarUrl(session.email, session.name)}
       />
 
       {/* MODALS */}
