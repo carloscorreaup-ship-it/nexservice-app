@@ -1,4 +1,5 @@
 import { Coordinates } from '../types';
+import { ALL_COLOMBIA_CITIES } from '../data/colombiaCities';
 
 /**
  * Calculates distance between two coordinates in kilometers using Haversine formula
@@ -33,6 +34,7 @@ export function formatDistance(distanceKm: number): string {
 export const DEFAULT_COLOMBIA_COORDS: Record<string, Coordinates> = {
   Pereira: { lat: 4.81333, lng: -75.69611 },
   Dosquebradas: { lat: 4.83889, lng: -75.68056 },
+  'Santa Rosa de Cabal': { lat: 4.8694, lng: -75.6214 },
   Bogotá: { lat: 4.711, lng: -74.0721 },
   Medellín: { lat: 6.2442, lng: -75.5812 },
   Cali: { lat: 3.4516, lng: -76.532 },
@@ -50,12 +52,136 @@ export const DEFAULT_COLOMBIA_COORDS: Record<string, Coordinates> = {
 };
 
 /**
+ * Request device GPS coordinates asynchronously
+ */
+export function requestUserCoordinates(options?: PositionOptions): Promise<Coordinates | null> {
+  return new Promise((resolve) => {
+    if (!('geolocation' in navigator)) {
+      resolve(null);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        resolve({
+          lat: Number(position.coords.latitude.toFixed(6)),
+          lng: Number(position.coords.longitude.toFixed(6)),
+        });
+      },
+      (error) => {
+        console.warn('Geolocation permission not granted or error:', error.message);
+        resolve(null);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 60000,
+        ...options,
+      }
+    );
+  });
+}
+
+/**
+ * Finds the nearest Colombian city based on given coordinates
+ */
+export function findNearestCity(coords: Coordinates): { name: string; department: string; distanceKm: number } {
+  let nearestCity = { name: 'Pereira', department: 'Risaralda', distanceKm: Infinity };
+
+  // Check ALL_COLOMBIA_CITIES with coordinates
+  for (const city of ALL_COLOMBIA_CITIES) {
+    if (city.coordinates) {
+      const dist = calculateDistanceKm(coords, city.coordinates);
+      if (dist < nearestCity.distanceKm) {
+        nearestCity = {
+          name: city.name,
+          department: city.department,
+          distanceKm: dist,
+        };
+      }
+    }
+  }
+
+  // Fallback check against DEFAULT_COLOMBIA_COORDS
+  if (nearestCity.distanceKm === Infinity) {
+    for (const [cityName, cityCoord] of Object.entries(DEFAULT_COLOMBIA_COORDS)) {
+      const dist = calculateDistanceKm(coords, cityCoord);
+      if (dist < nearestCity.distanceKm) {
+        nearestCity = {
+          name: cityName,
+          department: 'Colombia',
+          distanceKm: dist,
+        };
+      }
+    }
+  }
+
+  return nearestCity;
+}
+
+/**
+ * Reverse geocode coordinates to human-readable address with fast fallback
+ */
+export async function reverseGeocodeAddress(
+  coords: Coordinates
+): Promise<{ address: string; city: string; department: string } | null> {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3500);
+
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${coords.lat}&lon=${coords.lng}&zoom=18&addressdetails=1`,
+      {
+        signal: controller.signal,
+        headers: {
+          'Accept-Language': 'es',
+        },
+      }
+    );
+    clearTimeout(timeoutId);
+
+    if (response.ok) {
+      const data = await response.json();
+      const addr = data.address || {};
+      const road = addr.road || addr.pedestrian || addr.street || addr.neighbourhood || '';
+      const suburb = addr.suburb || addr.neighbourhood || addr.residential || '';
+      const city = addr.city || addr.town || addr.municipality || addr.village || addr.county || '';
+      const state = addr.state || '';
+
+      const nearest = findNearestCity(coords);
+      const finalCity = city || nearest.name;
+      const finalDept = state || nearest.department;
+
+      let formattedAddress = '';
+      if (road) formattedAddress += road;
+      if (suburb && suburb !== road) formattedAddress += formattedAddress ? `, Barrio ${suburb}` : suburb;
+      if (!formattedAddress) formattedAddress = `${finalCity}, ${finalDept}`;
+
+      return {
+        address: formattedAddress,
+        city: finalCity,
+        department: finalDept,
+      };
+    }
+  } catch (e) {
+    // Network or timeout failure - fallback to nearest city
+  }
+
+  const nearest = findNearestCity(coords);
+  return {
+    address: `${nearest.name}, ${nearest.department}`,
+    city: nearest.name,
+    department: nearest.department,
+  };
+}
+
+/**
  * Jitter coordinate slightly for realistic multi-marker display in map
  */
 export function jitterCoordinate(coord: Coordinates, offsetIndex: number): Coordinates {
   const angles = [0, 45, 90, 135, 180, 225, 270, 315];
   const angle = (angles[offsetIndex % angles.length] * Math.PI) / 180;
-  const radius = 0.005 + (offsetIndex * 0.003); // ~500m to 1km radius jitter
+  const radius = 0.005 + offsetIndex * 0.003; // ~500m to 1km radius jitter
   return {
     lat: coord.lat + Math.cos(angle) * radius,
     lng: coord.lng + Math.sin(angle) * radius * 1.2,

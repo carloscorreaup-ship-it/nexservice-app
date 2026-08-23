@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { UserSession, Provider, ProductItem, BookingOrOrder, ServiceItem, UserRole } from './types';
+import { UserSession, Provider, ProductItem, BookingOrOrder, ServiceItem, UserRole, Coordinates } from './types';
 import { INITIAL_PROVIDERS, INITIAL_PRODUCTS, INITIAL_BOOKINGS, INITIAL_USERS } from './data/initialData';
 import { Header } from './components/Header';
 import { BottomNavBar } from './components/BottomNavBar';
@@ -32,6 +32,7 @@ import {
   getUserByEmail
 } from './services/firestoreService';
 import { getEmailAvatarUrl } from './utils/userUtils';
+import { requestUserCoordinates, reverseGeocodeAddress, findNearestCity, DEFAULT_COLOMBIA_COORDS, calculateDistanceKm } from './utils/geoUtils';
 
 const STORAGE_KEYS = {
   SESSION: 'nexservice_session_v4',
@@ -168,6 +169,32 @@ export default function App() {
     localStorage.setItem(STORAGE_KEYS.SESSION, JSON.stringify(session));
   }, [session]);
 
+  // Request GPS coordinate sync on mount or auth if permitted
+  useEffect(() => {
+    if (session.email && session.isOnboarded) {
+      requestUserCoordinates({ timeout: 6000 }).then(async (coords) => {
+        if (coords) {
+          setSession((prev) => {
+            const currentCoords = prev.fixedLocation?.coordinates;
+            // If previous coords were missing or moved by more than 100m, update with precise GPS
+            if (!currentCoords || calculateDistanceKm(currentCoords, coords) > 0.1) {
+              const updated: UserSession = {
+                ...prev,
+                fixedLocation: {
+                  ...prev.fixedLocation,
+                  coordinates: coords,
+                },
+              };
+              saveUserToDB(updated);
+              return updated;
+            }
+            return prev;
+          });
+        }
+      });
+    }
+  }, [session.email, session.isOnboarded]);
+
   const handleToggleUserStatus = async (email: string, currentStatus: boolean) => {
     const nextStatus = !currentStatus;
     await toggleUserStatusInDB(email, nextStatus);
@@ -190,8 +217,12 @@ export default function App() {
     role: UserRole;
     address: string;
     city: string;
+    department?: string;
+    coordinates?: Coordinates;
     avatarUrl: string;
   }) => {
+    const coords = data.coordinates || session.fixedLocation?.coordinates || DEFAULT_COLOMBIA_COORDS[data.city] || DEFAULT_COLOMBIA_COORDS['Pereira'] || { lat: 4.81333, lng: -75.69611 };
+    const dept = data.department || session.fixedLocation?.department || 'Risaralda';
     const newSession: UserSession = {
       ...session,
       email: data.email,
@@ -199,6 +230,7 @@ export default function App() {
       phone: data.phone,
       role: data.role,
       city: data.city,
+      department: dept,
       avatarUrl: data.avatarUrl,
       isOnboarded: true,
       hasChosenCity: true,
@@ -206,22 +238,34 @@ export default function App() {
       isAdmin: data.email.toLowerCase() === 'carloscorreaup@gmail.com',
       mode: data.role === 'provider' ? 'provider' : 'client',
       fixedLocation: {
-        ...session.fixedLocation,
         address: data.address,
-        city: data.city
-      }
+        city: data.city,
+        department: dept,
+        coordinates: coords,
+        isPublicOnMap: true,
+      },
     };
     setSession(newSession);
     await saveUserToDB(newSession);
     setUsers(prev => [newSession, ...prev.filter(u => u.email !== newSession.email)]);
   };
 
-  const handleSelectCity = (cityName: string) => {
-    setSession(prev => ({
-      ...prev,
-      city: cityName,
-      hasChosenCity: true
-    }));
+  const handleSelectCity = (cityName: string, detectedCoords?: Coordinates) => {
+    const coords = detectedCoords || DEFAULT_COLOMBIA_COORDS[cityName] || session.fixedLocation?.coordinates || DEFAULT_COLOMBIA_COORDS['Pereira'];
+    setSession(prev => {
+      const updated: UserSession = {
+        ...prev,
+        city: cityName,
+        hasChosenCity: true,
+        fixedLocation: {
+          ...prev.fixedLocation,
+          city: cityName,
+          coordinates: coords,
+        },
+      };
+      saveUserToDB(updated);
+      return updated;
+    });
     setShowCityModal(false);
   };
 
@@ -495,6 +539,10 @@ export default function App() {
             onOpenFirebaseConfig={() => setShowFirebaseModal(true)}
             onToggleProviderMode={handleToggleProviderMode}
             onViewProvider={p => setSelectedProviderDetail(p)}
+            onUpdateLocation={updatedSession => {
+              setSession(updatedSession);
+              saveUserToDB(updatedSession);
+            }}
             onOpenAdminPanel={() => navigateToTab('admin')}
             onLogout={handleLogout}
             onResetData={handleResetData}

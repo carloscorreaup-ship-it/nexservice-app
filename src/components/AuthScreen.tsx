@@ -13,6 +13,7 @@ import { auth, isFirebaseConnected } from '../services/firebase';
 import { getEmailAvatarUrl } from '../utils/userUtils';
 import { DataPolicyModal } from './DataPolicyModal';
 import { getUserByEmail, saveUserToDB } from '../services/firestoreService';
+import { requestUserCoordinates, reverseGeocodeAddress, findNearestCity } from '../utils/geoUtils';
 
 interface AuthScreenProps {
   onAuthSuccess: (data: {
@@ -51,25 +52,40 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthSuccess, onOpenFir
 
             const dbUser = await getUserByEmail(googleEmail);
             if (!dbUser) {
+              const detectedCoords = await requestUserCoordinates({ timeout: 4000 });
+              let initialCity = 'Pereira';
+              let initialDept = 'Risaralda';
+              let initialAddr = 'Pereira, Risaralda';
+              let initialCoords = { lat: 4.81333, lng: -75.69611 };
+
+              if (detectedCoords) {
+                initialCoords = detectedCoords;
+                const geo = await reverseGeocodeAddress(detectedCoords);
+                const nearest = findNearestCity(detectedCoords);
+                initialCity = geo?.city || nearest.name;
+                initialDept = geo?.department || nearest.department;
+                initialAddr = geo?.address || `${initialCity}, ${initialDept}`;
+              }
+
               await saveUserToDB({
                 email: googleEmail,
                 name: googleName,
                 phone: result.user.phoneNumber || '+57 300 000 0000',
-                city: 'Pereira',
-                department: 'Risaralda',
+                city: initialCity,
+                department: initialDept,
                 mode: 'client',
                 role: 'both',
-                isOnboarded: true,
-                hasChosenCity: true,
+                isOnboarded: false,
+                hasChosenCity: false,
                 favorites: [],
                 isVerified: true,
                 isActive: true,
                 avatarUrl: googleAvatar,
                 fixedLocation: {
-                  address: 'Pereira, Risaralda',
-                  city: 'Pereira',
-                  department: 'Risaralda',
-                  coordinates: { lat: 4.81333, lng: -75.69611 },
+                  address: initialAddr,
+                  city: initialCity,
+                  department: initialDept,
+                  coordinates: initialCoords,
                   isPublicOnMap: true
                 }
               });
@@ -277,25 +293,40 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthSuccess, onOpenFir
         // Check or store in Firestore
         const dbUser = await getUserByEmail(googleEmail);
         if (!dbUser) {
+          const detectedCoords = await requestUserCoordinates({ timeout: 4000 });
+          let initialCity = 'Pereira';
+          let initialDept = 'Risaralda';
+          let initialAddr = 'Pereira, Risaralda';
+          let initialCoords = { lat: 4.81333, lng: -75.69611 };
+
+          if (detectedCoords) {
+            initialCoords = detectedCoords;
+            const geo = await reverseGeocodeAddress(detectedCoords);
+            const nearest = findNearestCity(detectedCoords);
+            initialCity = geo?.city || nearest.name;
+            initialDept = geo?.department || nearest.department;
+            initialAddr = geo?.address || `${initialCity}, ${initialDept}`;
+          }
+
           await saveUserToDB({
             email: googleEmail,
             name: googleName,
             phone: result.user.phoneNumber || '+57 300 000 0000',
-            city: 'Pereira',
-            department: 'Risaralda',
+            city: initialCity,
+            department: initialDept,
             mode: 'client',
             role: 'both',
-            isOnboarded: true,
-            hasChosenCity: true,
+            isOnboarded: false,
+            hasChosenCity: false,
             favorites: [],
             isVerified: true,
             isActive: true,
             avatarUrl: googleAvatar,
             fixedLocation: {
-              address: 'Pereira, Risaralda',
-              city: 'Pereira',
-              department: 'Risaralda',
-              coordinates: { lat: 4.81333, lng: -75.69611 },
+              address: initialAddr,
+              city: initialCity,
+              department: initialDept,
+              coordinates: initialCoords,
               isPublicOnMap: true
             }
           });

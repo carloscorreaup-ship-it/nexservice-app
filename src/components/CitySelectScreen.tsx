@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Search, MapPin, Check, X, Sparkles } from 'lucide-react';
+import { Search, MapPin, Check, X, Sparkles, Crosshair, Navigation } from 'lucide-react';
 import { COLOMBIA_CITIES } from '../data/initialData';
+import { requestUserCoordinates, findNearestCity, reverseGeocodeAddress } from '../utils/geoUtils';
 
 interface CitySelectScreenProps {
   selectedCity: string;
-  onSelectCity: (cityName: string) => void;
+  onSelectCity: (cityName: string, detectedCoords?: { lat: number; lng: number }) => void;
   onClose?: () => void;
   isModal?: boolean;
 }
@@ -16,6 +17,8 @@ export const CitySelectScreen: React.FC<CitySelectScreenProps> = ({
   isModal = false,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [isLocating, setIsLocating] = useState(false);
+  const [locateError, setLocateError] = useState<string | null>(null);
 
   const normalize = (str: string) =>
     str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
@@ -30,6 +33,23 @@ export const CitySelectScreen: React.FC<CitySelectScreenProps> = ({
   });
 
   const popularCities = ['Pereira', 'Dosquebradas', 'Manizales', 'Armenia', 'Bogotá', 'Medellín', 'Cali'];
+
+  const handleUseGpsLocation = async () => {
+    setIsLocating(true);
+    setLocateError(null);
+
+    const coords = await requestUserCoordinates();
+    if (coords) {
+      const geoResult = await reverseGeocodeAddress(coords);
+      const nearest = findNearestCity(coords);
+      const targetCity = geoResult?.city || nearest.name;
+      onSelectCity(targetCity, coords);
+    } else {
+      setLocateError('No se pudo acceder al GPS. Asegúrate de permitir el acceso en tu navegador.');
+      setTimeout(() => setLocateError(null), 4000);
+    }
+    setIsLocating(false);
+  };
 
   return (
     <div className={isModal ? 'fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs' : 'min-h-screen bg-[#f9f9ff] bg-pattern text-[#141b2b] p-4 sm:p-6 flex flex-col justify-center max-w-xl mx-auto'}>
@@ -52,6 +72,37 @@ export const CitySelectScreen: React.FC<CitySelectScreenProps> = ({
         <p className="text-xs text-slate-500 mb-4">
           Conéctate con proveedores verificados y productos cerca de tu ubicación.
         </p>
+
+        {/* GPS Quick Action Button */}
+        <button
+          onClick={handleUseGpsLocation}
+          disabled={isLocating}
+          className="w-full mb-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 border border-blue-200/90 rounded-2xl flex items-center justify-between text-left transition-all active:scale-98 cursor-pointer shadow-xs"
+        >
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-[#0052ff] text-white shadow-sm">
+              <Crosshair className={`w-4 h-4 ${isLocating ? 'animate-spin' : ''}`} />
+            </div>
+            <div>
+              <div className="text-xs font-extrabold text-[#0052ff] flex items-center gap-1">
+                <span>Usar mi ubicación GPS actual</span>
+                <Navigation className="w-3 h-3" />
+              </div>
+              <div className="text-[11px] text-slate-500">
+                {isLocating ? 'Detectando señal de satélite...' : 'Detecta automáticamente tu ciudad'}
+              </div>
+            </div>
+          </div>
+          <span className="text-[10px] font-bold bg-white text-[#0052ff] border border-blue-200 px-2 py-1 rounded-xl shadow-xs">
+            {isLocating ? '...' : 'Detectar'}
+          </span>
+        </button>
+
+        {locateError && (
+          <div className="mb-3 p-2.5 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl text-xs">
+            {locateError}
+          </div>
+        )}
 
         {/* Search Input */}
         <div className="relative mb-3">
@@ -150,4 +201,3 @@ export const CitySelectScreen: React.FC<CitySelectScreenProps> = ({
     </div>
   );
 };
-

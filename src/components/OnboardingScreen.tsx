@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { User, ShieldCheck, MapPin, ArrowRight, ArrowLeft, Check, Camera } from 'lucide-react';
-import { UserRole } from '../types';
+import { User, ShieldCheck, MapPin, ArrowRight, ArrowLeft, Check, Camera, Crosshair, Navigation, Sparkles, CheckCircle2 } from 'lucide-react';
+import { UserRole, Coordinates } from '../types';
 import { getEmailAvatarUrl } from '../utils/userUtils';
+import { requestUserCoordinates, reverseGeocodeAddress, DEFAULT_COLOMBIA_COORDS } from '../utils/geoUtils';
 
 interface OnboardingScreenProps {
   defaultEmail?: string;
@@ -14,6 +15,8 @@ interface OnboardingScreenProps {
     role: UserRole;
     address: string;
     city: string;
+    department: string;
+    coordinates: Coordinates;
     avatarUrl: string;
   }) => void;
 }
@@ -25,12 +28,45 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ defaultEmail
   const [phone, setPhone] = useState('+57 300 123 4567');
   const [role, setRole] = useState<UserRole>('both');
   const [city, setCity] = useState('Pereira');
+  const [department, setDepartment] = useState('Risaralda');
   const [address, setAddress] = useState('Carrera 15 # 12-45, Barrio Álamos');
+  const [coords, setCoords] = useState<Coordinates>(DEFAULT_COLOMBIA_COORDS['Pereira'] || { lat: 4.81333, lng: -75.69611 });
+  const [isDetectingGps, setIsDetectingGps] = useState(false);
+  const [gpsStatus, setGpsStatus] = useState<'idle' | 'detecting' | 'success' | 'denied'>('idle');
 
   useEffect(() => {
     if (defaultEmail) setEmail(defaultEmail);
     if (defaultName) setName(defaultName);
   }, [defaultEmail, defaultName]);
+
+  // Request GPS automatically when landing on Step 3
+  useEffect(() => {
+    if (step === 3 && gpsStatus === 'idle') {
+      triggerGpsDetection();
+    }
+  }, [step]);
+
+  const triggerGpsDetection = async () => {
+    setIsDetectingGps(true);
+    setGpsStatus('detecting');
+
+    const detected = await requestUserCoordinates();
+    if (detected) {
+      setCoords(detected);
+      setGpsStatus('success');
+
+      // Reverse geocode to get city, department, and address
+      const geoResult = await reverseGeocodeAddress(detected);
+      if (geoResult) {
+        if (geoResult.city) setCity(geoResult.city);
+        if (geoResult.department) setDepartment(geoResult.department);
+        if (geoResult.address) setAddress(geoResult.address);
+      }
+    } else {
+      setGpsStatus('denied');
+    }
+    setIsDetectingGps(false);
+  };
 
   // Automatic Avatar Preview derived from Email, or Google profile picture
   const autoAvatarUrl = defaultAvatarUrl || getEmailAvatarUrl(email, name);
@@ -39,7 +75,6 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ defaultEmail
     e.preventDefault();
     if (step === 1) {
       setStep(2);
-
     } else if (step === 2) {
       setStep(3);
     } else {
@@ -50,6 +85,8 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ defaultEmail
         role,
         address,
         city,
+        department,
+        coordinates: coords,
         avatarUrl: autoAvatarUrl
       });
     }
@@ -82,7 +119,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ defaultEmail
           {step > 1 && (
             <button
               onClick={() => setStep(step - 1)}
-              className="flex items-center gap-1 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-full"
+              className="flex items-center gap-1 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-full cursor-pointer transition-all"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Atrás</span>
@@ -202,32 +239,85 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ defaultEmail
             </>
           )}
 
-          {/* STEP 3: FIXED LOCATION FOR MAP */}
+          {/* STEP 3: FIXED LOCATION WITH AUTOMATIC GPS FOR MAP */}
           {step === 3 && (
             <>
               <div>
-                <h3 className="text-lg font-bold text-[#141b2b] mb-1 font-geist">Dirección Fija en el Mapa</h3>
-                <p className="text-xs text-slate-500 mb-3">Tu dirección física se mostrará en el Mapa.</p>
+                <h3 className="text-lg font-bold text-[#141b2b] mb-1 font-geist">Ubicación para el Mapa</h3>
+                <p className="text-xs text-slate-500 mb-3">Tu celular detectará tu posición para mostrarte servicios cercanos.</p>
+              </div>
+
+              {/* GPS Detection Status Banner */}
+              <div className={`p-3.5 rounded-2xl border transition-all ${
+                gpsStatus === 'success'
+                  ? 'bg-emerald-50/80 border-emerald-200 text-emerald-950'
+                  : gpsStatus === 'detecting'
+                  ? 'bg-blue-50 border-blue-200 text-blue-950 animate-pulse'
+                  : gpsStatus === 'denied'
+                  ? 'bg-amber-50 border-amber-200 text-amber-950'
+                  : 'bg-slate-50 border-slate-200 text-slate-800'
+              }`}>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    {gpsStatus === 'detecting' ? (
+                      <Crosshair className="w-4 h-4 text-[#0052ff] animate-spin shrink-0" />
+                    ) : gpsStatus === 'success' ? (
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    ) : (
+                      <Navigation className="w-4 h-4 text-amber-600 shrink-0" />
+                    )}
+
+                    <div className="text-xs truncate">
+                      {gpsStatus === 'detecting' && <span className="font-bold">Obteniendo coordenadas GPS...</span>}
+                      {gpsStatus === 'success' && (
+                        <div>
+                          <span className="font-bold text-emerald-800 block">GPS del Celular Activo</span>
+                          <span className="text-[10px] text-emerald-600 font-mono">
+                            {coords.lat.toFixed(4)}, {coords.lng.toFixed(4)}
+                          </span>
+                        </div>
+                      )}
+                      {gpsStatus === 'denied' && (
+                        <div>
+                          <span className="font-bold text-amber-800 block">Permiso de GPS no concedido</span>
+                          <span className="text-[10px] text-amber-700">Puedes ingresar tu ciudad manualmente.</span>
+                        </div>
+                      )}
+                      {gpsStatus === 'idle' && <span>Presiona para ubicar tu celular</span>}
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={triggerGpsDetection}
+                    disabled={isDetectingGps}
+                    className="px-2.5 py-1.5 bg-white border border-slate-200 hover:border-[#0052ff] hover:text-[#0052ff] rounded-xl text-[11px] font-bold shadow-xs transition-all cursor-pointer shrink-0 flex items-center gap-1"
+                  >
+                    <Crosshair className={`w-3 h-3 ${isDetectingGps ? 'animate-spin' : ''}`} />
+                    <span>{gpsStatus === 'success' ? 'Re-detectar' : 'Detectar GPS'}</span>
+                  </button>
+                </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Ciudad</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Ciudad / Municipio</label>
                 <input
                   type="text"
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-[#141b2b]"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-[#141b2b] focus:outline-none focus:border-[#0052ff]"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Dirección Exacta (Calle, Carrera, Barrio)</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Dirección Exacta o Barrio</label>
                 <input
                   type="text"
                   required
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-[#141b2b]"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-[#141b2b] focus:outline-none focus:border-[#0052ff]"
+                  placeholder="Ej: Carrera 15 # 12-45, Barrio Álamos"
                 />
               </div>
             </>
@@ -236,7 +326,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ defaultEmail
           <div className="pt-2">
             <button
               type="submit"
-              className="w-full bg-[#0052ff] hover:bg-blue-600 text-white font-bold text-sm py-3.5 rounded-2xl shadow-md shadow-blue-500/20 flex items-center justify-center gap-2 transition-all"
+              className="w-full bg-[#0052ff] hover:bg-blue-600 text-white font-bold text-sm py-3.5 rounded-2xl shadow-md shadow-blue-500/20 flex items-center justify-center gap-2 transition-all cursor-pointer"
             >
               <span>{step === 3 ? 'Comenzar en NexService' : 'Continuar'}</span>
               <ArrowRight className="w-4 h-4" />

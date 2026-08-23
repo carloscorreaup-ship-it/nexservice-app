@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { User, MapPin, ShieldCheck, Flame, RefreshCw, LogOut, Store, ShieldAlert, ArrowLeft, FileText } from 'lucide-react';
+import { User, MapPin, ShieldCheck, Flame, RefreshCw, LogOut, Store, ShieldAlert, ArrowLeft, FileText, Crosshair, Navigation, CheckCircle2 } from 'lucide-react';
 import { UserSession, Provider } from '../types';
 import { DataPolicyModal } from './DataPolicyModal';
+import { requestUserCoordinates, reverseGeocodeAddress, findNearestCity } from '../utils/geoUtils';
 
 interface ProfileViewProps {
   userSession: UserSession;
@@ -10,6 +11,7 @@ interface ProfileViewProps {
   onOpenFirebaseConfig: () => void;
   onToggleProviderMode: () => void;
   onViewProvider: (provider: Provider) => void;
+  onUpdateLocation?: (updatedSession: UserSession) => void;
   onOpenAdminPanel?: () => void;
   onLogout: () => void;
   onResetData: () => void;
@@ -21,20 +23,61 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   onOpenCitySelector,
   onOpenFirebaseConfig,
   onToggleProviderMode,
+  onUpdateLocation,
   onOpenAdminPanel,
   onLogout,
   onResetData,
   onBack,
 }) => {
   const [showPolicyModal, setShowPolicyModal] = useState(false);
+  const [isSyncingGps, setIsSyncingGps] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<string | null>(null);
+
   const isAdmin = userSession.email.toLowerCase() === 'carloscorreaup@gmail.com';
+
+  const handleSyncGpsLocation = async () => {
+    setIsSyncingGps(true);
+    setSyncStatus('Detectando satélites...');
+
+    const coords = await requestUserCoordinates();
+    if (coords) {
+      const geoResult = await reverseGeocodeAddress(coords);
+      const nearest = findNearestCity(coords);
+      const cityName = geoResult?.city || nearest.name;
+      const deptName = geoResult?.department || nearest.department;
+      const addrName = geoResult?.address || `${cityName}, ${deptName}`;
+
+      const updatedSession: UserSession = {
+        ...userSession,
+        city: cityName,
+        department: deptName,
+        fixedLocation: {
+          ...userSession.fixedLocation,
+          address: addrName,
+          city: cityName,
+          department: deptName,
+          coordinates: coords,
+        },
+      };
+
+      if (onUpdateLocation) {
+        onUpdateLocation(updatedSession);
+      }
+      setSyncStatus('¡Ubicación GPS sincronizada!');
+      setTimeout(() => setSyncStatus(null), 3000);
+    } else {
+      setSyncStatus('Error: Permiso de ubicación denegado.');
+      setTimeout(() => setSyncStatus(null), 3500);
+    }
+    setIsSyncingGps(false);
+  };
 
   return (
     <div className="pb-24 max-w-3xl mx-auto px-4 pt-4">
       {onBack && (
         <button
           onClick={onBack}
-          className="mb-4 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 font-semibold text-xs transition-all border border-slate-200 shadow-sm"
+          className="mb-4 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 font-semibold text-xs transition-all border border-slate-200 shadow-sm cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4 text-[#0052ff]" />
           <span>Volver al Inicio</span>
@@ -63,8 +106,13 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           <p className="text-xs text-slate-500 truncate">{userSession.email}</p>
           <div className="flex items-center gap-1.5 text-xs text-[#0052ff] mt-1">
             <MapPin className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">{userSession.fixedLocation?.address || 'Pereira, Colombia'}</span>
+            <span className="truncate">{userSession.fixedLocation?.address || `${userSession.city}, Colombia`}</span>
           </div>
+          {userSession.fixedLocation?.coordinates && (
+            <div className="text-[10px] text-slate-400 font-mono mt-0.5">
+              GPS: {userSession.fixedLocation.coordinates.lat.toFixed(4)}, {userSession.fixedLocation.coordinates.lng.toFixed(4)}
+            </div>
+          )}
         </div>
       </div>
 
@@ -73,7 +121,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
         <div className="bg-red-50/70 border border-red-200 rounded-3xl p-4 mb-4 shadow-sm">
           <button
             onClick={onOpenAdminPanel}
-            className="w-full flex items-center justify-between p-3 rounded-2xl bg-white hover:bg-red-50 border border-red-200 text-left transition-all shadow-sm"
+            className="w-full flex items-center justify-between p-3 rounded-2xl bg-white hover:bg-red-50 border border-red-200 text-left transition-all shadow-sm cursor-pointer"
           >
             <div className="flex items-center gap-3">
               <div className="p-2.5 rounded-xl bg-red-600 text-white">
@@ -91,9 +139,36 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
 
       {/* Settings */}
       <div className="bg-white border border-slate-200 rounded-3xl p-4 space-y-2 mb-6 shadow-sm">
+        {/* GPS Sync */}
+        <button
+          onClick={handleSyncGpsLocation}
+          disabled={isSyncingGps}
+          className="w-full flex items-center justify-between p-3.5 rounded-2xl hover:bg-slate-50 text-left transition-all cursor-pointer group"
+        >
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-blue-50 text-[#0052ff] group-hover:bg-[#0052ff] group-hover:text-white transition-colors">
+              <Crosshair className={`w-5 h-5 ${isSyncingGps ? 'animate-spin' : ''}`} />
+            </div>
+            <div>
+              <div className="font-bold text-sm text-slate-900 flex items-center gap-1.5">
+                <span>Sincronizar Ubicación GPS</span>
+                {syncStatus && (
+                  <span className="text-[11px] font-semibold text-emerald-600 animate-fade-in">
+                    {syncStatus}
+                  </span>
+                )}
+              </div>
+              <div className="text-xs text-slate-500">Actualizar las coordenadas de tu celular para el mapa</div>
+            </div>
+          </div>
+          <span className="text-xs font-bold bg-slate-100 group-hover:bg-[#0052ff] group-hover:text-white text-slate-700 px-3 py-1.5 rounded-xl transition-colors">
+            {isSyncingGps ? 'GPS...' : 'Sincronizar'}
+          </span>
+        </button>
+
         <button
           onClick={onToggleProviderMode}
-          className="w-full flex items-center justify-between p-3.5 rounded-2xl hover:bg-slate-50 text-left transition-all"
+          className="w-full flex items-center justify-between p-3.5 rounded-2xl hover:bg-slate-50 text-left transition-all cursor-pointer"
         >
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-xl bg-emerald-50 text-emerald-600">
@@ -108,7 +183,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
 
         <button
           onClick={onOpenFirebaseConfig}
-          className="w-full flex items-center justify-between p-3.5 rounded-2xl hover:bg-slate-50 text-left transition-all"
+          className="w-full flex items-center justify-between p-3.5 rounded-2xl hover:bg-slate-50 text-left transition-all cursor-pointer"
         >
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-xl bg-amber-50 text-amber-600">
@@ -123,7 +198,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
 
         <button
           onClick={onOpenCitySelector}
-          className="w-full flex items-center justify-between p-3.5 rounded-2xl hover:bg-slate-50 text-left transition-all"
+          className="w-full flex items-center justify-between p-3.5 rounded-2xl hover:bg-slate-50 text-left transition-all cursor-pointer"
         >
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-xl bg-blue-50 text-[#0052ff]">
@@ -138,7 +213,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
 
         <button
           onClick={() => setShowPolicyModal(true)}
-          className="w-full flex items-center justify-between p-3.5 rounded-2xl hover:bg-slate-50 text-left transition-all"
+          className="w-full flex items-center justify-between p-3.5 rounded-2xl hover:bg-slate-50 text-left transition-all cursor-pointer"
         >
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-xl bg-slate-100 text-slate-700">
@@ -155,14 +230,14 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
       <div className="flex gap-3 mb-8">
         <button
           onClick={onResetData}
-          className="flex-1 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold py-3 px-4 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-sm"
+          className="flex-1 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold py-3 px-4 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-sm cursor-pointer"
         >
           <RefreshCw className="w-4 h-4" />
           <span>Restablecer Datos</span>
         </button>
         <button
           onClick={onLogout}
-          className="bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 text-xs font-semibold py-3 px-4 rounded-2xl flex items-center justify-center gap-2 transition-all"
+          className="bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 text-xs font-semibold py-3 px-4 rounded-2xl flex items-center justify-center gap-2 transition-all cursor-pointer"
         >
           <LogOut className="w-4 h-4" />
           <span>Cerrar Sesión</span>
