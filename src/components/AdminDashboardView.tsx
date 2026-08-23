@@ -75,9 +75,14 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
               <ShieldAlert className="w-7 h-7" />
             </div>
             <div>
-              <span className="text-[10px] font-bold uppercase tracking-wider bg-red-100 text-red-700 px-2.5 py-0.5 rounded-full border border-red-200">
-                Super Administrador Master
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider bg-red-100 text-red-700 px-2.5 py-0.5 rounded-full border border-red-200">
+                  Super Administrador Master
+                </span>
+                <span className="text-[10px] font-serif italic text-slate-500">
+                  NexService.app By <strong className="text-red-600">Pasiflora Biohacking Pro.</strong>
+                </span>
+              </div>
               <h1 className="text-xl sm:text-2xl font-black text-[#141b2b] mt-1 font-geist">Base de Datos de Usuarios</h1>
               <p className="text-xs text-slate-500">Control total para <strong>carloscorreaup@gmail.com</strong></p>
             </div>

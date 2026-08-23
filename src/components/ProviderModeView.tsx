@@ -293,7 +293,7 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
       {activeTab === 'location' && (
         <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4">
           <div>
-            <h3 className="text-base font-bold text-white mb-1">Dirección Fija y Posición en Snap Map</h3>
+            <h3 className="text-base font-bold text-white mb-1">Dirección Fija y Posición en el Mapa</h3>
             <p className="text-xs text-slate-400">
               Permite que los clientes vean tu taller, tienda o consultorio en el mapa de {currentCity}.
             </p>

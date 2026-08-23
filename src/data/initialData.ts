@@ -1,21 +1,8 @@
 import { City, Category, Provider, ProductItem, BookingOrOrder, UserSession } from '../types';
+import { ALL_COLOMBIA_CITIES } from './colombiaCities';
 
-export const COLOMBIA_CITIES: City[] = [
-  { id: 'pereira', name: 'Pereira', department: 'Risaralda', isPopular: true, coordinates: { lat: 4.81333, lng: -75.69611 } },
-  { id: 'dosquebradas', name: 'Dosquebradas', department: 'Risaralda', isPopular: true, coordinates: { lat: 4.83889, lng: -75.68056 } },
-  { id: 'santa-rosa', name: 'Santa Rosa de Cabal', department: 'Risaralda', coordinates: { lat: 4.8694, lng: -75.6214 } },
-  { id: 'manizales', name: 'Manizales', department: 'Caldas', isPopular: true, coordinates: { lat: 5.0689, lng: -75.5174 } },
-  { id: 'armenia', name: 'Armenia', department: 'Quindío', isPopular: true, coordinates: { lat: 4.5339, lng: -75.6811 } },
-  { id: 'bogota', name: 'Bogotá', department: 'Cundinamarca', isPopular: true, coordinates: { lat: 4.711, lng: -74.0721 } },
-  { id: 'medellin', name: 'Medellín', department: 'Antioquia', isPopular: true, coordinates: { lat: 6.2442, lng: -75.5812 } },
-  { id: 'cali', name: 'Cali', department: 'Valle del Cauca', isPopular: true, coordinates: { lat: 3.4516, lng: -76.532 } },
-  { id: 'barranquilla', name: 'Barranquilla', department: 'Atlántico', isPopular: true, coordinates: { lat: 10.9685, lng: -74.7813 } },
-  { id: 'cartagena', name: 'Cartagena', department: 'Bolívar', isPopular: true, coordinates: { lat: 10.391, lng: -75.4794 } },
-  { id: 'bucaramanga', name: 'Bucaramanga', department: 'Santander', isPopular: true, coordinates: { lat: 7.1254, lng: -73.1198 } },
-  { id: 'cucuta', name: 'Cúcuta', department: 'Norte de Santander', coordinates: { lat: 7.8939, lng: -72.5078 } },
-  { id: 'ibague', name: 'Ibagué', department: 'Tolima', coordinates: { lat: 4.4389, lng: -75.2322 } },
-  { id: 'villavicencio', name: 'Villavicencio', department: 'Meta', coordinates: { lat: 4.142, lng: -73.6266 } },
-];
+export const COLOMBIA_CITIES: City[] = ALL_COLOMBIA_CITIES;
+
 
 export const INITIAL_CATEGORIES: Category[] = [
   {
@@ -252,6 +239,36 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     rating: 5.0,
     reviewsCount: 64,
     createdAt: '2026-08-21'
+  },
+  {
+    id: 'prod-106',
+    providerId: 'p5',
+    providerName: 'Dra. Camila Morales',
+    providerBusinessName: 'Huellitas Spa & Veterinaria',
+    providerAvatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=256&h=256&fit=crop&crop=faces&q=80',
+    providerPhone: '+57 311 987 6543',
+    providerWhatsapp: '573119876543',
+    name: 'Shampoo Hipoalergénico y Espuma Limpiadora para Baño de Gatos y Perros 250ml',
+    description: 'Fórmula suave con extracto de avena y aloe vera, ideal para bañar gatos sin estrés y cuidar el pelaje de mascotas con piel sensible.',
+    price: 38000,
+    originalPrice: 48000,
+    category: 'mascotas',
+    tags: ['Mascotas', 'Gatos', 'Baño de Gatos', 'Veterinaria', 'Shampoo'],
+    images: [
+      'https://images.unsplash.com/photo-1548767797-d8c844163c4c?w=600&h=450&fit=crop&q=80'
+    ],
+    inStock: true,
+    stockQuantity: 20,
+    condition: 'nuevo',
+    brand: 'PetCare Bio Natural',
+    deliveryAvailable: true,
+    deliveryFee: 5000,
+    warranty: 'Producto 100% garantizado',
+    city: 'Pereira',
+    verifiedSeller: true,
+    rating: 5.0,
+    reviewsCount: 42,
+    createdAt: '2026-08-21'
   }
 ];
 
@@ -453,6 +470,49 @@ export const INITIAL_PROVIDERS: Provider[] = [
       INITIAL_PRODUCTS[4]
     ],
     reviews: []
+  },
+  {
+    id: 'p5',
+    name: 'Dra. Camila Morales',
+    businessName: 'Huellitas Spa & Veterinaria Domiciliaria',
+    category: 'mascotas',
+    offerType: 'both',
+    rating: 5.0,
+    reviewCount: 148,
+    tags: ['Mascotas', 'Veterinaria', 'Gatos', 'Perros', 'Baño de Gatos', 'Peluquería Canina y Felina', 'Domicilio'],
+    phone: '+57 311 987 6543',
+    whatsapp: '573119876543',
+    address: 'Carrera 12 # 22-18, Barrio Los Alpes, Pereira',
+    coordinates: { lat: 4.8148, lng: -75.6892 },
+    city: 'Pereira',
+    department: 'Risaralda',
+    isFixedLocationVisibleOnMap: true,
+    website: 'https://huellitasspa.com.co',
+    social: '@huellitas.spa.pereira',
+    verified: true,
+    verifiedBadgeType: 'oficial',
+    documentVerified: true,
+    rutVerified: true,
+    avatarUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=256&h=256&fit=crop&crop=faces&q=80',
+    bannerUrl: 'https://images.unsplash.com/photo-1548767797-d8c844163c4c?w=1000&h=400&fit=crop&q=80',
+    description: 'Médica Veterinaria con especialización en etología y estética animal. Servicio especializado de baño sin estrés para gatos y peluquería canina a domicilio.',
+    isDelivery: true,
+    isFeatured: true,
+    yearsOfExperience: 6,
+    responseTime: '< 10 mins',
+    priceRange: '$$ (Accesible)',
+    openHours: 'Lun - Sáb: 8:00 AM - 6:30 PM',
+    services: [
+      { id: 's20', providerId: 'p5', name: 'Baño y peluquería antiestrés para gatos a domicilio', priceEstimate: '$55.000 COP', duration: '1 - 1.5 hrs', category: 'mascotas', isHomeService: true, description: 'Baño con agua tibia, secado silencioso, corte de uñas, limpieza de oídos y cepillado deslanador.' },
+      { id: 's21', providerId: 'p5', name: 'Spa completo y baño para perros razas pequeñas y medianas', priceEstimate: '$45.000 COP', duration: '1 hr', category: 'mascotas', isHomeService: true },
+      { id: 's22', providerId: 'p5', name: 'Consulta médica veterinaria y vacunación a domicilio', priceEstimate: '$50.000 COP', duration: '45 mins', category: 'mascotas', isHomeService: true }
+    ],
+    products: [
+      INITIAL_PRODUCTS[5]
+    ],
+    reviews: [
+      { id: 'r2', author: 'Mariana Gómez', rating: 5, date: 'Ayer', comment: 'Excelente servicio bañando a mi gato persa, fue súper paciente y cariñosa. Quedó impecable.', verifiedBooking: true }
+    ]
   }
 ];
 

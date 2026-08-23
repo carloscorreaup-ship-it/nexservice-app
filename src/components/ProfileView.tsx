@@ -1,6 +1,7 @@
-import React from 'react';
-import { User, MapPin, ShieldCheck, Flame, RefreshCw, LogOut, Store, ShieldAlert, ArrowLeft } from 'lucide-react';
+import React, { useState } from 'react';
+import { User, MapPin, ShieldCheck, Flame, RefreshCw, LogOut, Store, ShieldAlert, ArrowLeft, FileText } from 'lucide-react';
 import { UserSession, Provider } from '../types';
+import { DataPolicyModal } from './DataPolicyModal';
 
 interface ProfileViewProps {
   userSession: UserSession;
@@ -25,6 +26,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   onResetData,
   onBack,
 }) => {
+  const [showPolicyModal, setShowPolicyModal] = useState(false);
   const isAdmin = userSession.email.toLowerCase() === 'carloscorreaup@gmail.com';
 
   return (
@@ -41,7 +43,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
 
       {/* Profile Header */}
       <div className="bg-white border border-slate-200 rounded-3xl p-6 mb-6 shadow-elevation-1 flex items-center gap-4">
-        <div className="w-16 h-16 rounded-3xl overflow-hidden bg-slate-100 ring-4 ring-blue-100 flex items-center justify-center text-xl font-bold text-[#0052ff]">
+        <div className="w-16 h-16 rounded-3xl overflow-hidden bg-slate-100 ring-4 ring-blue-100 flex items-center justify-center text-xl font-bold text-[#0052ff] shrink-0">
           {userSession.avatarUrl ? (
             <img src={userSession.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
           ) : (
@@ -49,9 +51,9 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <h2 className="text-xl font-bold text-[#141b2b] font-geist">{userSession.name || 'Carlos Correa'}</h2>
-            <ShieldCheck className="w-4 h-4 text-emerald-600" />
+            <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
             {isAdmin && (
               <span className="text-[10px] bg-red-100 text-red-700 font-black px-2 py-0.5 rounded-full border border-red-200">
                 SUPER ADMIN
@@ -60,8 +62,8 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           </div>
           <p className="text-xs text-slate-500 truncate">{userSession.email}</p>
           <div className="flex items-center gap-1.5 text-xs text-[#0052ff] mt-1">
-            <MapPin className="w-3.5 h-3.5" />
-            <span>{userSession.fixedLocation?.address || 'Pereira, Colombia'}</span>
+            <MapPin className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">{userSession.fixedLocation?.address || 'Pereira, Colombia'}</span>
           </div>
         </div>
       </div>
@@ -133,9 +135,24 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             </div>
           </div>
         </button>
+
+        <button
+          onClick={() => setShowPolicyModal(true)}
+          className="w-full flex items-center justify-between p-3.5 rounded-2xl hover:bg-slate-50 text-left transition-all"
+        >
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-slate-100 text-slate-700">
+              <FileText className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="font-bold text-sm text-slate-900">Tratamiento de Datos y Privacidad</div>
+              <div className="text-xs text-slate-500">Ley 1581 de 2012 • Habeas Data</div>
+            </div>
+          </div>
+        </button>
       </div>
 
-      <div className="flex gap-3">
+      <div className="flex gap-3 mb-8">
         <button
           onClick={onResetData}
           className="flex-1 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold py-3 px-4 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-sm"
@@ -151,6 +168,26 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           <span>Cerrar Sesión</span>
         </button>
       </div>
+
+      {/* Footer Branding */}
+      <div className="text-center pb-6">
+        <div className="flex items-center justify-center gap-1.5 font-bold text-sm text-slate-800">
+          <span>NexService<span className="text-[#0052ff]">.app</span></span>
+        </div>
+        <div className="text-xs font-serif italic text-slate-500 mt-0.5">
+          By <span className="text-[#0052ff] font-semibold">Pasiflora Biohacking Pro.</span>
+        </div>
+        <p className="text-[10px] text-slate-400 mt-1">
+          Todos los derechos reservados • Conexión Directa de Proveedores
+        </p>
+      </div>
+
+      {/* Data Policy Modal */}
+      {showPolicyModal && (
+        <DataPolicyModal
+          onClose={() => setShowPolicyModal(false)}
+        />
+      )}
     </div>
   );
 };

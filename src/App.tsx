@@ -16,6 +16,7 @@ import { ProductDetailModal } from './components/ProductDetailModal';
 import { WhatsAppModal } from './components/WhatsAppModal';
 import { FirebaseConfigModal } from './components/FirebaseConfigModal';
 import { AuthScreen } from './components/AuthScreen';
+import { SplashScreen } from './components/SplashScreen';
 import { auth, isFirebaseConnected } from './services/firebase';
 import {
   getProvidersFromDB,
@@ -37,6 +38,7 @@ const STORAGE_KEYS = {
 };
 
 export default function App() {
+  const [showSplash, setShowSplash] = useState(true);
   const [session, setSession] = useState<UserSession>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.SESSION);
@@ -349,6 +351,10 @@ export default function App() {
     });
   };
 
+  if (showSplash) {
+    return <SplashScreen onFinish={() => setShowSplash(false)} durationMs={3000} />;
+  }
+
   if (!session.email) {
     return (
       <>
@@ -404,6 +410,7 @@ export default function App() {
       {/* Header */}
       <Header
         currentCity={session.city}
+        onSelectCity={handleSelectCity}
         onOpenCitySelector={() => setShowCityModal(true)}
         onOpenFirebaseConfig={() => setShowFirebaseModal(true)}
         activeTab={activeTab}

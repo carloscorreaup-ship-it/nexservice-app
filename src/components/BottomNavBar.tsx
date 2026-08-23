@@ -18,7 +18,7 @@ export const BottomNavBar: React.FC<BottomNavBarProps> = ({
 }) => {
   const navItems = [
     { id: 'explore', label: 'Explorar', icon: Compass },
-    { id: 'map', label: 'Snap Map', icon: Map, highlight: true },
+    { id: 'map', label: 'Mapa', icon: Map, highlight: true },
     { id: 'provider', label: isProviderMode ? 'Mi Negocio' : 'Ofrecer', icon: Store },
     { id: 'bookings', label: 'Pedidos', icon: Calendar, badge: ordersCount },
     ...(isAdmin ? [{ id: 'admin', label: 'Admin', icon: ShieldAlert, adminBadge: true }] : []),

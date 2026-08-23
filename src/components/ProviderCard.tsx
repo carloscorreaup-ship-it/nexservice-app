@@ -41,7 +41,9 @@ export const ProviderCard: React.FC<ProviderCardProps> = ({
                   {provider.name}
                 </h3>
                 {provider.verified && (
-                  <ShieldCheck className="w-4 h-4 text-emerald-600" title="Verificado Oficial" />
+                  <span title="Verificado Oficial">
+                    <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                  </span>
                 )}
               </div>
               <p className="text-xs text-slate-500 font-medium">{provider.businessName}</p>

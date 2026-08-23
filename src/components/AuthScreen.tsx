@@ -1,8 +1,18 @@
-import React, { useState } from 'react';
-import { Mail, Lock, User, ArrowRight, Chrome, AlertCircle, CheckCircle, HelpCircle, Sparkles, Shield, Wrench, Settings } from 'lucide-react';
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import React, { useState, useEffect } from 'react';
+import { Mail, Lock, User, ArrowRight, Chrome, AlertCircle, CheckCircle, HelpCircle, Sparkles, Shield, Wrench, Settings, FileText, ExternalLink } from 'lucide-react';
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
+  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
+  GoogleAuthProvider
+} from 'firebase/auth';
 import { auth, isFirebaseConnected } from '../services/firebase';
 import { getEmailAvatarUrl } from '../utils/userUtils';
+import { DataPolicyModal } from './DataPolicyModal';
+import { getUserByEmail, saveUserToDB } from '../services/firestoreService';
 
 interface AuthScreenProps {
   onAuthSuccess: (data: {
@@ -22,9 +32,62 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthSuccess, onOpenFir
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
+  const [acceptTerms, setAcceptTerms] = useState(true);
+  const [showPolicyModal, setShowPolicyModal] = useState(false);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // Check if returning from a Google Redirect authentication flow
+  useEffect(() => {
+    if (isFirebaseConnected && auth) {
+      getRedirectResult(auth)
+        .then(async (result) => {
+          if (result && result.user) {
+            const googleEmail = result.user.email || '';
+            const googleName = result.user.displayName || googleEmail.split('@')[0] || 'Usuario Google';
+            const googleAvatar = result.user.photoURL || getEmailAvatarUrl(googleEmail, googleName);
+
+            const dbUser = await getUserByEmail(googleEmail);
+            if (!dbUser) {
+              await saveUserToDB({
+                email: googleEmail,
+                name: googleName,
+                phone: result.user.phoneNumber || '+57 300 000 0000',
+                city: 'Pereira',
+                department: 'Risaralda',
+                mode: 'client',
+                role: 'both',
+                isOnboarded: true,
+                hasChosenCity: true,
+                favorites: [],
+                isVerified: true,
+                isActive: true,
+                avatarUrl: googleAvatar,
+                fixedLocation: {
+                  address: 'Pereira, Risaralda',
+                  city: 'Pereira',
+                  department: 'Risaralda',
+                  coordinates: { lat: 4.81333, lng: -75.69611 },
+                  isPublicOnMap: true
+                }
+              });
+            }
+
+            onAuthSuccess({
+              email: googleEmail,
+              name: googleName,
+              avatarUrl: googleAvatar,
+              isNewUser: !dbUser
+            });
+          }
+        })
+        .catch((err) => {
+          console.warn('Google redirect result notice:', err);
+        });
+    }
+  }, [isFirebaseConnected, onAuthSuccess]);
 
   const handleQuickDemoLogin = (emailChoice: string, nameChoice: string) => {
     setError(null);
@@ -41,25 +104,27 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthSuccess, onOpenFir
     e.preventDefault();
     setError(null);
     setSuccessMessage(null);
-    setLoading(true);
 
     if (mode === 'register') {
+      if (!acceptTerms) {
+        setError('Debes autorizar el tratamiento de datos personales (Ley 1581 de 2012) para registrarte.');
+        return;
+      }
       if (password !== confirmPassword) {
         setError('Las contraseñas no coinciden.');
-        setLoading(false);
         return;
       }
       if (password.length < 6) {
         setError('La contraseña debe tener al menos 6 caracteres.');
-        setLoading(false);
         return;
       }
       if (!name.trim()) {
         setError('Por favor ingresa tu nombre completo.');
-        setLoading(false);
         return;
       }
     }
+
+    setLoading(true);
 
     try {
       if (isFirebaseConnected && auth) {
@@ -68,17 +133,19 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthSuccess, onOpenFir
           try {
             const credential = await signInWithEmailAndPassword(auth, email, password);
             if (credential.user) {
+              const userEmail = credential.user.email || email;
+              const dbUser = await getUserByEmail(userEmail);
+              
               onAuthSuccess({
-                email: credential.user.email || email,
-                name: credential.user.displayName || name || email.split('@')[0],
-                avatarUrl: credential.user.photoURL || getEmailAvatarUrl(credential.user.email || email),
+                email: userEmail,
+                name: credential.user.displayName || dbUser?.name || name || userEmail.split('@')[0],
+                avatarUrl: credential.user.photoURL || dbUser?.avatarUrl || getEmailAvatarUrl(userEmail),
                 isNewUser: false
               });
               return;
             }
           } catch (firebaseErr: any) {
             console.warn('Firebase login attempt notice:', firebaseErr);
-            // If Firebase Auth is not yet enabled or configured in Firebase console, fall back to local mode seamlessly
             if (
               firebaseErr.code === 'auth/configuration-not-found' ||
               firebaseErr.code === 'auth/operation-not-allowed' ||
@@ -102,10 +169,13 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthSuccess, onOpenFir
           try {
             const credential = await createUserWithEmailAndPassword(auth, email, password);
             if (credential.user) {
+              const userEmail = credential.user.email || email;
+              const avatar = credential.user.photoURL || getEmailAvatarUrl(userEmail, name);
+              
               onAuthSuccess({
-                email: credential.user.email || email,
+                email: userEmail,
                 name: name,
-                avatarUrl: getEmailAvatarUrl(credential.user.email || email, name),
+                avatarUrl: avatar,
                 isNewUser: true
               });
               return;
@@ -136,7 +206,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthSuccess, onOpenFir
             setSuccessMessage('Se ha enviado un correo electrónico para restablecer tu contraseña.');
             setMode('login');
           } catch (firebaseErr) {
-            setSuccessMessage('Modo Local: Correo de restablecimiento enviado a ' + email);
+            setSuccessMessage('Modo de prueba: Enlace de restablecimiento enviado a ' + email);
             setMode('login');
           }
         }
@@ -184,48 +254,85 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthSuccess, onOpenFir
     setSuccessMessage(null);
     setLoading(true);
 
+    if (!isFirebaseConnected || !auth) {
+      setError('Firebase no está inicializado. Verifica la conexión en el modal de Firebase.');
+      setLoading(false);
+      return;
+    }
+
     try {
-      if (isFirebaseConnected && auth) {
-        try {
-          const provider = new GoogleAuthProvider();
-          const result = await signInWithPopup(auth, provider);
-          if (result.user) {
-            onAuthSuccess({
-              email: result.user.email || 'carloscorreaup@gmail.com',
-              name: result.user.displayName || result.user.email?.split('@')[0] || 'Carlos Correa',
-              avatarUrl: result.user.photoURL || getEmailAvatarUrl(result.user.email || 'carloscorreaup@gmail.com'),
-              isNewUser: false
-            });
-            return;
-          }
-        } catch (firebaseErr: any) {
-          console.warn('Google Auth popup notice:', firebaseErr);
-          // If popup failed or Firebase Auth is not enabled in Firebase Console, fallback smoothly to Google Demo user
-          onAuthSuccess({
-            email: 'carloscorreaup@gmail.com',
-            name: 'Carlos Correa (Google)',
-            avatarUrl: getEmailAvatarUrl('carloscorreaup@gmail.com', 'Carlos Correa'),
-            isNewUser: false
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: 'select_account' });
+      provider.addScope('email');
+      provider.addScope('profile');
+
+      // Attempt Real Firebase Google Popup
+      const result = await signInWithPopup(auth, provider);
+      
+      if (result && result.user) {
+        const googleEmail = result.user.email || '';
+        const googleName = result.user.displayName || (googleEmail ? googleEmail.split('@')[0] : 'Usuario Google');
+        const googleAvatar = result.user.photoURL || getEmailAvatarUrl(googleEmail, googleName);
+
+        // Check or store in Firestore
+        const dbUser = await getUserByEmail(googleEmail);
+        if (!dbUser) {
+          await saveUserToDB({
+            email: googleEmail,
+            name: googleName,
+            phone: result.user.phoneNumber || '+57 300 000 0000',
+            city: 'Pereira',
+            department: 'Risaralda',
+            mode: 'client',
+            role: 'both',
+            isOnboarded: true,
+            hasChosenCity: true,
+            favorites: [],
+            isVerified: true,
+            isActive: true,
+            avatarUrl: googleAvatar,
+            fixedLocation: {
+              address: 'Pereira, Risaralda',
+              city: 'Pereira',
+              department: 'Risaralda',
+              coordinates: { lat: 4.81333, lng: -75.69611 },
+              isPublicOnMap: true
+            }
           });
-          return;
         }
-      } else {
-        // Fallback local simulated Google login
+
         onAuthSuccess({
-          email: 'carloscorreaup@gmail.com',
-          name: 'Carlos Correa (Google)',
-          avatarUrl: getEmailAvatarUrl('carloscorreaup@gmail.com', 'Carlos Correa'),
-          isNewUser: false
+          email: googleEmail,
+          name: googleName,
+          avatarUrl: googleAvatar,
+          isNewUser: !dbUser
         });
+        return;
       }
     } catch (err: any) {
-      console.error(err);
-      onAuthSuccess({
-        email: 'carloscorreaup@gmail.com',
-        name: 'Carlos Correa (Google)',
-        avatarUrl: getEmailAvatarUrl('carloscorreaup@gmail.com', 'Carlos Correa'),
-        isNewUser: false
-      });
+      console.error('Google Auth Error Details:', err);
+
+      if (err.code === 'auth/popup-closed-by-user') {
+        setError('Cerraste la ventana de Google antes de completar la verificación.');
+      } else if (err.code === 'auth/configuration-not-found' || err.code === 'auth/operation-not-allowed') {
+        setError('Google Auth aún no está activado en Firebase Console. Debes ir a Firebase Console > Authentication > Proveedores de acceso y activar "Google". Haz clic en el botón de abajo para ir directo a la consola.');
+      } else if (err.code === 'auth/popup-blocked') {
+        // Automatically try redirect if popup was blocked by browser
+        try {
+          const provider = new GoogleAuthProvider();
+          provider.setCustomParameters({ prompt: 'select_account' });
+          await signInWithRedirect(auth, provider);
+          return;
+        } catch (redirectErr: any) {
+          setError('El navegador bloqueó la ventana emergente de Google. Permite las ventanas emergentes en tu navegador.');
+        }
+      } else if (err.code === 'auth/unauthorized-domain') {
+        setError(`El dominio actual no está en la lista de dominios autorizados de Firebase Console (Authentication > Settings > Authorized Domains).`);
+      } else if (err.code === 'auth/cancelled-popup-request') {
+        setError('Solicitud cancelada. Por favor presiona el botón nuevamente.');
+      } else {
+        setError(`Error de Google Auth (${err.code || err.message}). Activa el proveedor de Google en Firebase Console.`);
+      }
     } finally {
       setLoading(false);
     }
@@ -235,13 +342,34 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthSuccess, onOpenFir
     <div className="min-h-screen bg-[#f9f9ff] bg-pattern text-[#141b2b] flex flex-col justify-center items-center p-4">
       <div className="bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-8 w-full max-w-md shadow-elevation-1">
         
-        {/* App Logo & Header */}
+        {/* App Logo & Header with "By Pasiflora Biohacking Pro." in italic */}
         <div className="flex flex-col items-center mb-6 text-center">
-          <div className="w-12 h-12 rounded-2xl bg-[#0052ff] flex items-center justify-center font-bold text-xl text-white shadow-md mb-2">
-            N
+          <div className="w-20 h-20 rounded-3xl bg-white border border-slate-200/80 shadow-md p-2 flex items-center justify-center mb-3">
+            <img 
+              src="/logo.png" 
+              alt="NexService.app" 
+              className="w-full h-full object-contain"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+                const fb = e.currentTarget.parentElement?.querySelector('.auth-fallback');
+                if (fb) fb.classList.remove('hidden');
+              }}
+            />
+            <div className="auth-fallback hidden w-full h-full rounded-2xl bg-[#0052ff] flex items-center justify-center text-white font-bold text-2xl">
+              N
+            </div>
           </div>
-          <h2 className="text-xl font-bold text-[#141b2b] font-geist">NexService.app</h2>
-          <p className="text-xs text-slate-500 mt-0.5">
+
+          <h2 className="text-2xl font-extrabold text-[#141b2b] font-geist tracking-tight">
+            NexService<span className="text-[#0052ff]">.app</span>
+          </h2>
+          
+          {/* By Pasiflora Biohacking Pro. in italic */}
+          <div className="text-xs font-serif italic text-slate-600 font-medium mt-0.5">
+            By <span className="text-[#0052ff] font-semibold">Pasiflora Biohacking Pro.</span>
+          </div>
+
+          <p className="text-xs text-slate-500 mt-2">
             {mode === 'login' && 'Ingresa a tu cuenta para continuar'}
             {mode === 'register' && 'Crea una cuenta en pocos segundos'}
             {mode === 'forgot' && 'Recupera el acceso a tu cuenta'}
@@ -250,9 +378,21 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthSuccess, onOpenFir
 
         {/* Success/Error Alerts */}
         {error && (
-          <div className="mb-4 p-3.5 bg-rose-50 border border-rose-200 rounded-2xl flex items-start gap-2.5 text-xs text-rose-700 font-semibold">
+          <div className="mb-4 p-3.5 bg-rose-50 border border-rose-200 rounded-2xl flex items-start gap-2.5 text-xs text-rose-700 font-semibold leading-relaxed">
             <AlertCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
-            <div>{error}</div>
+            <div>
+              {error}
+              {error.includes('Firebase Console') && (
+                <a
+                  href="https://console.firebase.google.com/project/nexservice-app/authentication/providers"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block mt-1 text-[#0052ff] underline font-bold flex items-center gap-1"
+                >
+                  Abrir Firebase Console <ExternalLink className="w-3 h-3" />
+                </a>
+              )}
+            </div>
           </div>
         )}
 
@@ -263,7 +403,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthSuccess, onOpenFir
           </div>
         )}
 
-        {/* Tab switch (only if not forgot mode) */}
+        {/* Tab switch */}
         {mode !== 'forgot' && (
           <div className="flex bg-slate-100 p-1 rounded-2xl mb-5">
             <button
@@ -364,10 +504,35 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthSuccess, onOpenFir
             </div>
           )}
 
+          {/* LEYENDA Y AUTORIZACIÓN DE MANEJO DE DATOS (LEY 1581 DE 2012) */}
+          {mode === 'register' && (
+            <div className="p-3.5 bg-blue-50/50 border border-blue-100 rounded-2xl space-y-2">
+              <label className="flex items-start gap-2.5 cursor-pointer text-left select-none">
+                <input
+                  type="checkbox"
+                  checked={acceptTerms}
+                  onChange={(e) => setAcceptTerms(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 rounded border-slate-300 text-[#0052ff] focus:ring-[#0052ff]"
+                />
+                <span className="text-[11px] text-slate-700 leading-tight">
+                  Autorizo el tratamiento de mis datos personales a <strong>Pasiflora Biohacking Pro.</strong> conforme a la <strong>Ley 1581 de 2012</strong> (Habeas Data) y Decreto 1377 de 2013.
+                </span>
+              </label>
+              <button
+                type="button"
+                onClick={() => setShowPolicyModal(true)}
+                className="text-[11px] text-[#0052ff] font-bold hover:underline flex items-center gap-1 pl-6"
+              >
+                <FileText className="w-3.5 h-3.5" />
+                <span>Ver Política y Términos de Datos completa</span>
+              </button>
+            </div>
+          )}
+
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-[#0052ff] hover:bg-blue-600 disabled:bg-blue-300 text-white font-bold text-sm py-3.5 rounded-2xl shadow-md shadow-blue-500/20 flex items-center justify-center gap-2 transition-all mt-6"
+            className="w-full bg-[#0052ff] hover:bg-blue-600 disabled:bg-blue-300 text-white font-bold text-sm py-3.5 rounded-2xl shadow-md shadow-blue-500/20 flex items-center justify-center gap-2 transition-all mt-4"
           >
             {loading ? (
               <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
@@ -375,7 +540,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthSuccess, onOpenFir
               <>
                 <span>
                   {mode === 'login' && 'Iniciar Sesión'}
-                  {mode === 'register' && 'Crear Cuenta'}
+                  {mode === 'register' && 'Crear Cuenta y Autorizar'}
                   {mode === 'forgot' && 'Enviar Correo'}
                 </span>
                 <ArrowRight className="w-4 h-4" />
@@ -405,15 +570,30 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthSuccess, onOpenFir
               <div className="flex-grow border-t border-slate-200"></div>
             </div>
 
+            {/* Google Authentication Button */}
             <button
               type="button"
               onClick={handleGoogleAuth}
               disabled={loading}
-              className="w-full bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-bold text-xs py-3 rounded-2xl flex items-center justify-center gap-2.5 transition-all shadow-sm"
+              className="w-full bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 text-slate-700 font-bold text-xs py-3.5 rounded-2xl flex items-center justify-center gap-2.5 transition-all shadow-sm group"
             >
-              <Chrome className="w-4 h-4 text-rose-500" />
-              <span>Iniciar con Google</span>
+              <Chrome className="w-4 h-4 text-rose-500 group-hover:scale-110 transition-transform" />
+              <span>Continuar con Google</span>
             </button>
+
+            {/* Aviso legal para Login */}
+            {mode === 'login' && (
+              <div className="mt-3 text-center">
+                <button
+                  type="button"
+                  onClick={() => setShowPolicyModal(true)}
+                  className="text-[10px] text-slate-500 hover:text-[#0052ff] underline inline-flex items-center gap-1"
+                >
+                  <Shield className="w-3 h-3 text-[#0052ff]" />
+                  <span>Tratamiento de datos personales según Ley 1581 de 2012</span>
+                </button>
+              </div>
+            )}
 
             {/* Quick Demo Access Buttons */}
             <div className="mt-5 pt-4 border-t border-slate-100">
@@ -478,17 +658,18 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthSuccess, onOpenFir
           </>
         )}
 
-        {/* Notice of Automatic Email Picture Integration */}
-        {mode === 'register' && (
-          <div className="mt-5 p-3 bg-slate-50 border border-slate-100 rounded-2xl flex items-start gap-2 text-[10px] text-slate-500 leading-relaxed">
-            <HelpCircle className="w-4 h-4 text-[#0052ff] shrink-0 mt-0.5" />
-            <div>
-              Tu foto de perfil se sincronizará automáticamente con la de tu correo electrónico (vía Google o Gravatar) para mantener tu cuenta personalizada.
-            </div>
-          </div>
-        )}
-
       </div>
+
+      {/* Policy Modal */}
+      {showPolicyModal && (
+        <DataPolicyModal
+          onClose={() => setShowPolicyModal(false)}
+          onAccept={() => {
+            setAcceptTerms(true);
+            setShowPolicyModal(false);
+          }}
+        />
+      )}
     </div>
   );
 };

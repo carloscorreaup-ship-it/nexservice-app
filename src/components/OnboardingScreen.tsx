@@ -60,13 +60,22 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ defaultEmail
       <div className="bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-8 w-full max-w-md shadow-elevation-1">
         {/* Header with Back Button */}
         <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-2xl bg-[#0052ff] flex items-center justify-center font-bold text-lg text-white shadow-md">
-              N
+          <div className="flex items-center gap-3">
+            <div className="w-16 h-16 rounded-2xl bg-white border border-slate-200 p-1.5 flex items-center justify-center shadow-sm shrink-0">
+              <img src="/logo.png" alt="NexService.app" className="w-full h-full object-contain" onError={(e) => {
+                e.currentTarget.style.display = 'none';
+              }} />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-[#141b2b] font-geist">NexService.app</h2>
-              <p className="text-xs text-slate-500">Paso {step} de 3</p>
+              <div className="flex items-center gap-1.5 leading-tight">
+                <h2 className="text-lg font-extrabold text-[#141b2b] font-geist">NexService<span className="text-[#0052ff]">.app</span></h2>
+                <span className="text-[10px] bg-slate-100 text-slate-600 font-bold px-2 py-0.5 rounded-full">
+                  Paso {step}/3
+                </span>
+              </div>
+              <div className="text-[10px] font-serif italic text-slate-500 font-medium">
+                By <span className="text-[#0052ff] font-semibold">Pasiflora Biohacking Pro.</span>
+              </div>
             </div>
           </div>
 
@@ -193,12 +202,12 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ defaultEmail
             </>
           )}
 
-          {/* STEP 3: FIXED LOCATION FOR SNAP MAP */}
+          {/* STEP 3: FIXED LOCATION FOR MAP */}
           {step === 3 && (
             <>
               <div>
                 <h3 className="text-lg font-bold text-[#141b2b] mb-1 font-geist">Dirección Fija en el Mapa</h3>
-                <p className="text-xs text-slate-500 mb-3">Tu dirección física se mostrará en el Snap Map.</p>
+                <p className="text-xs text-slate-500 mb-3">Tu dirección física se mostrará en el Mapa.</p>
               </div>
 
               <div>

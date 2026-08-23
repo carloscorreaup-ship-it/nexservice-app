@@ -16,16 +16,25 @@ import { Provider, ProductItem, ServiceItem, BookingOrOrder, UserSession, Review
 import { INITIAL_PROVIDERS, INITIAL_PRODUCTS, INITIAL_BOOKINGS, INITIAL_USERS } from '../data/initialData';
 
 const LOCAL_STORAGE_KEYS = {
-  PROVIDERS: 'nexservice_store_providers_v1',
-  PRODUCTS: 'nexservice_store_products_v1',
-  BOOKINGS: 'nexservice_store_bookings_v1',
-  USERS: 'nexservice_store_users_v1',
+  PROVIDERS: 'nexservice_store_providers_v2',
+  PRODUCTS: 'nexservice_store_products_v2',
+  BOOKINGS: 'nexservice_store_bookings_v2',
+  USERS: 'nexservice_store_users_v2',
 };
 
 function getLocal<T>(key: string, defaultVal: T): T {
   try {
     const s = localStorage.getItem(key);
-    if (s) return JSON.parse(s);
+    if (s) {
+      const parsed = JSON.parse(s);
+      if (Array.isArray(parsed) && Array.isArray(defaultVal)) {
+        // Fusionar elementos nuevos de defaultVal que no estén en parsed por id
+        const existingIds = new Set(parsed.map((item: any) => item.id));
+        const missing = defaultVal.filter((item: any) => !existingIds.has(item.id));
+        return [...parsed, ...missing] as unknown as T;
+      }
+      return parsed;
+    }
   } catch (e) {
     console.error(e);
   }
