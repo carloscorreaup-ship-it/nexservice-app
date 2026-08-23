@@ -80,6 +80,7 @@ export interface ServiceItem {
   duration?: string;
   category: string;
   tags?: string[];
+  images?: string[];
   isHomeService: boolean;
   warranty?: string;
   reviews?: Review[];

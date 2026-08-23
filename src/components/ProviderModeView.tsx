@@ -18,7 +18,8 @@ import {
   Navigation,
   Star,
   UserCheck,
-  MessageSquare
+  MessageSquare,
+  X
 } from 'lucide-react';
 import { Provider, ProductItem, ServiceItem, UserSession, ServiceModality, BookingOrOrder } from '../types';
 import { formatCurrencyCOP } from '../utils/userUtils';
@@ -67,6 +68,8 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
   const [newProdDesc, setNewProdDesc] = useState('');
   const [newProdCategory, setNewProdCategory] = useState('tecnologia');
   const [newProdCondition, setNewProdCondition] = useState<'nuevo' | 'usado'>('nuevo');
+  const [newProdImages, setNewProdImages] = useState<string[]>([]);
+  const [newProdImageUrl, setNewProdImageUrl] = useState('');
 
   // Services state
   const [services, setServices] = useState<ServiceItem[]>(userSession.providerProfile?.services || []);
@@ -74,9 +77,67 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
   const [newSrvName, setNewSrvName] = useState('');
   const [newSrvPrice, setNewSrvPrice] = useState('');
   const [newSrvDuration, setNewSrvDuration] = useState('1 hr');
+  const [newSrvImages, setNewSrvImages] = useState<string[]>([]);
+  const [newSrvImageUrl, setNewSrvImageUrl] = useState('');
+
+  const handleProductFilesUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    const remainingSlots = 10 - newProdImages.length;
+    if (remainingSlots <= 0) {
+      alert('Ya has alcanzado el límite máximo de 10 imágenes por producto.');
+      return;
+    }
+
+    const filesToProcess = Array.from(files).slice(0, remainingSlots);
+    filesToProcess.forEach(file => {
+      if (file.size > 5 * 1024 * 1024) {
+        alert(`La imagen ${file.name} supera los 5MB.`);
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (typeof reader.result === 'string') {
+          setNewProdImages(prev => prev.length < 10 ? [...prev, reader.result as string] : prev);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleServiceFilesUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    const remainingSlots = 10 - newSrvImages.length;
+    if (remainingSlots <= 0) {
+      alert('Ya has alcanzado el límite máximo de 10 imágenes por servicio.');
+      return;
+    }
+
+    const filesToProcess = Array.from(files).slice(0, remainingSlots);
+    filesToProcess.forEach(file => {
+      if (file.size > 5 * 1024 * 1024) {
+        alert(`La imagen ${file.name} supera los 5MB.`);
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (typeof reader.result === 'string') {
+          setNewSrvImages(prev => prev.length < 10 ? [...prev, reader.result as string] : prev);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  };
 
   const handleAddProduct = () => {
     if (!newProdName || !newProdPrice) return;
+    const finalImages = newProdImages.length > 0
+      ? newProdImages
+      : ['https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=600&h=450&fit=crop&q=80'];
+
     const item: ProductItem = {
       id: `prod-${Date.now()}`,
       providerId: userSession.id || 'my-provider-id',
@@ -87,7 +148,7 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
       price: Number(newProdPrice) || 0,
       category: newProdCategory,
       tags: ['Local', currentCity],
-      images: ['https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=600&h=450&fit=crop&q=80'],
+      images: finalImages,
       inStock: true,
       condition: newProdCondition,
       deliveryAvailable: true,
@@ -100,6 +161,8 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
     setNewProdName('');
     setNewProdPrice('');
     setNewProdDesc('');
+    setNewProdImages([]);
+    setNewProdImageUrl('');
     onSaveProviderProfile({ products: updated });
   };
 
@@ -112,6 +175,7 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
       priceEstimate: `$${Number(newSrvPrice).toLocaleString('es-CO')} COP`,
       duration: newSrvDuration,
       category: category,
+      images: newSrvImages.length > 0 ? newSrvImages : undefined,
       isHomeService: true
     };
     const updated = [srv, ...services];
@@ -119,6 +183,8 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
     setShowAddServiceModal(false);
     setNewSrvName('');
     setNewSrvPrice('');
+    setNewSrvImages([]);
+    setNewSrvImageUrl('');
     onSaveProviderProfile({ services: updated });
   };
 
@@ -545,54 +611,139 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
 
       {/* ADD PRODUCT MODAL */}
       {showAddProductModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 w-full max-w-md shadow-2xl">
-            <h3 className="text-base font-bold text-white mb-3">Nuevo Producto para Venta</h3>
-            <div className="space-y-3 text-xs mb-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md overflow-y-auto">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 sm:p-6 w-full max-w-lg shadow-2xl my-auto max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
               <div>
-                <label className="block text-slate-400 mb-1">Nombre del Producto</label>
+                <h3 className="text-base font-bold text-white">Nuevo Producto para Venta</h3>
+                <p className="text-xs text-slate-400">Agrega nombre, precio y hasta 10 fotos reales</p>
+              </div>
+              <button
+                onClick={() => setShowAddProductModal(false)}
+                className="p-1.5 text-slate-400 hover:text-white rounded-full"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3.5 text-xs mb-5">
+              <div>
+                <label className="block text-slate-400 mb-1 font-semibold">Nombre del Producto</label>
                 <input
                   type="text"
                   value={newProdName}
                   onChange={(e) => setNewProdName(e.target.value)}
-                  placeholder="Ej: Filtro de agua, Memoria RAM..."
-                  className="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white"
+                  placeholder="Ej: Filtro de agua, Memoria RAM, Celular..."
+                  className="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white focus:outline-none focus:border-emerald-500"
                 />
               </div>
-              <div>
-                <label className="block text-slate-400 mb-1">Precio en Pesos COP ($)</label>
-                <input
-                  type="number"
-                  value={newProdPrice}
-                  onChange={(e) => setNewProdPrice(e.target.value)}
-                  placeholder="85000"
-                  className="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white"
-                />
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-slate-400 mb-1 font-semibold">Precio COP ($)</label>
+                  <input
+                    type="number"
+                    value={newProdPrice}
+                    onChange={(e) => setNewProdPrice(e.target.value)}
+                    placeholder="85000"
+                    className="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-400 mb-1 font-semibold">Condición</label>
+                  <select
+                    value={newProdCondition}
+                    onChange={(e) => setNewProdCondition(e.target.value as any)}
+                    className="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white focus:outline-none focus:border-emerald-500"
+                  >
+                    <option value="nuevo">Nuevo</option>
+                    <option value="usado">Usado (Excelente)</option>
+                  </select>
+                </div>
               </div>
+
               <div>
-                <label className="block text-slate-400 mb-1">Descripción</label>
+                <label className="block text-slate-400 mb-1 font-semibold">Descripción del Producto</label>
                 <textarea
                   value={newProdDesc}
                   onChange={(e) => setNewProdDesc(e.target.value)}
-                  placeholder="Detalles del producto y garantía..."
+                  placeholder="Detalles del producto, especificaciones, garantía..."
                   rows={2}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white"
+                  className="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white focus:outline-none focus:border-emerald-500 resize-none"
                 />
+              </div>
+
+              {/* 10 Images Upload Area */}
+              <div className="bg-slate-800/80 border border-slate-700 rounded-2xl p-3.5 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 font-bold text-white">
+                    <Camera className="w-4 h-4 text-emerald-400" />
+                    <span>Fotos del Producto (Hasta 10 imágenes)</span>
+                  </div>
+                  <span className="text-[11px] font-extrabold text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded-full border border-emerald-500/30">
+                    {newProdImages.length}/10 fotos
+                  </span>
+                </div>
+
+                <p className="text-[11px] text-slate-400">
+                  Sube fotos desde tu galería o cámara. Los clientes podrán hacer clic sobre ellas y ampliarlas.
+                </p>
+
+                {/* Upload Buttons */}
+                {newProdImages.length < 10 && (
+                  <div className="flex gap-2">
+                    <label className="flex-1 py-2.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 cursor-pointer transition-all shadow-md shadow-emerald-600/20">
+                      <Camera className="w-4 h-4" />
+                      <span>Subir Fotos de Galería / Cámara</span>
+                      <input
+                        type="file"
+                        multiple
+                        accept="image/*"
+                        onChange={handleProductFilesUpload}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                )}
+
+                {/* Images Preview Grid */}
+                {newProdImages.length > 0 && (
+                  <div className="grid grid-cols-5 gap-2 pt-1">
+                    {newProdImages.map((img, idx) => (
+                      <div key={idx} className="relative group rounded-xl overflow-hidden aspect-square border border-slate-600 bg-slate-950">
+                        <img src={img} alt={`Foto ${idx + 1}`} className="w-full h-full object-cover" />
+                        {idx === 0 && (
+                          <span className="absolute top-1 left-1 bg-emerald-600 text-white text-[8px] font-black px-1 rounded-sm shadow-xs">
+                            PORTADA
+                          </span>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => setNewProdImages(prev => prev.filter((_, i) => i !== idx))}
+                          className="absolute top-1 right-1 p-1 bg-rose-600 text-white rounded-full opacity-90 hover:opacity-100 transition-opacity"
+                          title="Eliminar foto"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex gap-2 pt-2 border-t border-slate-800">
               <button
                 onClick={() => setShowAddProductModal(false)}
-                className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-semibold"
+                className="px-4 py-2.5 rounded-xl bg-slate-800 text-slate-300 text-xs font-semibold hover:bg-slate-700 transition-all cursor-pointer"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleAddProduct}
-                className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2 rounded-xl"
+                className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2.5 rounded-xl shadow-md shadow-emerald-500/20 transition-all cursor-pointer"
               >
-                Guardar Producto
+                Guardar Producto ({newProdImages.length || 1} fotos)
               </button>
             </div>
           </div>
@@ -601,54 +752,122 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
 
       {/* ADD SERVICE MODAL */}
       {showAddServiceModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 w-full max-w-md shadow-2xl">
-            <h3 className="text-base font-bold text-white mb-3">Nuevo Servicio Ofrecido</h3>
-            <div className="space-y-3 text-xs mb-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md overflow-y-auto">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 sm:p-6 w-full max-w-lg shadow-2xl my-auto max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
               <div>
-                <label className="block text-slate-400 mb-1">Nombre del Servicio</label>
+                <h3 className="text-base font-bold text-white">Nuevo Servicio Ofrecido</h3>
+                <p className="text-xs text-slate-400">Agrega detalles y fotos de trabajos realizados</p>
+              </div>
+              <button
+                onClick={() => setShowAddServiceModal(false)}
+                className="p-1.5 text-slate-400 hover:text-white rounded-full"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3.5 text-xs mb-5">
+              <div>
+                <label className="block text-slate-400 mb-1 font-semibold">Nombre del Servicio</label>
                 <input
                   type="text"
                   value={newSrvName}
                   onChange={(e) => setNewSrvName(e.target.value)}
-                  placeholder="Ej: Mantenimiento e instalación..."
-                  className="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white"
+                  placeholder="Ej: Mantenimiento, Instalación, Asesoría..."
+                  className="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white focus:outline-none focus:border-blue-500"
                 />
               </div>
-              <div>
-                <label className="block text-slate-400 mb-1">Precio Estimado en COP ($)</label>
-                <input
-                  type="number"
-                  value={newSrvPrice}
-                  onChange={(e) => setNewSrvPrice(e.target.value)}
-                  placeholder="60000"
-                  className="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white"
-                />
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-slate-400 mb-1 font-semibold">Precio Estimado ($ COP)</label>
+                  <input
+                    type="number"
+                    value={newSrvPrice}
+                    onChange={(e) => setNewSrvPrice(e.target.value)}
+                    placeholder="60000"
+                    className="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-400 mb-1 font-semibold">Duración Estimada</label>
+                  <input
+                    type="text"
+                    value={newSrvDuration}
+                    onChange={(e) => setNewSrvDuration(e.target.value)}
+                    placeholder="Ej: 1 - 2 hrs"
+                    className="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white focus:outline-none focus:border-blue-500"
+                  />
+                </div>
               </div>
-              <div>
-                <label className="block text-slate-400 mb-1">Duración Estimada</label>
-                <input
-                  type="text"
-                  value={newSrvDuration}
-                  onChange={(e) => setNewSrvDuration(e.target.value)}
-                  placeholder="Ej: 1 - 2 hrs"
-                  className="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white"
-                />
+
+              {/* 10 Images Upload Area for Services */}
+              <div className="bg-slate-800/80 border border-slate-700 rounded-2xl p-3.5 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 font-bold text-white">
+                    <Camera className="w-4 h-4 text-blue-400" />
+                    <span>Fotos de Trabajos Realizados (Hasta 10 imágenes)</span>
+                  </div>
+                  <span className="text-[11px] font-extrabold text-blue-400 bg-blue-950/80 px-2 py-0.5 rounded-full border border-blue-500/30">
+                    {newSrvImages.length}/10 fotos
+                  </span>
+                </div>
+
+                <p className="text-[11px] text-slate-400">
+                  Muestra fotos de calidad de tus proyectos, herramientas o resultados para dar confianza a tus clientes.
+                </p>
+
+                {/* Upload Button */}
+                {newSrvImages.length < 10 && (
+                  <div className="flex gap-2">
+                    <label className="flex-1 py-2.5 px-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 cursor-pointer transition-all shadow-md shadow-blue-600/20">
+                      <Camera className="w-4 h-4" />
+                      <span>Subir Fotos de Trabajos / Proyectos</span>
+                      <input
+                        type="file"
+                        multiple
+                        accept="image/*"
+                        onChange={handleServiceFilesUpload}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                )}
+
+                {/* Service Images Preview Grid */}
+                {newSrvImages.length > 0 && (
+                  <div className="grid grid-cols-5 gap-2 pt-1">
+                    {newSrvImages.map((img, idx) => (
+                      <div key={idx} className="relative group rounded-xl overflow-hidden aspect-square border border-slate-600 bg-slate-950">
+                        <img src={img} alt={`Trabajo ${idx + 1}`} className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => setNewSrvImages(prev => prev.filter((_, i) => i !== idx))}
+                          className="absolute top-1 right-1 p-1 bg-rose-600 text-white rounded-full opacity-90 hover:opacity-100 transition-opacity"
+                          title="Eliminar foto"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex gap-2 pt-2 border-t border-slate-800">
               <button
                 onClick={() => setShowAddServiceModal(false)}
-                className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-semibold"
+                className="px-4 py-2.5 rounded-xl bg-slate-800 text-slate-300 text-xs font-semibold hover:bg-slate-700 transition-all cursor-pointer"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleAddService}
-                className="flex-1 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2 rounded-xl"
+                className="flex-1 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2.5 rounded-xl shadow-md shadow-blue-500/20 transition-all cursor-pointer"
               >
-                Guardar Servicio
+                Guardar Servicio ({newSrvImages.length} fotos)
               </button>
             </div>
           </div>

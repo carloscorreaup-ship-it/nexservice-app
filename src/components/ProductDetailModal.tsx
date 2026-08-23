@@ -28,21 +28,86 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 }) => {
   const [selectedImg, setSelectedImg] = useState(0);
   const [previewZoomImage, setPreviewZoomImage] = useState<string | null>(null);
+  const [zoomIndex, setZoomIndex] = useState<number>(0);
+
+  const imagesList = product.images && product.images.length > 0
+    ? product.images
+    : ['https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=600&h=450&fit=crop&q=80'];
 
   const productRating = product.rating || 5.0;
   const productReviewsCount = product.reviewsCount || product.reviews?.length || 0;
 
+  const handleOpenZoom = (index: number) => {
+    setZoomIndex(index);
+    setPreviewZoomImage(imagesList[index] || imagesList[0]);
+  };
+
+  const handleNextZoom = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const nextIdx = (zoomIndex + 1) % imagesList.length;
+    setZoomIndex(nextIdx);
+    setPreviewZoomImage(imagesList[nextIdx]);
+  };
+
+  const handlePrevZoom = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const prevIdx = (zoomIndex - 1 + imagesList.length) % imagesList.length;
+    setZoomIndex(prevIdx);
+    setPreviewZoomImage(imagesList[prevIdx]);
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm">
-      <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-2xl max-h-[92vh] overflow-y-auto shadow-2xl relative">
-        {/* Header Image with Back Button */}
-        <div className="relative h-64 bg-slate-100">
-          <img
-            src={product.images[selectedImg] || product.images[0]}
-            alt={product.name}
-            className="w-full h-full object-cover"
-          />
+      <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-2xl max-h-[92vh] overflow-y-auto shadow-2xl relative font-inter">
+        {/* Header Image Gallery */}
+        <div className="relative bg-slate-900 overflow-hidden group">
+          <div className="h-72 sm:h-80 w-full relative">
+            <img
+              src={imagesList[selectedImg] || imagesList[0]}
+              alt={product.name}
+              className="w-full h-full object-cover cursor-pointer transition-transform duration-300 group-hover:scale-102"
+              onClick={() => handleOpenZoom(selectedImg)}
+            />
 
+            {/* Zoom overlay hint */}
+            <button
+              type="button"
+              onClick={() => handleOpenZoom(selectedImg)}
+              className="absolute bottom-3 right-3 bg-black/70 hover:bg-black text-white text-[11px] font-bold px-3 py-1.5 rounded-full backdrop-blur-md flex items-center gap-1.5 transition-all shadow-md cursor-pointer"
+            >
+              <span>🔍 Ampliar foto</span>
+              <span>({selectedImg + 1}/{imagesList.length})</span>
+            </button>
+
+            {/* Prev/Next buttons on main image if > 1 image */}
+            {imagesList.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedImg((selectedImg - 1 + imagesList.length) % imagesList.length);
+                  }}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 p-2 bg-white/80 hover:bg-white text-slate-800 rounded-full shadow-md transition-all cursor-pointer"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedImg((selectedImg + 1) % imagesList.length);
+                  }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-white/80 hover:bg-white text-slate-800 rounded-full shadow-md transition-all cursor-pointer"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </>
+            )}
+          </div>
+
+          {/* Top buttons */}
           <button
             onClick={onClose}
             className="absolute top-4 left-4 flex items-center gap-1.5 px-3 py-1.5 bg-white/90 hover:bg-white text-slate-800 rounded-full shadow-md text-xs font-bold transition-all z-10 cursor-pointer"
@@ -58,6 +123,31 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             <X className="w-4 h-4" />
           </button>
         </div>
+
+        {/* 10 Photos Thumbnails Strip */}
+        {imagesList.length > 1 && (
+          <div className="flex items-center gap-2 p-3 bg-slate-100/80 border-b border-slate-200 overflow-x-auto scrollbar-none">
+            {imagesList.map((img, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => setSelectedImg(idx)}
+                className={`relative shrink-0 w-14 h-14 rounded-xl overflow-hidden border-2 transition-all cursor-pointer ${
+                  selectedImg === idx
+                    ? 'border-[#0052ff] ring-2 ring-blue-200 scale-105'
+                    : 'border-slate-300 opacity-70 hover:opacity-100'
+                }`}
+              >
+                <img src={img} alt={`Miniatura ${idx + 1}`} className="w-full h-full object-cover" />
+                {selectedImg === idx && (
+                  <span className="absolute bottom-0 inset-x-0 bg-[#0052ff] text-white text-[8px] font-bold text-center">
+                    Ver
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Content */}
         <div className="p-6">
@@ -251,21 +341,84 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
           </div>
         </div>
 
-        {/* IMAGE ZOOM MODAL */}
+        {/* FULLSCREEN IMAGE ZOOM LIGHTBOX */}
         {previewZoomImage && (
           <div
-            className="fixed inset-0 z-60 bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
+            className="fixed inset-0 z-60 bg-black/90 backdrop-blur-md flex flex-col items-center justify-between p-4 sm:p-6"
             onClick={() => setPreviewZoomImage(null)}
           >
-            <div className="relative max-w-lg max-h-[85vh] rounded-2xl overflow-hidden bg-black shadow-2xl">
-              <img src={previewZoomImage} alt="Zoom" className="w-full h-full object-contain max-h-[80vh]" />
+            {/* Top Bar */}
+            <div className="w-full max-w-4xl flex items-center justify-between text-white z-10" onClick={e => e.stopPropagation()}>
+              <div className="flex items-center gap-2">
+                <span className="bg-white/20 text-white text-xs font-bold px-3 py-1 rounded-full backdrop-blur-sm">
+                  Foto {zoomIndex + 1} de {imagesList.length}
+                </span>
+                <span className="text-xs text-slate-300 font-medium truncate max-w-[200px] sm:max-w-md">
+                  {product.name}
+                </span>
+              </div>
+
               <button
+                type="button"
                 onClick={() => setPreviewZoomImage(null)}
-                className="absolute top-3 right-3 p-2 bg-white/80 hover:bg-white text-slate-900 rounded-full cursor-pointer shadow-md"
+                className="p-2 bg-white/20 hover:bg-white text-white hover:text-slate-900 rounded-full cursor-pointer shadow-md transition-all"
+                title="Cerrar visor"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
+
+            {/* Main Zoomed Image with Next/Prev Arrows */}
+            <div className="relative flex-1 w-full max-w-4xl flex items-center justify-center my-3" onClick={e => e.stopPropagation()}>
+              <img
+                src={previewZoomImage}
+                alt="Foto ampliada en alta resolución"
+                className="max-h-[72vh] max-w-full object-contain rounded-2xl shadow-2xl transition-all"
+              />
+
+              {imagesList.length > 1 && (
+                <>
+                  <button
+                    type="button"
+                    onClick={handlePrevZoom}
+                    className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 p-3 bg-black/60 hover:bg-black/90 text-white rounded-full shadow-lg transition-all cursor-pointer"
+                    title="Foto anterior"
+                  >
+                    <ArrowLeft className="w-5 h-5" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleNextZoom}
+                    className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 p-3 bg-black/60 hover:bg-black/90 text-white rounded-full shadow-lg transition-all cursor-pointer"
+                    title="Siguiente foto"
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                </>
+              )}
+            </div>
+
+            {/* Bottom Thumbnails Strip in Zoom View */}
+            {imagesList.length > 1 && (
+              <div className="w-full max-w-xl flex items-center justify-center gap-2 overflow-x-auto p-2 bg-black/40 rounded-2xl backdrop-blur-sm z-10" onClick={e => e.stopPropagation()}>
+                {imagesList.map((img, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => {
+                      setZoomIndex(idx);
+                      setPreviewZoomImage(img);
+                    }}
+                    className={`relative w-12 h-12 rounded-xl overflow-hidden border-2 transition-all cursor-pointer shrink-0 ${
+                      zoomIndex === idx ? 'border-white scale-110' : 'border-white/30 opacity-60 hover:opacity-100'
+                    }`}
+                  >
+                    <img src={img} alt={`Thumb ${idx + 1}`} className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>

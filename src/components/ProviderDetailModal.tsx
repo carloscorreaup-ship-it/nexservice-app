@@ -306,38 +306,65 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
               {provider.services.map((srv) => (
                 <div
                   key={srv.id}
-                  className="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                  className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3"
                 >
-                  <div>
-                    <h4 className="text-sm font-bold text-slate-900">{srv.name}</h4>
-                    <div className="flex items-center gap-3 mt-1.5 text-xs text-slate-600">
-                      <span className="font-extrabold text-emerald-600">{srv.priceEstimate}</span>
-                      {srv.duration && <span>• {srv.duration}</span>}
-                      {srv.isHomeService && (
-                        <span className="text-[#0052ff] bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
-                          A Domicilio
-                        </span>
-                      )}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <h4 className="text-sm font-bold text-slate-900">{srv.name}</h4>
+                      <div className="flex items-center gap-3 mt-1.5 text-xs text-slate-600">
+                        <span className="font-extrabold text-emerald-600">{srv.priceEstimate}</span>
+                        {srv.duration && <span>• {srv.duration}</span>}
+                        {srv.isHomeService && (
+                          <span className="text-[#0052ff] bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
+                            A Domicilio
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          setSelectedService(srv);
+                          setShowBookingForm(true);
+                        }}
+                        className="bg-[#0052ff] hover:bg-blue-600 text-white text-xs font-bold py-2 px-3.5 rounded-xl transition-all cursor-pointer shadow-xs"
+                      >
+                        Reservar Cita
+                      </button>
+                      <button
+                        onClick={() => onContactWhatsApp(provider, `Hola ${provider.name}, deseo cotizar el servicio "${srv.name}".`)}
+                        className="bg-emerald-600 hover:bg-emerald-500 text-white p-2.5 rounded-xl text-xs cursor-pointer shadow-xs"
+                        title="Consultar por WhatsApp"
+                      >
+                        <MessageSquare className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
 
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => {
-                        setSelectedService(srv);
-                        setShowBookingForm(true);
-                      }}
-                      className="bg-[#0052ff] hover:bg-blue-600 text-white text-xs font-bold py-2 px-3 rounded-xl transition-all cursor-pointer"
-                    >
-                      Reservar
-                    </button>
-                    <button
-                      onClick={() => onContactWhatsApp(provider, `Hola ${provider.name}, deseo cotizar el servicio "${srv.name}".`)}
-                      className="bg-emerald-600 hover:bg-emerald-500 text-white p-2 rounded-xl text-xs cursor-pointer"
-                    >
-                      <MessageSquare className="w-4 h-4" />
-                    </button>
-                  </div>
+                  {/* Up to 10 Service Work Photos */}
+                  {srv.images && srv.images.length > 0 && (
+                    <div className="pt-2 border-t border-slate-200/80">
+                      <span className="text-[11px] font-bold text-slate-500 block mb-1.5">
+                        Fotos de trabajos realizados ({srv.images.length} fotos - Toca para ampliar):
+                      </span>
+                      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+                        {srv.images.map((img, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => setPreviewZoomImage(img)}
+                            className="relative group rounded-xl overflow-hidden aspect-square w-16 h-16 shrink-0 border border-slate-300 shadow-xs cursor-pointer"
+                          >
+                            <img src={img} alt={`Trabajo ${idx + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                            <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-[9px] font-bold transition-opacity">
+                              Ver
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
