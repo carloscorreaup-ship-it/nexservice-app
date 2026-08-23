@@ -20,7 +20,12 @@ import {
   UserX,
   FileText,
   AlertOctagon,
-  Calendar
+  Calendar,
+  Star,
+  Check,
+  X,
+  Filter,
+  UserCheck
 } from 'lucide-react';
 import { UserSession, Provider, ProductItem, BookingOrOrder, UserReport, ReportResolutionType } from '../types';
 
@@ -31,7 +36,7 @@ interface AdminDashboardViewProps {
   bookings: BookingOrOrder[];
   reports: UserReport[];
   onToggleUserStatus: (email: string, currentStatus: boolean) => void;
-  onToggleProviderVerification: (providerId: string, currentStatus: boolean) => void;
+  onToggleProviderVerification?: (providerId: string, currentStatus: boolean) => void;
   onResolveReport: (reportId: string, resolution: ReportResolutionType, notes: string, sanctionDays?: number) => Promise<void>;
   onBack?: () => void;
 }
@@ -46,9 +51,9 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
   onResolveReport,
   onBack,
 }) => {
-  const [activeAdminTab, setActiveAdminTab] = useState<'users' | 'reports'>('reports');
+  const [activeAdminTab, setActiveAdminTab] = useState<'users' | 'reports'>('users');
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterRole, setFilterRole] = useState<'all' | 'client' | 'provider' | 'both'>('all');
+  const [filterRole, setFilterRole] = useState<'all' | 'client' | 'provider'>('all');
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'suspended'>('all');
 
   // Report resolution form states per report
@@ -61,13 +66,19 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
   const pendingReportsCount = reports.filter(r => r.status === 'pendiente').length;
 
   const filteredUsers = users.filter((u) => {
+    const term = searchTerm.toLowerCase();
     const matchSearch =
-      u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      u.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      u.phone.includes(searchTerm);
+      u.name.toLowerCase().includes(term) ||
+      u.email.toLowerCase().includes(term) ||
+      (u.city && u.city.toLowerCase().includes(term)) ||
+      (u.phone && u.phone.includes(term)) ||
+      (u.fixedLocation?.address && u.fixedLocation.address.toLowerCase().includes(term));
 
-    const matchRole = filterRole === 'all' || u.role === filterRole;
+    const matchRole =
+      filterRole === 'all' ||
+      (filterRole === 'client' && u.role === 'client') ||
+      (filterRole === 'provider' && (u.role === 'provider' || u.role === 'both' || u.mode === 'provider'));
+
     const matchStatus =
       filterStatus === 'all' ||
       (filterStatus === 'active' && u.isActive) ||
@@ -86,7 +97,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
   const suspendedUsersCount = users.filter(u => !u.isActive).length;
 
   const handleExecuteResolution = async (reportId: string) => {
-    const resolution = selectedResolutions[reportId] || 'desestimada_sin_sancion';
+    const resolution = selectedResolutions[reportId] || 'sancion_temporal';
     const notes = resolutionNotes[reportId]?.trim() || 'Caso evaluado conforme a los términos de servicio de NexService.';
     const sanctionDays = sanctionDaysMap[reportId] || 7;
 
@@ -101,139 +112,401 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
   };
 
   return (
-    <div className="pb-24 max-w-6xl mx-auto px-4 pt-4">
-      {/* Top Banner with Back Button */}
-      <div className="bg-white border border-slate-200/80 rounded-3xl p-6 mb-6 shadow-elevation-1">
+    <div className="min-h-screen pb-28 pt-4 px-3 sm:px-6 max-w-6xl mx-auto font-inter">
+      {/* Top Header Card */}
+      <div className="bg-white border border-slate-200/90 rounded-3xl p-5 sm:p-7 mb-6 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
+          <div className="flex items-start sm:items-center gap-3.5">
             {onBack && (
               <button
                 onClick={onBack}
-                className="p-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center gap-1 text-xs font-bold transition-all cursor-pointer"
+                className="p-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center gap-1 text-xs font-bold transition-all cursor-pointer shrink-0"
+                title="Volver a la vista anterior"
               >
                 <ArrowLeft className="w-4 h-4 text-[#0052ff]" />
-                <span>Volver</span>
+                <span className="hidden sm:inline">Volver</span>
               </button>
             )}
-            <div className="p-3 bg-red-50 text-red-600 rounded-2xl border border-red-200">
+            <div className="p-3 bg-red-50 text-red-600 rounded-2xl border border-red-200 shrink-0">
               <ShieldAlert className="w-7 h-7" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider bg-red-100 text-red-700 px-2.5 py-0.5 rounded-full border border-red-200">
-                  Super Administrador Master
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[10px] font-black uppercase tracking-wider bg-red-100 text-red-700 px-2.5 py-0.5 rounded-full border border-red-200">
+                  Super Administrador
                 </span>
-                <span className="text-[10px] font-serif italic text-slate-500 hidden sm:inline">
-                  NexService.app By <strong className="text-red-600">Pasiflora Biohacking Pro.</strong>
+                <span className="text-[11px] text-slate-400 font-medium hidden sm:inline">
+                  Control Master • NexService App
                 </span>
               </div>
-              <h1 className="text-xl sm:text-2xl font-black text-[#141b2b] mt-1 font-geist">Panel de Control & Moderación</h1>
-              <p className="text-xs text-slate-500">Gestión de usuarios y resolución de denuncias para <strong>carloscorreaup@gmail.com</strong></p>
+              <h1 className="text-xl sm:text-2xl font-black text-slate-900 mt-1">
+                Panel de Administración & Usuarios
+              </h1>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Activación, desactivación y moderación oficial de cuentas de usuarios y proveedores
+              </p>
             </div>
           </div>
         </div>
 
-        {/* Navigation Tabs between Users & Reports */}
-        <div className="flex items-center gap-2 mt-6 border-b border-slate-200 pb-3">
+        {/* 4 Metric Stats Cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-6">
+          <div className="bg-slate-50 border border-slate-200/90 rounded-2xl p-3.5 flex flex-col justify-between">
+            <div className="flex items-center justify-between text-xs font-bold text-slate-600 mb-1">
+              <span>Usuarios Totales</span>
+              <Users className="w-4 h-4 text-[#0052ff]" />
+            </div>
+            <div className="text-2xl font-black text-slate-900">{users.length}</div>
+            <div className="text-[11px] text-emerald-600 font-bold mt-1">
+              {activeUsersCount} activos • {suspendedUsersCount} inactivos
+            </div>
+          </div>
+
+          <div className="bg-slate-50 border border-slate-200/90 rounded-2xl p-3.5 flex flex-col justify-between">
+            <div className="flex items-center justify-between text-xs font-bold text-slate-600 mb-1">
+              <span>Proveedores</span>
+              <Store className="w-4 h-4 text-emerald-600" />
+            </div>
+            <div className="text-2xl font-black text-slate-900">{providers.length}</div>
+            <div className="text-[11px] text-slate-500 font-medium mt-1">
+              {providers.filter(p => p.verified).length} verificados oficiales
+            </div>
+          </div>
+
+          <div className="bg-slate-50 border border-slate-200/90 rounded-2xl p-3.5 flex flex-col justify-between">
+            <div className="flex items-center justify-between text-xs font-bold text-slate-600 mb-1">
+              <span>Denuncias & Casos</span>
+              <Scale className="w-4 h-4 text-red-600" />
+            </div>
+            <div className="text-2xl font-black text-slate-900">{reports.length}</div>
+            <div className="text-[11px] text-red-600 font-bold mt-1">
+              {pendingReportsCount} en evaluación (5 días)
+            </div>
+          </div>
+
+          <div className="bg-slate-50 border border-slate-200/90 rounded-2xl p-3.5 flex flex-col justify-between">
+            <div className="flex items-center justify-between text-xs font-bold text-slate-600 mb-1">
+              <span>Servicios / Pedidos</span>
+              <Wrench className="w-4 h-4 text-indigo-600" />
+            </div>
+            <div className="text-2xl font-black text-slate-900">{bookings.length}</div>
+            <div className="text-[11px] text-slate-500 font-medium mt-1">
+              En base de datos
+            </div>
+          </div>
+        </div>
+
+        {/* Segmented Tab Switcher */}
+        <div className="grid grid-cols-2 gap-2 mt-6 p-1.5 bg-slate-100/90 rounded-2xl border border-slate-200">
+          <button
+            onClick={() => setActiveAdminTab('users')}
+            className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
+              activeAdminTab === 'users'
+                ? 'bg-white text-slate-900 shadow-sm'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+            }`}
+          >
+            <Users className="w-4 h-4 text-[#0052ff]" />
+            <span>Usuarios & Activación ({users.length})</span>
+          </button>
+
           <button
             onClick={() => setActiveAdminTab('reports')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-extrabold transition-all cursor-pointer ${
+            className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
               activeAdminTab === 'reports'
-                ? 'bg-red-600 text-white shadow-md'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                ? 'bg-red-600 text-white shadow-sm'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
             }`}
           >
             <Scale className="w-4 h-4" />
             <span>Casos & Denuncias</span>
             {pendingReportsCount > 0 && (
-              <span className="bg-white text-red-600 px-2 py-0.5 rounded-full text-[10px] font-black animate-pulse">
-                {pendingReportsCount} pendientes
+              <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
+                activeAdminTab === 'reports' ? 'bg-white text-red-600' : 'bg-red-600 text-white animate-pulse'
+              }`}>
+                {pendingReportsCount}
               </span>
             )}
           </button>
-
-          <button
-            onClick={() => setActiveAdminTab('users')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-extrabold transition-all cursor-pointer ${
-              activeAdminTab === 'users'
-                ? 'bg-slate-900 text-white shadow-md'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-            }`}
-          >
-            <Users className="w-4 h-4" />
-            <span>Base de Datos de Usuarios ({users.length})</span>
-          </button>
-        </div>
-
-        {/* Counts */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
-          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3.5">
-            <div className="flex items-center gap-2 text-red-600 text-xs font-semibold mb-1">
-              <Scale className="w-4 h-4" />
-              <span>Denuncias Totales</span>
-            </div>
-            <div className="text-2xl font-black text-slate-900">{reports.length}</div>
-            <div className="text-[10px] text-red-600 font-bold mt-0.5">
-              {pendingReportsCount} en evaluación (5 días)
-            </div>
-          </div>
-
-          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3.5">
-            <div className="flex items-center gap-2 text-[#0052ff] text-xs font-semibold mb-1">
-              <Users className="w-4 h-4" />
-              <span>Usuarios Registrados</span>
-            </div>
-            <div className="text-2xl font-black text-slate-900">{users.length}</div>
-            <div className="text-[10px] text-emerald-600 font-medium mt-0.5">
-              {activeUsersCount} activos • {suspendedUsersCount} suspendidos
-            </div>
-          </div>
-
-          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3.5">
-            <div className="flex items-center gap-2 text-emerald-600 text-xs font-semibold mb-1">
-              <Store className="w-4 h-4" />
-              <span>Proveedores</span>
-            </div>
-            <div className="text-2xl font-black text-slate-900">{providers.length}</div>
-            <div className="text-[10px] text-slate-500 font-medium mt-0.5">
-              {providers.filter(p => p.verified).length} verificados
-            </div>
-          </div>
-
-          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3.5">
-            <div className="flex items-center gap-2 text-purple-600 text-xs font-semibold mb-1">
-              <Wrench className="w-4 h-4" />
-              <span>Pedidos / Citas</span>
-            </div>
-            <div className="text-2xl font-black text-slate-900">{bookings.length}</div>
-            <div className="text-[10px] text-slate-500 font-medium mt-0.5">
-              En sistema
-            </div>
-          </div>
         </div>
       </div>
 
       {/* ======================================================== */}
-      {/* TAB 1: GESTIÓN DE DENUNCIAS (CASOS EN 5 DÍAS HÁBILES) */}
+      {/* TAB 1: GESTIÓN DE USUARIOS (ACTIVAR / DESACTIVAR) */}
+      {/* ======================================================== */}
+      {activeAdminTab === 'users' && (
+        <div className="space-y-4">
+          {/* Search and Filters Bar */}
+          <div className="bg-white border border-slate-200/90 rounded-3xl p-4 sm:p-5 shadow-sm space-y-3">
+            {/* Search Input */}
+            <div className="relative">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder="Buscar por nombre, correo, teléfono, ciudad o dirección..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-10 pr-10 py-3 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#0052ff] focus:ring-2 focus:ring-blue-100 transition-all"
+              />
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
+            {/* Filter Pills Grid */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
+              {/* Role filter */}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1 flex items-center gap-1">
+                  <Filter className="w-3 h-3" /> Rol:
+                </span>
+                <button
+                  onClick={() => setFilterRole('all')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    filterRole === 'all'
+                      ? 'bg-slate-900 text-white shadow-xs'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  Todos ({users.length})
+                </button>
+                <button
+                  onClick={() => setFilterRole('client')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    filterRole === 'client'
+                      ? 'bg-[#0052ff] text-white shadow-xs'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  Clientes
+                </button>
+                <button
+                  onClick={() => setFilterRole('provider')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    filterRole === 'provider'
+                      ? 'bg-emerald-600 text-white shadow-xs'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  Proveedores
+                </button>
+              </div>
+
+              {/* Status filter */}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1">
+                  Estado:
+                </span>
+                <button
+                  onClick={() => setFilterStatus('all')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    filterStatus === 'all'
+                      ? 'bg-slate-900 text-white shadow-xs'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  Todos
+                </button>
+                <button
+                  onClick={() => setFilterStatus('active')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    filterStatus === 'active'
+                      ? 'bg-emerald-600 text-white shadow-xs'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  Activos ({activeUsersCount})
+                </button>
+                <button
+                  onClick={() => setFilterStatus('suspended')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    filterStatus === 'suspended'
+                      ? 'bg-rose-600 text-white shadow-xs'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  Desactivados ({suspendedUsersCount})
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* User Cards List */}
+          {filteredUsers.length === 0 ? (
+            <div className="bg-white border border-slate-200 rounded-3xl p-12 text-center shadow-sm">
+              <div className="w-16 h-16 bg-slate-100 text-slate-400 rounded-3xl flex items-center justify-center mx-auto mb-3">
+                <UserX className="w-8 h-8" />
+              </div>
+              <h3 className="font-bold text-slate-800 text-base">No se encontraron usuarios</h3>
+              <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+                No hay resultados que coincidan con tu búsqueda o filtros seleccionados.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {filteredUsers.map((u) => {
+                const isMe = u.email.toLowerCase() === 'carloscorreaup@gmail.com';
+                const userRating = u.rating || 5.0;
+
+                return (
+                  <div
+                    key={u.email}
+                    className={`bg-white border rounded-3xl p-4 sm:p-5 transition-all shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 ${
+                      !u.isActive
+                        ? 'border-rose-300 bg-rose-50/30 ring-1 ring-rose-200'
+                        : 'border-slate-200 hover:border-slate-300'
+                    }`}
+                  >
+                    {/* User Info */}
+                    <div className="flex items-start gap-3.5 min-w-0">
+                      {/* Avatar with Status Dot */}
+                      <div className="relative shrink-0">
+                        <div className="w-13 h-13 rounded-2xl bg-slate-100 overflow-hidden ring-2 ring-slate-200 flex items-center justify-center text-sm font-bold text-slate-700">
+                          {u.avatarUrl ? (
+                            <img src={u.avatarUrl} alt={u.name} className="w-full h-full object-cover" />
+                          ) : (
+                            u.name ? u.name.substring(0, 2).toUpperCase() : 'US'
+                          )}
+                        </div>
+                        <span
+                          className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full ring-2 ring-white ${
+                            u.isActive ? 'bg-emerald-500' : 'bg-rose-500'
+                          }`}
+                          title={u.isActive ? 'Usuario Activo' : 'Usuario Desactivado'}
+                        />
+                      </div>
+
+                      {/* Details */}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="font-black text-sm sm:text-base text-slate-900 truncate">
+                            {u.name || 'Usuario'}
+                          </h3>
+
+                          {isMe && (
+                            <span className="text-[10px] bg-red-100 text-red-700 font-extrabold px-2.5 py-0.5 rounded-full border border-red-200">
+                              SUPER ADMIN
+                            </span>
+                          )}
+
+                          {/* Role Badge */}
+                          <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border uppercase tracking-wider ${
+                            u.role === 'provider' || u.mode === 'provider'
+                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                              : 'bg-blue-50 text-[#0052ff] border-blue-200'
+                          }`}>
+                            {u.role === 'provider' || u.mode === 'provider' ? 'Proveedor' : 'Cliente'}
+                          </span>
+
+                          {/* Status Badge */}
+                          <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border ${
+                            u.isActive
+                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                              : 'bg-rose-100 text-rose-700 border-rose-300'
+                          }`}>
+                            {u.isActive ? '✓ ACTIVO' : '✕ DESACTIVADO'}
+                          </span>
+
+                          {/* Warnings badge */}
+                          {u.warningsCount !== undefined && u.warningsCount > 0 && (
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-amber-100 text-amber-800 border-amber-300">
+                              ⚠️ {u.warningsCount} Advertencia{u.warningsCount > 1 ? 's' : ''}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Contact info grid */}
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-xs text-slate-600">
+                          <span className="flex items-center gap-1.5 truncate">
+                            <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                            <strong className="text-slate-800 truncate">{u.email}</strong>
+                          </span>
+                          {u.phone && (
+                            <span className="flex items-center gap-1.5">
+                              <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                              <span>{u.phone}</span>
+                            </span>
+                          )}
+                          <span className="flex items-center gap-1.5">
+                            <MapPin className="w-3.5 h-3.5 text-[#0052ff] shrink-0" />
+                            <span>{u.city || 'Pereira'}, Colombia</span>
+                          </span>
+                        </div>
+
+                        {/* Location and rating row */}
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1 text-[11px] text-slate-400">
+                          <span>Dirección: <strong className="text-slate-600">{u.fixedLocation?.address || 'Sin registrar'}</strong></span>
+                          <span>•</span>
+                          <span className="flex items-center gap-1 text-amber-600 font-bold">
+                            <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                            <span>{userRating.toFixed(1)}</span>
+                            <span className="text-slate-400 font-normal">({u.reviewCount || 0} reseñas)</span>
+                          </span>
+                          {u.sanctionUntil && !u.isActive && (
+                            <span className="text-rose-600 font-bold">
+                              • Suspendido hasta: {u.sanctionUntil}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Action Buttons: Activar / Desactivar */}
+                    <div className="flex items-center gap-2 pt-2 md:pt-0 border-t md:border-t-0 border-slate-100 shrink-0">
+                      {!isMe ? (
+                        <button
+                          type="button"
+                          onClick={() => onToggleUserStatus(u.email, u.isActive)}
+                          className={`w-full md:w-auto px-4 py-2.5 rounded-2xl text-xs font-black flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm active:scale-98 ${
+                            u.isActive
+                              ? 'bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white border border-rose-300'
+                              : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/20'
+                          }`}
+                          title={u.isActive ? 'Suspender o desactivar cuenta de usuario' : 'Reactivar cuenta de usuario'}
+                        >
+                          <Power className="w-4 h-4" />
+                          <span>{u.isActive ? 'Desactivar Usuario' : 'Activar Usuario'}</span>
+                        </button>
+                      ) : (
+                        <span className="text-xs text-slate-400 italic px-3 py-1">
+                          (Cuenta Master)
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* TAB 2: GESTIÓN DE DENUNCIAS (RESOLUCIÓN EN 5 DÍAS HÁBILES) */}
       {/* ======================================================== */}
       {activeAdminTab === 'reports' && (
         <div className="space-y-4">
-          {/* Sub-filter */}
-          <div className="bg-white border border-slate-200 rounded-3xl p-4 flex items-center justify-between gap-3 shadow-sm">
-            <div className="flex items-center gap-2">
+          {/* Sub-filter bar */}
+          <div className="bg-white border border-slate-200 rounded-3xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
+            <div className="flex items-center gap-2 flex-wrap">
               <button
                 onClick={() => setReportFilter('pending')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   reportFilter === 'pending'
                     ? 'bg-red-600 text-white shadow-xs'
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }`}
               >
-                Pendientes de Evaluación ({pendingReportsCount})
+                Pendientes ({pendingReportsCount})
               </button>
               <button
                 onClick={() => setReportFilter('resolved')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   reportFilter === 'resolved'
                     ? 'bg-emerald-600 text-white shadow-xs'
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -243,9 +516,9 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
               </button>
               <button
                 onClick={() => setReportFilter('all')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   reportFilter === 'all'
-                    ? 'bg-slate-800 text-white'
+                    ? 'bg-slate-900 text-white'
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }`}
               >
@@ -253,19 +526,19 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
               </button>
             </div>
 
-            <div className="text-xs text-slate-500 hidden md:block">
-              ⚖️ Plazo reglamentario de evaluación: <strong>5 días hábiles</strong>
+            <div className="text-xs text-slate-500 font-medium">
+              ⚖️ Plazo reglamentario: <strong>5 días hábiles</strong>
             </div>
           </div>
 
           {filteredReports.length === 0 ? (
-            <div className="bg-white border border-slate-200 rounded-3xl p-12 text-center">
+            <div className="bg-white border border-slate-200 rounded-3xl p-12 text-center shadow-sm">
               <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-3xl flex items-center justify-center mx-auto mb-3">
                 <CheckCircle2 className="w-8 h-8" />
               </div>
-              <h3 className="font-bold text-slate-800 text-base">No hay denuncias en esta sección</h3>
+              <h3 className="font-bold text-slate-800 text-base">No hay casos pendientes</h3>
               <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
-                La comunidad está operando con normalidad y sin reclamos pendientes por resolver.
+                No existen denuncias pendientes de resolución administrativa en este momento.
               </p>
             </div>
           ) : (
@@ -298,145 +571,143 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                       <div className="flex items-center gap-2">
                         <div className="flex items-center gap-1 text-xs bg-amber-50 text-amber-900 border border-amber-200 font-bold px-2.5 py-0.5 rounded-full">
                           <Clock className="w-3.5 h-3.5 text-amber-600" />
-                          <span>Límite de Evaluación: {rep.deadlineDate}</span>
+                          <span>Límite (5 días hábiles): {rep.deadlineDate}</span>
                         </div>
-                        <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase ${
-                          isPending ? 'bg-rose-600 text-white animate-pulse' : 'bg-emerald-100 text-emerald-800'
-                        }`}>
-                          {isPending ? 'En Evaluación (5 Días)' : 'Resuelto'}
-                        </span>
                       </div>
                     </div>
 
-                    {/* Parties Involved */}
+                    {/* Parties Comparison Box */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
-                      {/* Denunciante */}
-                      <div className="bg-blue-50/60 border border-blue-100 rounded-2xl p-3.5">
-                        <div className="text-[10px] uppercase font-bold text-[#0052ff] tracking-wider mb-1 flex items-center gap-1">
-                          <span>👤 Denunciante:</span>
+                      {/* Reporter */}
+                      <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-3.5">
+                        <div className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1">
+                          👤 Parte Denunciante
                         </div>
                         <div className="font-bold text-sm text-slate-900">{rep.reporterName}</div>
-                        <div className="text-xs text-slate-600 truncate">{rep.reporterEmail}</div>
+                        <div className="text-xs text-slate-500 truncate">{rep.reporterEmail}</div>
                       </div>
 
-                      {/* Denunciado */}
-                      <div className="bg-rose-50/60 border border-rose-100 rounded-2xl p-3.5">
-                        <div className="text-[10px] uppercase font-bold text-rose-600 tracking-wider mb-1 flex items-center gap-1">
-                          <span>🚨 Denunciado ({rep.targetType === 'provider' ? 'Proveedor' : 'Cliente'}):</span>
+                      {/* Reported User */}
+                      <div className="bg-red-50/60 border border-red-200/80 rounded-2xl p-3.5">
+                        <div className="text-[10px] font-extrabold uppercase tracking-wider text-red-600 mb-1">
+                          🎯 Parte Denunciada ({rep.targetType === 'provider' ? 'Proveedor' : 'Cliente'})
                         </div>
-                        <div className="font-bold text-sm text-slate-900">{rep.targetName}</div>
-                        <div className="text-xs text-slate-600 truncate">{rep.targetEmail}</div>
+                        <div className="font-bold text-sm text-red-950">{rep.targetName}</div>
+                        <div className="text-xs text-red-700 truncate">{rep.targetEmail}</div>
                       </div>
                     </div>
 
-                    {/* Facts / Explanation */}
-                    <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 mb-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xs font-bold bg-rose-100 text-rose-800 px-2.5 py-0.5 rounded-lg">
-                          Motivo: {rep.reasonLabel}
+                    {/* Reason & Facts */}
+                    <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 mb-4 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-slate-900">Motivo:</span>
+                        <span className="bg-red-100 text-red-700 text-xs font-extrabold px-2.5 py-0.5 rounded-full">
+                          {rep.reasonLabel}
                         </span>
                       </div>
-                      <div className="text-xs font-bold text-slate-700 mb-1">Explicación de los Hechos:</div>
-                      <blockquote className="text-xs text-slate-900 leading-relaxed italic bg-white p-3 rounded-xl border border-slate-200">
-                        "{rep.explanation}"
-                      </blockquote>
+
+                      <div>
+                        <span className="text-xs font-bold text-slate-900 block mb-1">
+                          Hechos Denunciados:
+                        </span>
+                        <p className="text-xs text-slate-700 leading-relaxed bg-white border border-slate-200 rounded-xl p-3 italic">
+                          "{rep.explanation}"
+                        </p>
+                      </div>
+
                       {rep.evidenceNotes && (
-                        <div className="mt-2 text-xs text-slate-600 bg-amber-50/70 p-2 rounded-xl border border-amber-200/60">
+                        <div className="text-xs text-slate-600 pt-1">
                           <strong>Pruebas / Notas adicionales:</strong> {rep.evidenceNotes}
                         </div>
                       )}
                     </div>
 
-                    {/* Resolution Section */}
+                    {/* RESOLUTION ACTIONS (FOR PENDING) */}
                     {isPending ? (
-                      <div className="bg-white border-2 border-red-200 rounded-2xl p-4 space-y-3">
-                        <div className="flex items-center gap-2 text-xs font-extrabold text-red-700 uppercase tracking-wider">
+                      <div className="border-t border-slate-200 pt-4 space-y-3">
+                        <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
                           <Scale className="w-4 h-4 text-red-600" />
-                          <span>Emitir Decisión Oficial del Super Administrador:</span>
+                          <span>Decisión del Administrador:</span>
                         </div>
 
-                        {/* 4 Decision Options */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                          {/* Option 1: Ban Definitivo */}
+                        {/* 4 Resolution Options */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
                           <button
                             type="button"
                             onClick={() => setSelectedResolutions(prev => ({ ...prev, [rep.id]: 'ban_definitivo' }))}
-                            className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                            className={`p-3 rounded-2xl border text-left transition-all cursor-pointer ${
                               currentRes === 'ban_definitivo'
-                                ? 'bg-red-50 border-red-600 ring-2 ring-red-400 text-red-950 font-bold'
-                                : 'bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-700'
+                                ? 'bg-red-600 text-white border-red-700 shadow-sm'
+                                : 'bg-slate-50 hover:bg-red-50 text-slate-800 border-slate-200'
                             }`}
                           >
-                            <div className="flex items-center gap-1.5 text-xs font-bold text-red-700">
-                              <Ban className="w-3.5 h-3.5" />
-                              <span>1. Retirar al Usuario Definitivamente</span>
+                            <div className="font-bold text-xs flex items-center gap-1.5">
+                              <Ban className="w-4 h-4" />
+                              <span>1. Retirar Definitivamente</span>
                             </div>
-                            <p className="text-[10px] text-slate-500 mt-0.5">
-                              Expulsión permanente y bloqueo total de la cuenta.
+                            <p className={`text-[10px] mt-1 ${currentRes === 'ban_definitivo' ? 'text-white/80' : 'text-slate-500'}`}>
+                              Expulsión permanente y desactivación de cuenta.
                             </p>
                           </button>
 
-                          {/* Option 2: Sanción Temporal */}
                           <button
                             type="button"
                             onClick={() => setSelectedResolutions(prev => ({ ...prev, [rep.id]: 'sancion_temporal' }))}
-                            className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                            className={`p-3 rounded-2xl border text-left transition-all cursor-pointer ${
                               currentRes === 'sancion_temporal'
-                                ? 'bg-amber-50 border-amber-600 ring-2 ring-amber-400 text-amber-950 font-bold'
-                                : 'bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-700'
+                                ? 'bg-amber-600 text-white border-amber-700 shadow-sm'
+                                : 'bg-slate-50 hover:bg-amber-50 text-slate-800 border-slate-200'
                             }`}
                           >
-                            <div className="flex items-center gap-1.5 text-xs font-bold text-amber-800">
-                              <Clock className="w-3.5 h-3.5" />
-                              <span>2. Sanción Temporal por Tiempo</span>
+                            <div className="font-bold text-xs flex items-center gap-1.5">
+                              <Clock className="w-4 h-4" />
+                              <span>2. Sanción Temporal</span>
                             </div>
-                            <p className="text-[10px] text-slate-500 mt-0.5">
-                              Suspensión temporal por 7, 15 o 30 días.
+                            <p className={`text-[10px] mt-1 ${currentRes === 'sancion_temporal' ? 'text-white/80' : 'text-slate-500'}`}>
+                              Suspensión por días con reactivación programada.
                             </p>
                           </button>
 
-                          {/* Option 3: Advertencia a quien denuncia */}
                           <button
                             type="button"
                             onClick={() => setSelectedResolutions(prev => ({ ...prev, [rep.id]: 'advertencia_denunciante' }))}
-                            className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                            className={`p-3 rounded-2xl border text-left transition-all cursor-pointer ${
                               currentRes === 'advertencia_denunciante'
-                                ? 'bg-purple-50 border-purple-600 ring-2 ring-purple-400 text-purple-950 font-bold'
-                                : 'bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-700'
+                                ? 'bg-indigo-600 text-white border-indigo-700 shadow-sm'
+                                : 'bg-slate-50 hover:bg-indigo-50 text-slate-800 border-slate-200'
                             }`}
                           >
-                            <div className="flex items-center gap-1.5 text-xs font-bold text-purple-800">
-                              <AlertOctagon className="w-3.5 h-3.5" />
-                              <span>3. Advertencia a quien denuncia</span>
+                            <div className="font-bold text-xs flex items-center gap-1.5">
+                              <AlertTriangle className="w-4 h-4" />
+                              <span>3. Advertencia al Denunciante</span>
                             </div>
-                            <p className="text-[10px] text-slate-500 mt-0.5">
-                              Los hechos no ameritan denuncia; se amonesta al denunciante.
+                            <p className={`text-[10px] mt-1 ${currentRes === 'advertencia_denunciante' ? 'text-white/80' : 'text-slate-500'}`}>
+                              Amonestación si los hechos no ameritan sanción.
                             </p>
                           </button>
 
-                          {/* Option 4: Desestimar sin sanción */}
                           <button
                             type="button"
                             onClick={() => setSelectedResolutions(prev => ({ ...prev, [rep.id]: 'desestimada_sin_sancion' }))}
-                            className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                            className={`p-3 rounded-2xl border text-left transition-all cursor-pointer ${
                               currentRes === 'desestimada_sin_sancion'
-                                ? 'bg-slate-100 border-slate-600 ring-2 ring-slate-400 text-slate-900 font-bold'
-                                : 'bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-700'
+                                ? 'bg-slate-800 text-white border-slate-900 shadow-sm'
+                                : 'bg-slate-50 hover:bg-slate-100 text-slate-800 border-slate-200'
                             }`}
                           >
-                            <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
-                              <CheckCircle2 className="w-3.5 h-3.5 text-slate-600" />
-                              <span>4. Desestimar / Archivar sin Sanción</span>
+                            <div className="font-bold text-xs flex items-center gap-1.5">
+                              <CheckCircle2 className="w-4 h-4" />
+                              <span>4. Desestimar Caso</span>
                             </div>
-                            <p className="text-[10px] text-slate-500 mt-0.5">
-                              Cierre amistoso sin amonestaciones.
+                            <p className={`text-[10px] mt-1 ${currentRes === 'desestimada_sin_sancion' ? 'text-white/80' : 'text-slate-500'}`}>
+                              Cierre amistoso y archivo sin sanciones.
                             </p>
                           </button>
                         </div>
 
-                        {/* Days selector if temporal */}
+                        {/* Suspension Days selector */}
                         {currentRes === 'sancion_temporal' && (
-                          <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-center justify-between gap-3 text-xs">
+                          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
                             <span className="font-bold text-amber-900">Duración de la suspensión temporal:</span>
                             <div className="flex items-center gap-1.5">
                               {[7, 15, 30].map(days => (
@@ -444,7 +715,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                                   key={days}
                                   type="button"
                                   onClick={() => setSanctionDaysMap(prev => ({ ...prev, [rep.id]: days }))}
-                                  className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${
+                                  className={`px-3 py-1 rounded-xl font-bold transition-all cursor-pointer ${
                                     currentDays === days
                                       ? 'bg-amber-600 text-white shadow-xs'
                                       : 'bg-white text-amber-900 border border-amber-200'
@@ -457,7 +728,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                           </div>
                         )}
 
-                        {/* Resolution Notes */}
+                        {/* Notes */}
                         <div>
                           <label className="block text-xs font-bold text-slate-800 mb-1">
                             Fundamento Oficial de la Decisión Administrativa:
@@ -465,9 +736,9 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                           <textarea
                             value={currentNotes}
                             onChange={e => setResolutionNotes(prev => ({ ...prev, [rep.id]: e.target.value }))}
-                            placeholder="Describe el motivo de la decisión que será notificado a las partes involucradas..."
+                            placeholder="Escribe la explicación oficial que se notificará a las partes..."
                             rows={2}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-red-500 resize-none"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-red-500 resize-none"
                           />
                         </div>
 
@@ -477,9 +748,9 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                             type="button"
                             onClick={() => handleExecuteResolution(rep.id)}
                             disabled={submitting}
-                            className="bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-xs font-bold px-5 py-2.5 rounded-xl flex items-center gap-1.5 transition-all shadow-md active:scale-98 cursor-pointer"
+                            className="w-full sm:w-auto bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-xs font-bold px-6 py-3 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-md active:scale-98 cursor-pointer"
                           >
-                            <Scale className="w-3.5 h-3.5" />
+                            <Scale className="w-4 h-4" />
                             <span>{submitting ? 'Aplicando Resolución...' : 'Emitir Resolución Oficial'}</span>
                           </button>
                         </div>
@@ -509,164 +780,6 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
               })}
             </div>
           )}
-        </div>
-      )}
-
-      {/* ======================================================== */}
-      {/* TAB 2: BASE DE DATOS DE USUARIOS */}
-      {/* ======================================================== */}
-      {activeAdminTab === 'users' && (
-        <div className="space-y-4">
-          {/* Filter and Search */}
-          <div className="bg-white border border-slate-200 rounded-3xl p-4 space-y-3 shadow-sm">
-            <div className="relative">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                placeholder="Buscar por nombre, correo, teléfono o ciudad..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-[#141b2b] placeholder-slate-400 focus:outline-none focus:border-red-500"
-              />
-            </div>
-
-            <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-              <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl">
-                <button
-                  onClick={() => setFilterRole('all')}
-                  className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${
-                    filterRole === 'all' ? 'bg-red-600 text-white' : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  Todos ({users.length})
-                </button>
-                <button
-                  onClick={() => setFilterRole('client')}
-                  className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${
-                    filterRole === 'client' ? 'bg-red-600 text-white' : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  Clientes
-                </button>
-                <button
-                  onClick={() => setFilterRole('provider')}
-                  className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${
-                    filterRole === 'provider' ? 'bg-red-600 text-white' : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  Proveedores
-                </button>
-              </div>
-
-              <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl">
-                <button
-                  onClick={() => setFilterStatus('all')}
-                  className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${
-                    filterStatus === 'all' ? 'bg-slate-700 text-white' : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  Todos
-                </button>
-                <button
-                  onClick={() => setFilterStatus('active')}
-                  className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${
-                    filterStatus === 'active' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  Activos ({activeUsersCount})
-                </button>
-                <button
-                  onClick={() => setFilterStatus('suspended')}
-                  className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${
-                    filterStatus === 'suspended' ? 'bg-rose-600 text-white' : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  Suspendidos ({suspendedUsersCount})
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Users List */}
-          <div className="space-y-3">
-            {filteredUsers.map((u) => {
-              const isMe = u.email.toLowerCase() === 'carloscorreaup@gmail.com';
-
-              return (
-                <div
-                  key={u.email}
-                  className={`bg-white border rounded-3xl p-4 sm:p-5 transition-all shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
-                    !u.isActive ? 'border-rose-300 bg-rose-50/40 opacity-80' : 'border-slate-200'
-                  }`}
-                >
-                  <div className="flex items-start sm:items-center gap-3.5">
-                    <div className="w-12 h-12 rounded-2xl bg-slate-100 overflow-hidden ring-2 ring-slate-200 flex items-center justify-center text-sm font-bold text-slate-700 shrink-0">
-                      {u.avatarUrl ? (
-                        <img src={u.avatarUrl} alt={u.name} className="w-full h-full object-cover" />
-                      ) : (
-                        u.name.substring(0, 2).toUpperCase()
-                      )}
-                    </div>
-
-                    <div>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="font-bold text-sm sm:text-base text-slate-900">{u.name}</h3>
-                        {isMe && (
-                          <span className="text-[10px] bg-red-100 text-red-700 font-bold px-2 py-0.5 rounded-full border border-red-200">
-                            SUPER ADMIN
-                          </span>
-                        )}
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                          u.isActive
-                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                            : 'bg-rose-100 text-rose-700 border-rose-300'
-                        }`}>
-                          {u.isActive ? 'ACTIVO' : 'DESACTIVADO / SUSPENDIDO'}
-                        </span>
-                        {u.warningsCount && u.warningsCount > 0 && (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-amber-100 text-amber-800 border-amber-300">
-                            ⚠️ {u.warningsCount} Advertencia{u.warningsCount > 1 ? 's' : ''}
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-xs text-slate-500">
-                        <span className="flex items-center gap-1">
-                          <Mail className="w-3 h-3 text-slate-400" /> {u.email}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Phone className="w-3 h-3 text-slate-400" /> {u.phone}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <MapPin className="w-3 h-3 text-[#0052ff]" /> {u.city}
-                        </span>
-                      </div>
-
-                      <div className="text-[11px] text-slate-400 mt-1">
-                        Dirección: {u.fixedLocation?.address || 'Sin registrar'} • Rol: <strong className="capitalize text-slate-700">{u.role}</strong>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 self-end sm:self-center">
-                    {!isMe && (
-                      <button
-                        onClick={() => onToggleUserStatus(u.email, u.isActive)}
-                        className={`px-4 py-2.5 rounded-2xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm cursor-pointer ${
-                          u.isActive
-                            ? 'bg-rose-100 hover:bg-rose-600 text-rose-700 hover:text-white border border-rose-300'
-                            : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-md'
-                        }`}
-                      >
-                        <Power className="w-3.5 h-3.5" />
-                        <span>{u.isActive ? 'Desactivar Usuario' : 'Activar Usuario'}</span>
-                      </button>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
         </div>
       )}
     </div>
