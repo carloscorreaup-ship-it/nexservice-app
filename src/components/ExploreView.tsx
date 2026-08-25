@@ -527,7 +527,7 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
                           onClick={() => onSelectProvider(prov)}
                           className="relative w-14 h-14 rounded-2xl overflow-hidden ring-2 ring-[#0052ff]/20 bg-slate-100 shrink-0 cursor-pointer group-hover:scale-105 transition-transform"
                         >
-                          <img src={prov.avatarUrl} alt={prov.name} className="w-full h-full object-cover" />
+                          <img src={prov.avatarUrl} alt={prov.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                           {prov.verified && (
                             <div className="absolute -bottom-0.5 -right-0.5 bg-emerald-500 text-white p-0.5 rounded-full ring-2 ring-white">
                               <ShieldCheck className="w-3 h-3" />
@@ -653,7 +653,7 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
                         onClick={() => onSelectProvider(provider)}
                         className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden ring-2 ring-blue-100 shrink-0 cursor-pointer bg-slate-100"
                       >
-                        <img src={provider.avatarUrl} alt={provider.name} className="w-full h-full object-cover" />
+                        <img src={provider.avatarUrl} alt={provider.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5">

@@ -370,7 +370,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                       <div className="relative shrink-0">
                         <div className="w-13 h-13 rounded-2xl bg-slate-100 overflow-hidden ring-2 ring-slate-200 flex items-center justify-center text-sm font-bold text-slate-700">
                           {u.avatarUrl ? (
-                            <img src={u.avatarUrl} alt={u.name} className="w-full h-full object-cover" />
+                            <img src={u.avatarUrl} alt={u.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                           ) : (
                             u.name ? u.name.substring(0, 2).toUpperCase() : 'US'
                           )}

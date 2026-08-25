@@ -40,7 +40,7 @@ import {
   resolveReportInDB,
   addReviewToTargetInDB
 } from './services/firestoreService';
-import { getEmailAvatarUrl } from './utils/userUtils';
+import { getEmailAvatarUrl, getReliableAvatarUrl } from './utils/userUtils';
 import { requestUserCoordinates, reverseGeocodeAddress, findNearestCity, DEFAULT_COLOMBIA_COORDS, calculateDistanceKm } from './utils/geoUtils';
 
 const STORAGE_KEYS = {
@@ -152,16 +152,31 @@ export default function App() {
     if (isFirebaseConnected && auth) {
       const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
         if (firebaseUser && firebaseUser.email) {
+          const googlePhoto = firebaseUser.photoURL ? firebaseUser.photoURL.replace(/=s\d+(-c)?$/, '=s400-c') : '';
+          const reliableAvatar = getReliableAvatarUrl(googlePhoto, firebaseUser.email, firebaseUser.displayName || '');
+
           if (!session.email || session.email.toLowerCase() !== firebaseUser.email.toLowerCase()) {
             const dbUser = await getUserByEmail(firebaseUser.email);
             if (dbUser && dbUser.isOnboarded) {
-              setSession(dbUser);
+              const finalAvatar = (googlePhoto && (!dbUser.avatarUrl || dbUser.avatarUrl.includes('ui-avatars.com')))
+                ? googlePhoto
+                : (dbUser.avatarUrl || reliableAvatar);
+              
+              const updated = {
+                ...dbUser,
+                avatarUrl: finalAvatar,
+                name: dbUser.name || firebaseUser.displayName || (firebaseUser.email ? firebaseUser.email.split('@')[0] : 'Usuario'),
+              };
+              setSession(updated);
+              if (finalAvatar !== dbUser.avatarUrl) {
+                saveUserToDB(updated);
+              }
             } else {
               setSession(prev => ({
                 ...prev,
                 email: firebaseUser.email || '',
                 name: firebaseUser.displayName || prev.name || (firebaseUser.email ? firebaseUser.email.split('@')[0] : 'Usuario'),
-                avatarUrl: firebaseUser.photoURL || getEmailAvatarUrl(firebaseUser.email || ''),
+                avatarUrl: reliableAvatar,
                 isOnboarded: false
               }));
             }
@@ -231,6 +246,29 @@ export default function App() {
       await deleteUserInDB(email);
       setUsers(prev => prev.filter(u => u.email.toLowerCase() !== email.toLowerCase()));
     }
+  };
+
+  const handleUpdateUserAvatar = async (newAvatarUrl: string) => {
+    setSession(prev => {
+      const updated: UserSession = {
+        ...prev,
+        avatarUrl: newAvatarUrl,
+      };
+      saveUserToDB(updated);
+      return updated;
+    });
+
+    // Update in providers list & database if this user is a provider
+    setProviders(prev => prev.map(p => {
+      if (p.email?.toLowerCase() === session.email.toLowerCase() || p.id === session.id) {
+        const updatedP = { ...p, avatarUrl: newAvatarUrl };
+        saveProviderToDB(updatedP);
+        return updatedP;
+      }
+      return p;
+    }));
+
+    setUsers(prev => prev.map(u => u.email.toLowerCase() === session.email.toLowerCase() ? { ...u, avatarUrl: newAvatarUrl } : u));
   };
 
   const handleToggleProviderVerification = (providerId: string, currentStatus: boolean) => {
@@ -507,14 +545,24 @@ export default function App() {
         <AuthScreen
           onAuthSuccess={async (authData) => {
             const dbUser = await getUserByEmail(authData.email);
+            const reliableAvatar = getReliableAvatarUrl(authData.avatarUrl, authData.email, authData.name);
             if (dbUser && dbUser.isOnboarded) {
-              setSession(dbUser);
+              const finalAvatar = authData.avatarUrl || dbUser.avatarUrl || reliableAvatar;
+              const mergedUser = {
+                ...dbUser,
+                avatarUrl: finalAvatar,
+                name: dbUser.name || authData.name,
+              };
+              setSession(mergedUser);
+              if (finalAvatar !== dbUser.avatarUrl) {
+                saveUserToDB(mergedUser);
+              }
             } else {
               setSession(prev => ({
                 ...prev,
                 email: authData.email,
                 name: authData.name || prev.name,
-                avatarUrl: authData.avatarUrl || prev.avatarUrl,
+                avatarUrl: reliableAvatar,
                 isOnboarded: false
               }));
             }
@@ -684,6 +732,7 @@ export default function App() {
               setSession(updatedSession);
               saveUserToDB(updatedSession);
             }}
+            onUpdateAvatar={handleUpdateUserAvatar}
             onOpenAdminPanel={() => navigateToTab('admin')}
             onLogout={handleLogout}
             onResetData={handleResetData}

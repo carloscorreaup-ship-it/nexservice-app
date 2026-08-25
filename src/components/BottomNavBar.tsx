@@ -51,7 +51,7 @@ export const BottomNavBar: React.FC<BottomNavBarProps> = ({
               <div className={`p-1 rounded-xl relative ${isActive ? (item.adminBadge ? 'bg-red-50' : 'bg-blue-50') : ''}`}>
                 {item.id === 'profile' && userAvatarUrl ? (
                   <div className={`w-5 h-5 rounded-full overflow-hidden ring-2 ${isActive ? 'ring-[#0052ff]' : 'ring-slate-200'}`}>
-                    <img src={userAvatarUrl} alt="Perfil" className="w-full h-full object-cover" />
+                    <img src={userAvatarUrl} alt="Perfil" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                   </div>
                 ) : (
                   <Icon className="w-5 h-5" />

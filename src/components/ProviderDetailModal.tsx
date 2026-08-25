@@ -95,6 +95,7 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
                 src={provider.avatarUrl}
                 alt={provider.name}
                 className="w-full h-full object-cover"
+                referrerPolicy="no-referrer"
               />
             </div>
           </div>

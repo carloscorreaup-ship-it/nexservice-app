@@ -48,6 +48,7 @@ export const WhatsAppModal: React.FC<WhatsAppModalProps> = ({
               src={provider.avatarUrl}
               alt={provider.name}
               className="w-12 h-12 rounded-2xl object-cover ring-2 ring-emerald-500/40"
+              referrerPolicy="no-referrer"
             />
             <div>
               <div className="flex items-center gap-1.5">

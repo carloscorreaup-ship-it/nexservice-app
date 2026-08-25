@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { User, MapPin, ShieldCheck, Flame, RefreshCw, LogOut, Store, ShieldAlert, ArrowLeft, FileText, Crosshair, Navigation, CheckCircle2, Chrome, Star, Download, Smartphone } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { User, MapPin, ShieldCheck, Flame, RefreshCw, LogOut, Store, ShieldAlert, ArrowLeft, FileText, Crosshair, Navigation, CheckCircle2, Chrome, Star, Download, Smartphone, Camera, Loader2 } from 'lucide-react';
 import { UserSession, Provider } from '../types';
 import { DataPolicyModal } from './DataPolicyModal';
 import { requestUserCoordinates, reverseGeocodeAddress, findNearestCity } from '../utils/geoUtils';
-import { getEmailAvatarUrl } from '../utils/userUtils';
+import { getEmailAvatarUrl, getReliableAvatarUrl } from '../utils/userUtils';
+import { compressImageFile } from '../utils/imageUtils';
 import { isAppInstalledPWA } from './PWAInstallBanner';
 
 interface BeforeInstallPromptEvent extends Event {
@@ -19,6 +20,7 @@ interface ProfileViewProps {
   onToggleProviderMode: () => void;
   onViewProvider: (provider: Provider) => void;
   onUpdateLocation?: (updatedSession: UserSession) => void;
+  onUpdateAvatar?: (newAvatarUrl: string) => Promise<void> | void;
   onOpenAdminPanel?: () => void;
   onLogout: () => void;
   onResetData: () => void;
@@ -31,6 +33,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   onOpenFirebaseConfig,
   onToggleProviderMode,
   onUpdateLocation,
+  onUpdateAvatar,
   onOpenAdminPanel,
   onLogout,
   onResetData,
@@ -39,6 +42,10 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   const [showPolicyModal, setShowPolicyModal] = useState(false);
   const [isSyncingGps, setIsSyncingGps] = useState(false);
   const [syncStatus, setSyncStatus] = useState<string | null>(null);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [avatarFeedback, setAvatarFeedback] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(
     (window as any).__pwaInstallPrompt || null
   );
@@ -59,9 +66,34 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   }, []);
 
   const isAdmin = userSession.email.toLowerCase() === 'carloscorreaup@gmail.com';
-  const effectiveAvatar = userSession.avatarUrl || getEmailAvatarUrl(userSession.email, userSession.name);
+  const effectiveAvatar = getReliableAvatarUrl(userSession.avatarUrl, userSession.email, userSession.name);
   const clientRating = userSession.rating || 5.0;
   const clientReviewsCount = userSession.reviewCount || 0;
+
+  const handleAvatarFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingAvatar(true);
+    setAvatarFeedback('Optimizando imagen...');
+
+    try {
+      // Compress avatar for fast performance and lightweight storage (~30-50KB)
+      const compressedDataUrl = await compressImageFile(file, 400, 0.85);
+      if (onUpdateAvatar) {
+        await onUpdateAvatar(compressedDataUrl);
+      }
+      setAvatarFeedback('¡Foto de perfil actualizada!');
+      setTimeout(() => setAvatarFeedback(null), 3000);
+    } catch (err: any) {
+      console.error('Error al cambiar foto de perfil:', err);
+      setAvatarFeedback('Error al cargar la foto.');
+      setTimeout(() => setAvatarFeedback(null), 3500);
+    } finally {
+      setIsUploadingAvatar(false);
+      if (e.target) e.target.value = '';
+    }
+  };
 
   const handleSyncGpsLocation = async () => {
     setIsSyncingGps(true);
@@ -113,52 +145,117 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
       )}
 
       {/* Profile Header */}
-      <div className="bg-white border border-slate-200 rounded-3xl p-6 mb-6 shadow-elevation-1 flex items-center gap-4">
-        <div className="relative w-16 h-16 rounded-3xl overflow-hidden bg-slate-100 ring-4 ring-blue-100 flex items-center justify-center shrink-0 shadow-sm">
-          <img
-            src={effectiveAvatar}
-            alt={userSession.name || 'Avatar'}
-            className="w-full h-full object-cover"
-            onError={(e) => {
-              e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(userSession.name || 'Usuario')}&background=0052ff&color=fff&size=256&bold=true`;
-            }}
-          />
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <h2 className="text-xl font-bold text-[#141b2b] font-geist">{userSession.name || 'Carlos Correa'}</h2>
-            <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-            {isAdmin && (
-              <span className="text-[10px] bg-red-100 text-red-700 font-black px-2 py-0.5 rounded-full border border-red-200">
-                SUPER ADMIN
+      <div className="bg-white border border-slate-200 rounded-3xl p-6 mb-6 shadow-elevation-1">
+        <div className="flex items-start sm:items-center gap-4">
+          {/* Avatar Container with Interactive Change Button */}
+          <div className="relative group shrink-0">
+            <div className="relative w-18 h-18 sm:w-20 sm:h-20 rounded-3xl overflow-hidden bg-slate-100 ring-4 ring-blue-100 flex items-center justify-center shadow-md">
+              {isUploadingAvatar ? (
+                <div className="absolute inset-0 bg-black/60 backdrop-blur-xs flex flex-col items-center justify-center text-white text-[10px] font-bold gap-1 z-10">
+                  <Loader2 className="w-5 h-5 animate-spin text-white" />
+                  <span>Cargando...</span>
+                </div>
+              ) : null}
+              <img
+                src={effectiveAvatar}
+                alt={userSession.name || 'Avatar'}
+                className="w-full h-full object-cover"
+                referrerPolicy="no-referrer"
+                onError={(e) => {
+                  e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(userSession.name || 'Usuario')}&background=0052ff&color=fff&size=256&bold=true`;
+                }}
+              />
+              {/* Overlay button on desktop hover or mobile tap */}
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploadingAvatar}
+                className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-[10px] font-bold gap-1 cursor-pointer"
+                title="Cambiar Foto de Perfil"
+              >
+                <Camera className="w-5 h-5" />
+                <span>Cambiar</span>
+              </button>
+            </div>
+
+            {/* Quick Action Floating Camera Badge */}
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploadingAvatar}
+              className="absolute -bottom-1 -right-1 bg-[#0052ff] hover:bg-blue-700 text-white p-1.5 rounded-full shadow-md border-2 border-white cursor-pointer active:scale-95 transition-all"
+              title="Cambiar foto de perfil desde galería o cámara"
+            >
+              <Camera className="w-3.5 h-3.5" />
+            </button>
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleAvatarFileSelect}
+            />
+          </div>
+
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h2 className="text-xl font-bold text-[#141b2b] font-geist">{userSession.name || 'Carlos Correa'}</h2>
+              <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+              {isAdmin && (
+                <span className="text-[10px] bg-red-100 text-red-700 font-black px-2 py-0.5 rounded-full border border-red-200">
+                  SUPER ADMIN
+                </span>
+              )}
+            </div>
+
+            {/* Live Feedback Toast on Avatar Change */}
+            {avatarFeedback && (
+              <div className="inline-flex items-center gap-1.5 mt-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-semibold animate-fade-in">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                <span>{avatarFeedback}</span>
+              </div>
+            )}
+
+            {/* Star Rating of User */}
+            <div className="flex items-center gap-2 mt-1">
+              <div className="flex items-center gap-1 text-amber-500 font-extrabold text-xs">
+                <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                <span>{clientRating.toFixed(1)} / 5.0</span>
+              </div>
+              <span className="text-[11px] text-slate-400">
+                ({clientReviewsCount > 0 ? `${clientReviewsCount} calificaciones de proveedores` : 'Cliente Verificado'})
               </span>
+            </div>
+
+            <div className="flex items-center gap-1.5 text-xs text-slate-500 truncate mt-0.5">
+              <Chrome className="w-3 h-3 text-[#0052ff] shrink-0" />
+              <span className="truncate">{userSession.email}</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-xs text-[#0052ff] mt-1">
+              <MapPin className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">{userSession.fixedLocation?.address || `${userSession.city}, Colombia`}</span>
+            </div>
+            {userSession.fixedLocation?.coordinates && (
+              <div className="text-[10px] text-slate-400 font-mono mt-0.5">
+                GPS: {userSession.fixedLocation.coordinates.lat.toFixed(4)}, {userSession.fixedLocation.coordinates.lng.toFixed(4)}
+              </div>
             )}
           </div>
+        </div>
 
-          {/* Star Rating of User */}
-          <div className="flex items-center gap-2 mt-1">
-            <div className="flex items-center gap-1 text-amber-500 font-extrabold text-xs">
-              <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-              <span>{clientRating.toFixed(1)} / 5.0</span>
-            </div>
-            <span className="text-[11px] text-slate-400">
-              ({clientReviewsCount > 0 ? `${clientReviewsCount} calificaciones de proveedores` : 'Cliente Verificado'})
-            </span>
-          </div>
-
-          <div className="flex items-center gap-1.5 text-xs text-slate-500 truncate mt-0.5">
-            <Chrome className="w-3 h-3 text-[#0052ff] shrink-0" />
-            <span className="truncate">{userSession.email}</span>
-          </div>
-          <div className="flex items-center gap-1.5 text-xs text-[#0052ff] mt-1">
-            <MapPin className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">{userSession.fixedLocation?.address || `${userSession.city}, Colombia`}</span>
-          </div>
-          {userSession.fixedLocation?.coordinates && (
-            <div className="text-[10px] text-slate-400 font-mono mt-0.5">
-              GPS: {userSession.fixedLocation.coordinates.lat.toFixed(4)}, {userSession.fixedLocation.coordinates.lng.toFixed(4)}
-            </div>
-          )}
+        {/* Change Photo Banner Button */}
+        <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
+          <span className="text-xs text-slate-500">Foto sincronizada o personalizada</span>
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isUploadingAvatar}
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0052ff] hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-xl transition-colors cursor-pointer"
+          >
+            <Camera className="w-3.5 h-3.5" />
+            <span>{isUploadingAvatar ? 'Subiendo...' : 'Cambiar Foto de Perfil'}</span>
+          </button>
         </div>
       </div>
 

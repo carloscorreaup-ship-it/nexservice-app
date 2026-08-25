@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MapPin, Flame, Bell, ShieldAlert, ArrowLeft, Search, Check, ChevronDown, X, Sparkles } from 'lucide-react';
+import { MapPin, Flame, Bell, ShieldAlert, ArrowLeft, Search, Check, ChevronDown, X, Sparkles, User } from 'lucide-react';
 import { isFirebaseConnected } from '../services/firebase';
 import { COLOMBIA_CITIES } from '../data/initialData';
 
@@ -313,9 +313,17 @@ export const Header: React.FC<HeaderProps> = ({
             title="Mi Perfil"
           >
             {userAvatarUrl ? (
-              <img src={userAvatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+              <img
+                src={userAvatarUrl}
+                alt="Avatar"
+                className="w-full h-full object-cover"
+                referrerPolicy="no-referrer"
+                onError={(e) => {
+                  e.currentTarget.src = 'https://ui-avatars.com/api/?name=Usuario&background=0052ff&color=fff&size=128&bold=true';
+                }}
+              />
             ) : (
-              'CC'
+              <User className="w-4 h-4 text-[#0052ff]" />
             )}
           </div>
         </div>

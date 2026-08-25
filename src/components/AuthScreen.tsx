@@ -47,8 +47,9 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthSuccess, onOpenFir
         .then(async (result) => {
           if (result && result.user) {
             const googleEmail = result.user.email || '';
-            const googleName = result.user.displayName || googleEmail.split('@')[0] || 'Usuario Google';
-            const googleAvatar = result.user.photoURL || getEmailAvatarUrl(googleEmail, googleName);
+            const googleName = result.user.displayName || (googleEmail ? googleEmail.split('@')[0] : 'Usuario Google');
+            const rawPhoto = result.user.photoURL || '';
+            const googleAvatar = rawPhoto ? rawPhoto.replace(/=s\d+(-c)?$/, '=s400-c') : getEmailAvatarUrl(googleEmail, googleName);
 
             const dbUser = await getUserByEmail(googleEmail);
             if (!dbUser) {
@@ -89,12 +90,15 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthSuccess, onOpenFir
                   isPublicOnMap: true
                 }
               });
+            } else if (rawPhoto && (!dbUser.avatarUrl || dbUser.avatarUrl.includes('ui-avatars.com'))) {
+              dbUser.avatarUrl = googleAvatar;
+              await saveUserToDB(dbUser);
             }
 
             onAuthSuccess({
               email: googleEmail,
               name: googleName,
-              avatarUrl: googleAvatar,
+              avatarUrl: (dbUser && dbUser.avatarUrl) || googleAvatar,
               isNewUser: !dbUser
             });
           }
@@ -288,7 +292,8 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthSuccess, onOpenFir
       if (result && result.user) {
         const googleEmail = result.user.email || '';
         const googleName = result.user.displayName || (googleEmail ? googleEmail.split('@')[0] : 'Usuario Google');
-        const googleAvatar = result.user.photoURL || getEmailAvatarUrl(googleEmail, googleName);
+        const rawPhoto = result.user.photoURL || '';
+        const googleAvatar = rawPhoto ? rawPhoto.replace(/=s\d+(-c)?$/, '=s400-c') : getEmailAvatarUrl(googleEmail, googleName);
 
         // Check or store in Firestore
         const dbUser = await getUserByEmail(googleEmail);
@@ -330,12 +335,15 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthSuccess, onOpenFir
               isPublicOnMap: true
             }
           });
+        } else if (rawPhoto && (!dbUser.avatarUrl || dbUser.avatarUrl.includes('ui-avatars.com'))) {
+          dbUser.avatarUrl = googleAvatar;
+          await saveUserToDB(dbUser);
         }
 
         onAuthSuccess({
           email: googleEmail,
           name: googleName,
-          avatarUrl: googleAvatar,
+          avatarUrl: (dbUser && dbUser.avatarUrl) || googleAvatar,
           isNewUser: !dbUser
         });
         return;

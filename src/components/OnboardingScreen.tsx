@@ -17,7 +17,8 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { UserRole, Coordinates, ServiceModality } from '../types';
-import { getEmailAvatarUrl } from '../utils/userUtils';
+import { getEmailAvatarUrl, getReliableAvatarUrl } from '../utils/userUtils';
+import { compressImageFile } from '../utils/imageUtils';
 import { requestUserCoordinates, reverseGeocodeAddress, DEFAULT_COLOMBIA_COORDS } from '../utils/geoUtils';
 
 interface OnboardingScreenProps {
@@ -48,6 +49,10 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
   const [name, setName] = useState(defaultName || '');
   const [email, setEmail] = useState(defaultEmail || '');
   const [phone, setPhone] = useState('');
+  const [customAvatarUrl, setCustomAvatarUrl] = useState<string>(defaultAvatarUrl || '');
+  const [isCompressingAvatar, setIsCompressingAvatar] = useState(false);
+  const avatarFileInputRef = React.useRef<HTMLInputElement | null>(null);
+
   const [role, setRole] = useState<UserRole>('both');
   const [serviceModality, setServiceModality] = useState<ServiceModality>('physical_store');
   const [city, setCity] = useState('Pereira');
@@ -61,7 +66,8 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
   useEffect(() => {
     if (defaultEmail) setEmail(defaultEmail);
     if (defaultName) setName(defaultName);
-  }, [defaultEmail, defaultName]);
+    if (defaultAvatarUrl) setCustomAvatarUrl(defaultAvatarUrl);
+  }, [defaultEmail, defaultName, defaultAvatarUrl]);
 
   // Request GPS automatically when landing on Step 3
   useEffect(() => {
@@ -92,8 +98,24 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
     setIsDetectingGps(false);
   };
 
-  // Automatic Avatar Preview derived from Email, or Google profile picture
-  const autoAvatarUrl = defaultAvatarUrl || getEmailAvatarUrl(email, name);
+  // Avatar Preview derived from Custom upload, Google photo, or Email
+  const autoAvatarUrl = customAvatarUrl || getReliableAvatarUrl(defaultAvatarUrl, email, name);
+
+  const handleAvatarFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsCompressingAvatar(true);
+    try {
+      const compressed = await compressImageFile(file, 400, 0.85);
+      setCustomAvatarUrl(compressed);
+    } catch (err) {
+      console.error('Error al procesar foto:', err);
+    } finally {
+      setIsCompressingAvatar(false);
+      if (e.target) e.target.value = '';
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -126,7 +148,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
         city,
         department,
         coordinates: coords,
-        avatarUrl: autoAvatarUrl,
+        avatarUrl: customAvatarUrl || autoAvatarUrl,
         serviceModality,
       });
     }
@@ -180,18 +202,55 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
             <>
               <div>
                 <h3 className="text-lg font-bold text-[#141b2b] mb-1 font-geist">Crea tu Perfil</h3>
-                <p className="text-xs text-slate-500 mb-3">La foto de perfil se sincroniza automáticamente con tu correo.</p>
+                <p className="text-xs text-slate-500 mb-3">La foto de perfil se sincroniza con tu correo o puedes subir una personalizada.</p>
               </div>
 
-              {/* Live Avatar Preview */}
-              <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-2xl border border-slate-200">
-                <div className="w-14 h-14 rounded-2xl overflow-hidden ring-2 ring-[#0052ff] bg-white shadow-sm shrink-0">
-                  <img src={autoAvatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+              {/* Live Avatar Preview & Custom Upload */}
+              <div className="flex items-center justify-between gap-3 bg-slate-50 p-3 rounded-2xl border border-slate-200">
+                <div className="flex items-center gap-3">
+                  <div
+                    onClick={() => avatarFileInputRef.current?.click()}
+                    className="relative w-14 h-14 rounded-2xl overflow-hidden ring-2 ring-[#0052ff] bg-white shadow-sm shrink-0 cursor-pointer group"
+                    title="Toca para cambiar foto de perfil"
+                  >
+                    <img
+                      src={autoAvatarUrl}
+                      alt="Avatar"
+                      className="w-full h-full object-cover"
+                      referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'Usuario')}&background=0052ff&color=fff&size=256&bold=true`;
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+                      <Camera className="w-4 h-4" />
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-xs font-bold text-slate-800 block">Foto de Perfil</span>
+                    <span className="text-[11px] text-emerald-600">
+                      {customAvatarUrl ? '✓ Foto personalizada cargada' : 'Sincronizada con tu correo'}
+                    </span>
+                  </div>
                 </div>
-                <div>
-                  <span className="text-xs font-bold text-slate-800 block">Foto de Perfil Automática</span>
-                  <span className="text-[11px] text-emerald-600">Sincronizada con tu correo / Google</span>
-                </div>
+
+                <button
+                  type="button"
+                  onClick={() => avatarFileInputRef.current?.click()}
+                  disabled={isCompressingAvatar}
+                  className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-xs font-bold text-[#0052ff] flex items-center gap-1 shadow-xs cursor-pointer"
+                >
+                  <Camera className="w-3.5 h-3.5" />
+                  <span>{isCompressingAvatar ? 'Cargando...' : 'Cambiar'}</span>
+                </button>
+
+                <input
+                  ref={avatarFileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleAvatarFileChange}
+                />
               </div>
 
               <div>

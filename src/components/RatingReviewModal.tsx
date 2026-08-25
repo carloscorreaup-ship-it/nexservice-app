@@ -158,7 +158,7 @@ export const RatingReviewModal: React.FC<RatingReviewModalProps> = ({
             <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3 flex items-center gap-3">
               <div className="w-11 h-11 rounded-xl bg-slate-200 overflow-hidden ring-2 ring-slate-300 flex items-center justify-center text-sm font-bold text-slate-700 shrink-0">
                 {target.avatarUrl ? (
-                  <img src={target.avatarUrl} alt={target.name} className="w-full h-full object-cover" />
+                  <img src={target.avatarUrl} alt={target.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                 ) : (
                   target.name.substring(0, 2).toUpperCase()
                 )}

@@ -180,7 +180,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
             <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3 flex items-center gap-3">
               <div className="w-11 h-11 rounded-xl bg-slate-200 overflow-hidden ring-2 ring-slate-300 flex items-center justify-center text-sm font-bold text-slate-700 shrink-0">
                 {targetUser.avatarUrl ? (
-                  <img src={targetUser.avatarUrl} alt={targetUser.name} className="w-full h-full object-cover" />
+                  <img src={targetUser.avatarUrl} alt={targetUser.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                 ) : (
                   targetUser.name.substring(0, 2).toUpperCase()
                 )}

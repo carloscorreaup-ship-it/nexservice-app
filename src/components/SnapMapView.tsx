@@ -175,7 +175,7 @@ export const SnapMapView: React.FC<SnapMapViewProps> = ({
       <div style="position: relative; display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; transform: translate(-50%, -50%);">
         <div style="position: absolute; width: 48px; height: 48px; border-radius: 9999px; background-color: rgba(0, 82, 255, 0.25); border: 2px solid rgba(0, 82, 255, 0.6);" class="pulse-radar"></div>
         <div style="position: relative; width: 34px; height: 34px; border-radius: 9999px; overflow: hidden; background-color: #0052ff; border: 2.5px solid #ffffff; box-shadow: 0 4px 14px rgba(0,82,255,0.45); display: flex; align-items: center; justify-content: center; color: white;">
-          <img src="${userAvatar}" alt="${userSession.name || 'Tú'}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(userSession.name || 'Tú')}&background=0052ff&color=fff&size=128&bold=true';" />
+          <img src="${userAvatar}" alt="${userSession.name || 'Tú'}" style="width: 100%; height: 100%; object-fit: cover;" referrerpolicy="no-referrer" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(userSession.name || 'Tú')}&background=0052ff&color=fff&size=128&bold=true';" />
         </div>
         <div style="position: absolute; bottom: -8px; background: white; border: 1.5px solid #0052ff; color: #0052ff; font-size: 9.5px; font-weight: 900; padding: 1px 6px; border-radius: 9999px; box-shadow: 0 2px 6px rgba(0,0,0,0.15); white-space: nowrap;">
           Tú (GPS)
@@ -247,7 +247,7 @@ export const SnapMapView: React.FC<SnapMapViewProps> = ({
           <div style="position: relative; display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; transform: translate(-50%, -50%);">
             <div style="position: absolute; width: 48px; height: 48px; border-radius: 9999px; background-color: rgba(0, 82, 255, 0.25); border: 2px solid rgba(0, 82, 255, 0.6);" class="pulse-radar"></div>
             <div style="position: relative; width: 34px; height: 34px; border-radius: 9999px; overflow: hidden; background-color: #0052ff; border: 2.5px solid #ffffff; box-shadow: 0 4px 14px rgba(0,82,255,0.45); display: flex; align-items: center; justify-content: center; color: white;">
-              <img src="${userAvatar}" alt="${userSession.name || 'Tú'}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(userSession.name || 'Tú')}&background=0052ff&color=fff&size=128&bold=true';" />
+              <img src="${userAvatar}" alt="${userSession.name || 'Tú'}" style="width: 100%; height: 100%; object-fit: cover;" referrerpolicy="no-referrer" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(userSession.name || 'Tú')}&background=0052ff&color=fff&size=128&bold=true';" />
             </div>
             <div style="position: absolute; bottom: -8px; background: white; border: 1.5px solid #0052ff; color: #0052ff; font-size: 9.5px; font-weight: 900; padding: 1px 6px; border-radius: 9999px; box-shadow: 0 2px 6px rgba(0,0,0,0.15); white-space: nowrap;">
               Tú (GPS)
@@ -319,7 +319,7 @@ export const SnapMapView: React.FC<SnapMapViewProps> = ({
           ">
             <!-- Avatar -->
             <div style="position: relative; width: 32px; height: 32px; border-radius: 9999px; overflow: hidden; flex-shrink: 0; background: #e2e8f0;">
-              <img src="${prov.avatarUrl}" alt="${prov.name}" style="width: 100%; height: 100%; object-fit: cover;" />
+              <img src="${prov.avatarUrl}" alt="${prov.name}" style="width: 100%; height: 100%; object-fit: cover;" referrerpolicy="no-referrer" />
             </div>
 
             <!-- Type badge corner -->
@@ -655,6 +655,7 @@ export const SnapMapView: React.FC<SnapMapViewProps> = ({
                   src={selectedEntity.avatarUrl}
                   alt={selectedEntity.name}
                   className="w-12 h-12 rounded-2xl object-cover ring-2 ring-[#0052ff]/30 shadow"
+                  referrerPolicy="no-referrer"
                 />
                 {selectedEntity.verified && (
                   <div className="absolute -bottom-1 -right-1 bg-emerald-500 text-white p-0.5 rounded-full ring-2 ring-white">

@@ -30,6 +30,7 @@ export const ProviderCard: React.FC<ProviderCardProps> = ({
                 src={provider.avatarUrl}
                 alt={provider.name}
                 className="w-full h-full object-cover"
+                referrerPolicy="no-referrer"
               />
             </div>
             <div>
