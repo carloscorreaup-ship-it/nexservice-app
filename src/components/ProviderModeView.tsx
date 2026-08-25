@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   Store,
   ShoppingBag,
@@ -23,11 +23,13 @@ import {
 } from 'lucide-react';
 import { Provider, ProductItem, ServiceItem, UserSession, ServiceModality, BookingOrOrder } from '../types';
 import { formatCurrencyCOP } from '../utils/userUtils';
+import { compressMultipleImages } from '../utils/imageUtils';
 
 interface ProviderModeViewProps {
   currentCity: string;
   userSession: UserSession;
   bookings?: BookingOrOrder[];
+  existingProviderData?: Provider;
   onSaveProviderProfile: (profile: Partial<Provider>) => void;
   onSwitchToClientMode: () => void;
   onOpenRatingModal?: (target: {
@@ -44,6 +46,7 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
   currentCity,
   userSession,
   bookings = [],
+  existingProviderData,
   onSaveProviderProfile,
   onSwitchToClientMode,
   onOpenRatingModal,
@@ -51,17 +54,19 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
   const [activeTab, setActiveTab] = useState<'products' | 'services' | 'location' | 'verification' | 'orders'>('products');
   
   // Profile state
-  const [businessName, setBusinessName] = useState(userSession.providerProfile?.businessName || userSession.name || 'Mi Negocio');
+  const [businessName, setBusinessName] = useState(userSession.providerProfile?.businessName || userSession.name || '');
   const [category, setCategory] = useState(userSession.providerProfile?.category || 'reparaciones');
   const [serviceModality, setServiceModality] = useState<ServiceModality>(userSession.fixedLocation?.serviceModality || 'physical_store');
-  const [address, setAddress] = useState(userSession.providerProfile?.address || userSession.fixedLocation?.address || 'Calle 14 # 15-20, Pereira');
-  const [phone, setPhone] = useState(userSession.providerProfile?.phone || userSession.phone || '+57 300 000 0000');
-  const [whatsapp, setWhatsapp] = useState(userSession.providerProfile?.whatsapp || userSession.phone || '573000000000');
-  const [description, setDescription] = useState(userSession.providerProfile?.description || 'Ofrecemos los mejores productos y servicios con garantía.');
+  const [address, setAddress] = useState(userSession.providerProfile?.address || userSession.fixedLocation?.address || '');
+  const [phone, setPhone] = useState(userSession.providerProfile?.phone || userSession.phone || '');
+  const [whatsapp, setWhatsapp] = useState(userSession.providerProfile?.whatsapp || userSession.phone || '');
+  const [description, setDescription] = useState(userSession.providerProfile?.description || '');
   const [savedSuccess, setSavedSuccess] = useState(false);
 
-  // Products state
-  const [products, setProducts] = useState<ProductItem[]>(userSession.providerProfile?.products || []);
+  // Products state — prefer existingProviderData (has real images) over session (lightweight copy)
+  const [products, setProducts] = useState<ProductItem[]>(
+    existingProviderData?.products || userSession.providerProfile?.products || []
+  );
   const [showAddProductModal, setShowAddProductModal] = useState(false);
   const [newProdName, setNewProdName] = useState('');
   const [newProdPrice, setNewProdPrice] = useState('');
@@ -70,19 +75,23 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
   const [newProdCondition, setNewProdCondition] = useState<'nuevo' | 'usado'>('nuevo');
   const [newProdImages, setNewProdImages] = useState<string[]>([]);
   const [newProdImageUrl, setNewProdImageUrl] = useState('');
+  const [isUploadingProdImages, setIsUploadingProdImages] = useState(false);
 
-  // Services state
-  const [services, setServices] = useState<ServiceItem[]>(userSession.providerProfile?.services || []);
+  // Services state — prefer existingProviderData (has real images) over session (lightweight copy)
+  const [services, setServices] = useState<ServiceItem[]>(
+    existingProviderData?.services || userSession.providerProfile?.services || []
+  );
   const [showAddServiceModal, setShowAddServiceModal] = useState(false);
   const [newSrvName, setNewSrvName] = useState('');
   const [newSrvPrice, setNewSrvPrice] = useState('');
   const [newSrvDuration, setNewSrvDuration] = useState('1 hr');
   const [newSrvImages, setNewSrvImages] = useState<string[]>([]);
   const [newSrvImageUrl, setNewSrvImageUrl] = useState('');
+  const [isUploadingSrvImages, setIsUploadingSrvImages] = useState(false);
 
-  const handleProductFilesUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleProductFilesUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (!files) return;
+    if (!files || files.length === 0) return;
 
     const remainingSlots = 10 - newProdImages.length;
     if (remainingSlots <= 0) {
@@ -91,24 +100,27 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
     }
 
     const filesToProcess = Array.from(files).slice(0, remainingSlots);
-    filesToProcess.forEach(file => {
-      if (file.size > 5 * 1024 * 1024) {
-        alert(`La imagen ${file.name} supera los 5MB.`);
-        return;
-      }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        if (typeof reader.result === 'string') {
-          setNewProdImages(prev => prev.length < 10 ? [...prev, reader.result as string] : prev);
-        }
-      };
-      reader.readAsDataURL(file);
-    });
-  };
+    setIsUploadingProdImages(true);
 
-  const handleServiceFilesUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      const compressed = await compressMultipleImages(filesToProcess, 800, 0.70);
+      setNewProdImages(prev => {
+        const combined = [...prev, ...compressed];
+        return combined.slice(0, 10);
+      });
+    } catch (err) {
+      console.error('[ProviderMode] Error compressing product images:', err);
+      alert('Ocurrió un error al procesar las imágenes. Intenta de nuevo con menos fotos.');
+    } finally {
+      setIsUploadingProdImages(false);
+      // Reset the input so the same files can be re-selected if needed
+      e.target.value = '';
+    }
+  }, [newProdImages.length]);
+
+  const handleServiceFilesUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (!files) return;
+    if (!files || files.length === 0) return;
 
     const remainingSlots = 10 - newSrvImages.length;
     if (remainingSlots <= 0) {
@@ -117,20 +129,22 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
     }
 
     const filesToProcess = Array.from(files).slice(0, remainingSlots);
-    filesToProcess.forEach(file => {
-      if (file.size > 5 * 1024 * 1024) {
-        alert(`La imagen ${file.name} supera los 5MB.`);
-        return;
-      }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        if (typeof reader.result === 'string') {
-          setNewSrvImages(prev => prev.length < 10 ? [...prev, reader.result as string] : prev);
-        }
-      };
-      reader.readAsDataURL(file);
-    });
-  };
+    setIsUploadingSrvImages(true);
+
+    try {
+      const compressed = await compressMultipleImages(filesToProcess, 800, 0.70);
+      setNewSrvImages(prev => {
+        const combined = [...prev, ...compressed];
+        return combined.slice(0, 10);
+      });
+    } catch (err) {
+      console.error('[ProviderMode] Error compressing service images:', err);
+      alert('Ocurrió un error al procesar las imágenes. Intenta de nuevo con menos fotos.');
+    } finally {
+      setIsUploadingSrvImages(false);
+      e.target.value = '';
+    }
+  }, [newSrvImages.length]);
 
   const handleAddProduct = () => {
     if (!newProdName || !newProdPrice) return;
@@ -453,7 +467,8 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
                 type="text"
                 value={businessName}
                 onChange={(e) => setBusinessName(e.target.value)}
-                className="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white"
+                placeholder="Ej: Taller Don Pedro, Tienda XYZ..."
+                className="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white placeholder:text-slate-500"
               />
             </div>
             <div>
@@ -468,7 +483,7 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
                 type="text"
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
-                className="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white"
+                className="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white placeholder:text-slate-500"
                 placeholder={
                   serviceModality === 'physical_store'
                     ? 'Ej: Carrera 15 # 12-45, Local 102'
@@ -482,7 +497,8 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
                 type="text"
                 value={whatsapp}
                 onChange={(e) => setWhatsapp(e.target.value)}
-                className="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white font-mono"
+                placeholder="Ej: 573001234567"
+                className="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white font-mono placeholder:text-slate-500"
               />
             </div>
 
@@ -690,7 +706,14 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
                 </p>
 
                 {/* Upload Buttons */}
-                {newProdImages.length < 10 && (
+                {isUploadingProdImages && (
+                  <div className="flex items-center justify-center gap-2 py-3 text-emerald-400">
+                    <div className="w-5 h-5 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
+                    <span className="font-semibold">Comprimiendo y cargando fotos...</span>
+                  </div>
+                )}
+
+                {!isUploadingProdImages && newProdImages.length < 10 && (
                   <div className="flex gap-2">
                     <label className="flex-1 py-2.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 cursor-pointer transition-all shadow-md shadow-emerald-600/20">
                       <Camera className="w-4 h-4" />
@@ -819,7 +842,14 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
                 </p>
 
                 {/* Upload Button */}
-                {newSrvImages.length < 10 && (
+                {isUploadingSrvImages && (
+                  <div className="flex items-center justify-center gap-2 py-3 text-blue-400">
+                    <div className="w-5 h-5 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+                    <span className="font-semibold">Comprimiendo y cargando fotos...</span>
+                  </div>
+                )}
+
+                {!isUploadingSrvImages && newSrvImages.length < 10 && (
                   <div className="flex gap-2">
                     <label className="flex-1 py-2.5 px-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 cursor-pointer transition-all shadow-md shadow-blue-600/20">
                       <Camera className="w-4 h-4" />

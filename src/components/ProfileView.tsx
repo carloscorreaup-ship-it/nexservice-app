@@ -4,6 +4,7 @@ import { UserSession, Provider } from '../types';
 import { DataPolicyModal } from './DataPolicyModal';
 import { requestUserCoordinates, reverseGeocodeAddress, findNearestCity } from '../utils/geoUtils';
 import { getEmailAvatarUrl } from '../utils/userUtils';
+import { isAppInstalledPWA } from './PWAInstallBanner';
 
 interface ProfileViewProps {
   userSession: UserSession;
@@ -233,33 +234,53 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           </div>
         </button>
 
-        <button
-          onClick={() => {
-            const installEvent = (window as any).__pwaInstallPrompt;
-            if (installEvent) {
-              installEvent.prompt();
-            } else {
-              alert('Para instalar en tu celular:\n\n📱 En Android / Chrome: Toca los 3 puntos (⋮) arriba a la derecha y selecciona "Instalar aplicación" o "Agregar a la pantalla principal".\n\n🍏 En iPhone / Safari: Toca el botón Compartir (cuadrado con flecha hacia arriba) y selecciona "Agregar al inicio".');
-            }
-          }}
-          className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-gradient-to-r from-blue-50/80 to-indigo-50/80 hover:from-blue-100 hover:to-indigo-100 text-left transition-all border border-blue-200/80 cursor-pointer"
-        >
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-[#0052ff] text-white shadow-sm shadow-blue-500/30">
-              <Smartphone className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="font-bold text-sm text-slate-900 flex items-center gap-1.5">
-                <span>Instalar App en el Celular</span>
-                <span className="bg-emerald-500 text-white text-[9px] font-black px-1.5 py-0.2 rounded-full">
-                  PWA
-                </span>
+        {isAppInstalledPWA() ? (
+          <div className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-gradient-to-r from-emerald-50/80 to-green-50/80 text-left border border-emerald-200/80">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-emerald-600 text-white shadow-sm shadow-emerald-500/30">
+                <Smartphone className="w-5 h-5" />
               </div>
-              <div className="text-xs text-slate-500">Acceso rápido directo con el logo oficial en tu pantalla</div>
+              <div>
+                <div className="font-bold text-sm text-slate-900 flex items-center gap-1.5">
+                  <span>App Instalada</span>
+                  <span className="bg-emerald-500 text-white text-[9px] font-black px-1.5 py-0.2 rounded-full">
+                    ✓ ACTIVA
+                  </span>
+                </div>
+                <div className="text-xs text-emerald-600">NexService está instalada en tu dispositivo</div>
+              </div>
             </div>
+            <CheckCircle2 className="w-5 h-5 text-emerald-600" />
           </div>
-          <Download className="w-4 h-4 text-[#0052ff]" />
-        </button>
+        ) : (
+          <button
+            onClick={() => {
+              const installEvent = (window as any).__pwaInstallPrompt;
+              if (installEvent) {
+                installEvent.prompt();
+              } else {
+                alert('Para instalar en tu celular:\n\n📱 En Android / Chrome: Toca los 3 puntos (⋮) arriba a la derecha y selecciona "Instalar aplicación".\n\n🍏 En iPhone / Safari: Toca el botón Compartir y selecciona "Agregar al inicio".');
+              }
+            }}
+            className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-gradient-to-r from-blue-50/80 to-indigo-50/80 hover:from-blue-100 hover:to-indigo-100 text-left transition-all border border-blue-200/80 cursor-pointer"
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-[#0052ff] text-white shadow-sm shadow-blue-500/30">
+                <Smartphone className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="font-bold text-sm text-slate-900 flex items-center gap-1.5">
+                  <span>Instalar App en el Celular</span>
+                  <span className="bg-emerald-500 text-white text-[9px] font-black px-1.5 py-0.2 rounded-full">
+                    PWA
+                  </span>
+                </div>
+                <div className="text-xs text-slate-500">Acceso rápido directo con el logo oficial en tu pantalla</div>
+              </div>
+            </div>
+            <Download className="w-4 h-4 text-[#0052ff]" />
+          </button>
+        )}
 
         <button
           onClick={() => setShowPolicyModal(true)}

@@ -36,6 +36,7 @@ interface AdminDashboardViewProps {
   bookings: BookingOrOrder[];
   reports: UserReport[];
   onToggleUserStatus: (email: string, currentStatus: boolean) => void;
+  onDeleteUser: (email: string) => void;
   onToggleProviderVerification?: (providerId: string, currentStatus: boolean) => void;
   onResolveReport: (reportId: string, resolution: ReportResolutionType, notes: string, sanctionDays?: number) => Promise<void>;
   onBack?: () => void;
@@ -48,6 +49,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
   bookings,
   reports = [],
   onToggleUserStatus,
+  onDeleteUser,
   onResolveReport,
   onBack,
 }) => {
@@ -459,19 +461,31 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                     {/* Action Buttons: Activar / Desactivar */}
                     <div className="flex items-center gap-2 pt-2 md:pt-0 border-t md:border-t-0 border-slate-100 shrink-0">
                       {!isMe ? (
-                        <button
-                          type="button"
-                          onClick={() => onToggleUserStatus(u.email, u.isActive)}
-                          className={`w-full md:w-auto px-4 py-2.5 rounded-2xl text-xs font-black flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm active:scale-98 ${
-                            u.isActive
-                              ? 'bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white border border-rose-300'
-                              : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/20'
-                          }`}
-                          title={u.isActive ? 'Suspender o desactivar cuenta de usuario' : 'Reactivar cuenta de usuario'}
-                        >
-                          <Power className="w-4 h-4" />
-                          <span>{u.isActive ? 'Desactivar Usuario' : 'Activar Usuario'}</span>
-                        </button>
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => onToggleUserStatus(u.email, u.isActive)}
+                            className={`w-full md:w-auto px-4 py-2.5 rounded-2xl text-xs font-black flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm active:scale-98 ${
+                              u.isActive
+                                ? 'bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white border border-rose-300'
+                                : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/20'
+                            }`}
+                            title={u.isActive ? 'Suspender o desactivar cuenta de usuario' : 'Reactivar cuenta de usuario'}
+                          >
+                            <Power className="w-4 h-4" />
+                            <span>{u.isActive ? 'Desactivar Usuario' : 'Activar Usuario'}</span>
+                          </button>
+                          
+                          <button
+                            type="button"
+                            onClick={() => onDeleteUser(u.email)}
+                            className="w-full md:w-auto px-4 py-2.5 rounded-2xl text-xs font-black flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm active:scale-98 bg-red-100 hover:bg-red-600 text-red-700 hover:text-white border border-red-300"
+                            title="Eliminar usuario permanentemente"
+                          >
+                            <UserX className="w-4 h-4" />
+                            <span className="hidden md:inline">Eliminar</span>
+                          </button>
+                        </>
                       ) : (
                         <span className="text-xs text-slate-400 italic px-3 py-1">
                           (Cuenta Master)

@@ -45,8 +45,36 @@ function getLocal<T>(key: string, defaultVal: T): T {
 function setLocal<T>(key: string, val: T): void {
   try {
     localStorage.setItem(key, JSON.stringify(val));
-  } catch (e) {
-    console.error(e);
+  } catch (e: any) {
+    // Handle QuotaExceededError: try to free space and retry once
+    if (e?.name === 'QuotaExceededError' || e?.code === 22 || e?.code === 1014) {
+      console.warn('[firestoreService] localStorage quota exceeded. Attempting cleanup...');
+      try {
+        // Remove non-critical cached data to free space
+        const keysToTrim = Object.values(LOCAL_STORAGE_KEYS);
+        for (const storageKey of keysToTrim) {
+          if (storageKey !== key) {
+            // Trim arrays to only keep the 20 most recent items
+            const raw = localStorage.getItem(storageKey);
+            if (raw) {
+              try {
+                const arr = JSON.parse(raw);
+                if (Array.isArray(arr) && arr.length > 20) {
+                  localStorage.setItem(storageKey, JSON.stringify(arr.slice(0, 20)));
+                }
+              } catch { /* skip non-array items */ }
+            }
+          }
+        }
+        // Retry the original save
+        localStorage.setItem(key, JSON.stringify(val));
+        console.info('[firestoreService] Retry after cleanup succeeded.');
+      } catch (retryErr) {
+        console.error('[firestoreService] localStorage save failed even after cleanup:', retryErr);
+      }
+    } else {
+      console.error('[firestoreService] localStorage.setItem error:', e);
+    }
   }
 }
 
@@ -298,6 +326,21 @@ export async function toggleUserStatusInDB(email: string, nextStatus: boolean): 
 
   const list = getLocal<UserSession[]>(LOCAL_STORAGE_KEYS.USERS, INITIAL_USERS);
   const updated = list.map(u => u.email.toLowerCase() === email.toLowerCase() ? { ...u, isActive: nextStatus } : u);
+  setLocal(LOCAL_STORAGE_KEYS.USERS, updated);
+}
+
+export async function deleteUserInDB(email: string): Promise<void> {
+  if (db && isFirebaseConnected) {
+    try {
+      const docRef = doc(db, 'users', email.replace(/\./g, '_'));
+      await deleteDoc(docRef);
+    } catch (e) {
+      console.warn('Firestore deleteUser error:', e);
+    }
+  }
+
+  const list = getLocal<UserSession[]>(LOCAL_STORAGE_KEYS.USERS, INITIAL_USERS);
+  const updated = list.filter(u => u.email.toLowerCase() !== email.toLowerCase());
   setLocal(LOCAL_STORAGE_KEYS.USERS, updated);
 }
 

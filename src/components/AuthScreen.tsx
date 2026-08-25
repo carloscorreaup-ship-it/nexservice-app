@@ -70,7 +70,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthSuccess, onOpenFir
               await saveUserToDB({
                 email: googleEmail,
                 name: googleName,
-                phone: result.user.phoneNumber || '+57 300 000 0000',
+                phone: result.user.phoneNumber || '',
                 city: initialCity,
                 department: initialDept,
                 mode: 'client',
@@ -311,7 +311,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthSuccess, onOpenFir
           await saveUserToDB({
             email: googleEmail,
             name: googleName,
-            phone: result.user.phoneNumber || '+57 300 000 0000',
+            phone: result.user.phoneNumber || '',
             city: initialCity,
             department: initialDept,
             mode: 'client',

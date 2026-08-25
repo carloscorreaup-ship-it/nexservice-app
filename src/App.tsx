@@ -32,6 +32,7 @@ import {
   saveBookingToDB,
   updateBookingStatusInDB,
   toggleUserStatusInDB,
+  deleteUserInDB,
   saveUserToDB,
   getUserByEmail,
   getReportsFromDB,
@@ -225,6 +226,13 @@ export default function App() {
     );
   };
 
+  const handleDeleteUser = async (email: string) => {
+    if (window.confirm(`¿Estás seguro de que deseas eliminar permanentemente al usuario ${email}?`)) {
+      await deleteUserInDB(email);
+      setUsers(prev => prev.filter(u => u.email.toLowerCase() !== email.toLowerCase()));
+    }
+  };
+
   const handleToggleProviderVerification = (providerId: string, currentStatus: boolean) => {
     const nextStatus = !currentStatus;
     setProviders(prev =>
@@ -364,48 +372,67 @@ export default function App() {
   };
 
   const handleSaveProviderProfile = async (profileData: Partial<Provider>) => {
-    const updatedProvider: Provider = {
-      id: profileData.id || 'my-provider-id',
-      name: profileData.name || session.name,
-      businessName: profileData.businessName || 'Mi Negocio Local',
-      category: profileData.category || 'reparaciones',
-      offerType: profileData.offerType || 'both',
-      rating: 5.0,
-      reviewCount: 1,
-      tags: profileData.tags || ['Verificado', session.city],
-      phone: profileData.phone || session.phone,
-      whatsapp: profileData.whatsapp || session.phone,
-      address: profileData.address || session.fixedLocation.address,
-      coordinates: session.fixedLocation.coordinates,
-      city: session.city,
-      department: session.department,
-      isFixedLocationVisibleOnMap: true,
-      verified: true,
-      verifiedBadgeType: 'oficial',
-      avatarUrl: profileData.avatarUrl || session.avatarUrl || getEmailAvatarUrl(session.email, session.name),
-      description: profileData.description || 'Ofrecemos los mejores productos y servicios.',
-      services: profileData.services || [],
-      products: profileData.products || [],
-      reviews: [],
-      isDelivery: true,
-      serviceModality: profileData.serviceModality || session.fixedLocation?.serviceModality || 'physical_store',
-    };
+    try {
+      const updatedProvider: Provider = {
+        id: profileData.id || 'my-provider-id',
+        name: profileData.name || session.name,
+        businessName: profileData.businessName || 'Mi Negocio Local',
+        category: profileData.category || 'reparaciones',
+        offerType: profileData.offerType || 'both',
+        rating: 5.0,
+        reviewCount: 1,
+        tags: profileData.tags || ['Verificado', session.city],
+        phone: profileData.phone || session.phone,
+        whatsapp: profileData.whatsapp || session.phone,
+        address: profileData.address || session.fixedLocation.address,
+        coordinates: session.fixedLocation.coordinates,
+        city: session.city,
+        department: session.department,
+        isFixedLocationVisibleOnMap: true,
+        verified: true,
+        verifiedBadgeType: 'oficial',
+        avatarUrl: profileData.avatarUrl || session.avatarUrl || getEmailAvatarUrl(session.email, session.name),
+        description: profileData.description || 'Ofrecemos los mejores productos y servicios.',
+        services: profileData.services || [],
+        products: profileData.products || [],
+        reviews: [],
+        isDelivery: true,
+        serviceModality: profileData.serviceModality || session.fixedLocation?.serviceModality || 'physical_store',
+      };
 
-    await saveProviderToDB(updatedProvider);
-    setProviders(prev => {
-      const idx = prev.findIndex(p => p.id === updatedProvider.id);
-      if (idx >= 0) {
-        const copy = [...prev];
-        copy[idx] = updatedProvider;
-        return copy;
-      }
-      return [updatedProvider, ...prev];
-    });
+      await saveProviderToDB(updatedProvider);
+      setProviders(prev => {
+        const idx = prev.findIndex(p => p.id === updatedProvider.id);
+        if (idx >= 0) {
+          const copy = [...prev];
+          copy[idx] = updatedProvider;
+          return copy;
+        }
+        return [updatedProvider, ...prev];
+      });
 
-    setSession(prev => ({
-      ...prev,
-      providerProfile: profileData
-    }));
+      // Store a LIGHTWEIGHT copy in session.providerProfile (no Base64 images)
+      // to avoid bloating localStorage with duplicate heavy data.
+      // The full data (with images) is persisted separately in the providers store.
+      const lightweightProfile: Partial<Provider> = {
+        ...profileData,
+        products: (profileData.products || []).map(p => ({
+          ...p,
+          images: p.images.map(img => img.startsWith('data:') ? `[compressed:${img.length}]` : img),
+        })),
+        services: (profileData.services || []).map(s => ({
+          ...s,
+          images: s.images?.map(img => img.startsWith('data:') ? `[compressed:${img.length}]` : img),
+        })),
+      };
+
+      setSession(prev => ({
+        ...prev,
+        providerProfile: lightweightProfile
+      }));
+    } catch (err) {
+      console.error('[App] handleSaveProviderProfile error:', err);
+    }
   };
 
   const handleBookService = async (service: ServiceItem, date: string, time: string, notes: string) => {
@@ -606,6 +633,7 @@ export default function App() {
             currentCity={session.city}
             userSession={session}
             bookings={bookings}
+            existingProviderData={providers.find(p => p.id === 'my-provider-id')}
             onSaveProviderProfile={handleSaveProviderProfile}
             onSwitchToClientMode={() => {
               setSession(p => ({ ...p, mode: 'client' }));
@@ -637,6 +665,7 @@ export default function App() {
             bookings={bookings}
             reports={reports}
             onToggleUserStatus={handleToggleUserStatus}
+            onDeleteUser={handleDeleteUser}
             onToggleProviderVerification={handleToggleProviderVerification}
             onResolveReport={handleResolveReport}
             onBack={handleGoBack}
@@ -721,8 +750,8 @@ export default function App() {
               id: prod.providerId,
               name: prod.providerName,
               businessName: prod.providerBusinessName || prod.providerName,
-              phone: prod.providerPhone || '+57 300 000 0000',
-              whatsapp: prod.providerWhatsapp || '573000000000',
+              phone: prod.providerPhone || '',
+              whatsapp: prod.providerWhatsapp || '',
               avatarUrl: prod.providerAvatar,
               category: prod.category,
               offerType: 'products' as const,
