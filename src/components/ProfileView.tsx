@@ -1,10 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, MapPin, ShieldCheck, Flame, RefreshCw, LogOut, Store, ShieldAlert, ArrowLeft, FileText, Crosshair, Navigation, CheckCircle2, Chrome, Star, Download, Smartphone } from 'lucide-react';
 import { UserSession, Provider } from '../types';
 import { DataPolicyModal } from './DataPolicyModal';
 import { requestUserCoordinates, reverseGeocodeAddress, findNearestCity } from '../utils/geoUtils';
 import { getEmailAvatarUrl } from '../utils/userUtils';
 import { isAppInstalledPWA } from './PWAInstallBanner';
+
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+}
 
 interface ProfileViewProps {
   userSession: UserSession;
@@ -34,6 +39,24 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   const [showPolicyModal, setShowPolicyModal] = useState(false);
   const [isSyncingGps, setIsSyncingGps] = useState(false);
   const [syncStatus, setSyncStatus] = useState<string | null>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(
+    (window as any).__pwaInstallPrompt || null
+  );
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e as BeforeInstallPromptEvent);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    if ((window as any).__pwaInstallPrompt) {
+      setDeferredPrompt((window as any).__pwaInstallPrompt);
+    }
+
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+  }, []);
 
   const isAdmin = userSession.email.toLowerCase() === 'carloscorreaup@gmail.com';
   const effectiveAvatar = userSession.avatarUrl || getEmailAvatarUrl(userSession.email, userSession.name);
@@ -252,14 +275,19 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             </div>
             <CheckCircle2 className="w-5 h-5 text-emerald-600" />
           </div>
-        ) : (
+        ) : deferredPrompt ? (
           <button
-            onClick={() => {
-              const installEvent = (window as any).__pwaInstallPrompt;
-              if (installEvent) {
-                installEvent.prompt();
-              } else {
-                alert('Para instalar en tu celular:\n\n📱 En Android / Chrome: Toca los 3 puntos (⋮) arriba a la derecha y selecciona "Instalar aplicación".\n\n🍏 En iPhone / Safari: Toca el botón Compartir y selecciona "Agregar al inicio".');
+            onClick={async () => {
+              try {
+                await deferredPrompt.prompt();
+                const choiceResult = await deferredPrompt.userChoice;
+                if (choiceResult.outcome === 'accepted') {
+                  localStorage.setItem('nexservice_pwa_installed', 'true');
+                  setDeferredPrompt(null);
+                  (window as any).__pwaInstallPrompt = null;
+                }
+              } catch (err) {
+                console.warn('PWA prompt error:', err);
               }
             }}
             className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-gradient-to-r from-blue-50/80 to-indigo-50/80 hover:from-blue-100 hover:to-indigo-100 text-left transition-all border border-blue-200/80 cursor-pointer"
@@ -280,7 +308,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             </div>
             <Download className="w-4 h-4 text-[#0052ff]" />
           </button>
-        )}
+        ) : null}
 
         <button
           onClick={() => setShowPolicyModal(true)}
