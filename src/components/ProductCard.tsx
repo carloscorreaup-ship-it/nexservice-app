@@ -53,12 +53,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
           <h3 
             onClick={() => onViewDetails(product)}
-            className="text-sm font-bold text-[#141b2b] hover:text-[#0052ff] cursor-pointer line-clamp-2 mb-1.5 transition-colors"
+            className="text-base font-bold text-[#141b2b] hover:text-[#0052ff] cursor-pointer line-clamp-2 mb-1.5 transition-colors"
           >
             {product.name}
           </h3>
 
-          <p className="text-xs text-slate-600 line-clamp-2 mb-3 leading-relaxed">
+          <p className="text-sm text-slate-600 line-clamp-2 mb-3 leading-relaxed">
             {product.description}
           </p>
         </div>
@@ -70,7 +70,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 {formatCurrencyCOP(product.price)}
               </span>
               {product.originalPrice && product.originalPrice > product.price && (
-                <span className="text-xs text-slate-400 line-through ml-2">
+                <span className="text-sm text-slate-400 line-through ml-2">
                   {formatCurrencyCOP(product.originalPrice)}
                 </span>
               )}
@@ -83,13 +83,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           <div className="flex gap-2">
             <button
               onClick={() => onViewDetails(product)}
-              className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold py-2.5 px-3 rounded-2xl transition-all"
+              className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold py-2.5 px-3 rounded-2xl transition-all"
             >
               Ver Detalles
             </button>
             <button
               onClick={() => onContactWhatsApp(product)}
-              className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2.5 px-3 rounded-2xl flex items-center gap-1.5 shadow-md shadow-emerald-600/20 transition-all"
+              className="bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold py-2.5 px-3 rounded-2xl flex items-center gap-1.5 shadow-md shadow-emerald-600/20 transition-all"
             >
               <MessageSquare className="w-3.5 h-3.5" />
               <span>WhatsApp</span>
@@ -100,3 +100,4 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     </div>
   );
 };
+

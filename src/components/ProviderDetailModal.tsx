@@ -12,7 +12,8 @@ import {
   CheckCircle2,
   FileCheck,
   ArrowLeft,
-  Flag
+  Flag,
+  Edit
 } from 'lucide-react';
 import { Provider, ProductItem, ServiceItem } from '../types';
 import { formatCurrencyCOP, getCategoryName, getCategoryEmoji } from '../utils/userUtils';
@@ -24,6 +25,7 @@ interface ProviderDetailModalProps {
   onContactWhatsApp: (provider: Provider, customMessage?: string) => void;
   onBookService: (service: ServiceItem, date: string, time: string, notes: string) => void;
   onSelectProduct?: (product: ProductItem) => void;
+  onEditProvider?: () => void;
   onOpenReportModal?: (target: { id: string; name: string; email: string; avatarUrl?: string; type: 'provider' | 'client' }) => void;
   onOpenRatingModal?: (target: {
     id: string;
@@ -44,6 +46,8 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
   onBookService,
   onOpenReportModal,
   onOpenRatingModal,
+  onSelectProduct,
+  onEditProvider,
 }) => {
   const [activeTab, setActiveTab] = useState<'catalog' | 'services' | 'location' | 'reviews'>('catalog');
   const [selectedService, setSelectedService] = useState<ServiceItem | null>(null);
@@ -70,7 +74,7 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
         <div className="relative bg-white pt-6 pb-2 px-6 flex items-center justify-between border-b border-slate-100">
           <button
             onClick={onClose}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-full text-xs font-bold transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-full text-sm font-bold transition-all cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4 text-[#0052ff]" />
             <span>Volver</span>
@@ -102,14 +106,14 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
               <div className="flex items-center gap-2">
                 <h2 className="text-xl sm:text-2xl font-bold text-[#141b2b]">{provider.name}</h2>
                 {provider.verified && (
-                  <span className="flex items-center gap-1 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                  <span className="flex items-center gap-1 text-sm font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
                     <ShieldCheck className="w-3.5 h-3.5" /> Verificado Oficial
                   </span>
                 )}
               </div>
-              <p className="text-sm text-slate-500 font-medium">{provider.businessName}</p>
+              <p className="text-base text-slate-500 font-medium">{provider.businessName}</p>
               
-              <div className="flex items-center gap-3 mt-1 text-xs text-slate-500">
+              <div className="flex items-center gap-3 mt-1 text-sm text-slate-500">
                 <button
                   type="button"
                   onClick={() => setActiveTab('reviews')}
@@ -130,11 +134,21 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
             <div className="flex items-center gap-2 flex-wrap self-start sm:self-auto">
               <button
                 onClick={() => onContactWhatsApp(provider)}
-                className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-2.5 px-4 rounded-2xl flex items-center justify-center gap-2 shadow-md shadow-emerald-600/20 transition-all cursor-pointer"
+                className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm py-2.5 px-4 rounded-2xl flex items-center justify-center gap-2 shadow-md shadow-emerald-600/20 transition-all cursor-pointer"
               >
                 <MessageSquare className="w-4 h-4" />
                 <span>WhatsApp Directo</span>
               </button>
+
+              {onEditProvider && (
+                <button
+                  onClick={onEditProvider}
+                  className="bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm py-2.5 px-4 rounded-2xl flex items-center justify-center gap-2 shadow-md shadow-slate-800/20 transition-all cursor-pointer"
+                >
+                  <Edit className="w-4 h-4" />
+                  <span>Editar Perfil</span>
+                </button>
+              )}
 
               {onOpenRatingModal && (
                 <button
@@ -148,7 +162,7 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
                     currentRating: provider.rating,
                     reviewCount: provider.reviewCount
                   })}
-                  className="flex items-center gap-1.5 px-3 py-2.5 rounded-2xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold transition-all cursor-pointer shadow-xs"
+                  className="flex items-center gap-1.5 px-3 py-2.5 rounded-2xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 text-sm font-bold transition-all cursor-pointer shadow-xs"
                   title="Calificar a este proveedor con estrellas"
                 >
                   <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
@@ -166,7 +180,7 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
                     avatarUrl: provider.avatarUrl,
                     type: 'provider'
                   })}
-                  className="flex items-center gap-1.5 px-3 py-2.5 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold transition-all cursor-pointer"
+                  className="flex items-center gap-1.5 px-3 py-2.5 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-sm font-bold transition-all cursor-pointer"
                   title="Denunciar este proveedor ante el Super Administrador"
                 >
                   <Flag className="w-3.5 h-3.5 text-rose-600" />
@@ -176,12 +190,12 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
             </div>
           </div>
 
-          <p className="text-xs sm:text-sm text-slate-600 leading-relaxed mb-4">
+          <p className="text-sm sm:text-base text-slate-600 leading-relaxed mb-4">
             {provider.description}
           </p>
 
           {/* Badges */}
-          <div className="flex flex-wrap gap-2 mb-4 text-xs">
+          <div className="flex flex-wrap gap-2 mb-4 text-sm">
             {/* Categoría General */}
             <span className="bg-blue-50 text-[#0052ff] px-3 py-1 rounded-xl border border-blue-200 flex items-center gap-1.5 font-bold">
               <span>{getCategoryEmoji(provider.category)}</span>
@@ -219,7 +233,7 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
           </div>
 
           {/* Tabs */}
-          <div className="flex border-b border-slate-200 text-xs font-semibold mb-5 gap-4 overflow-x-auto">
+          <div className="flex border-b border-slate-200 text-sm font-semibold mb-5 gap-4 overflow-x-auto">
             <button
               onClick={() => setActiveTab('catalog')}
               className={`pb-2.5 flex items-center gap-2 border-b-2 transition-all whitespace-nowrap cursor-pointer ${
@@ -280,14 +294,14 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
                       <img src={prod.images[0]} alt={prod.name} className="w-14 h-14 rounded-xl object-cover" />
                       <div className="flex-1 min-w-0">
                         <span className="text-[10px] text-[#0052ff] font-bold uppercase">{prod.condition}</span>
-                        <h4 className="text-xs font-bold text-slate-900 truncate">{prod.name}</h4>
-                        <div className="text-xs font-extrabold text-emerald-600 mt-0.5">
+                        <h4 className="text-sm font-bold text-slate-900 truncate">{prod.name}</h4>
+                        <div className="text-sm font-extrabold text-emerald-600 mt-0.5">
                           {formatCurrencyCOP(prod.price)}
                         </div>
                       </div>
                       <button
                         onClick={() => onContactWhatsApp(provider, `Hola ${provider.name}, deseo comprar el producto "${prod.name}".`)}
-                        className="bg-emerald-600 hover:bg-emerald-500 text-white p-2 rounded-xl text-xs cursor-pointer"
+                        className="bg-emerald-600 hover:bg-emerald-500 text-white p-2 rounded-xl text-sm cursor-pointer"
                       >
                         <MessageSquare className="w-4 h-4" />
                       </button>
@@ -295,7 +309,7 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8 bg-slate-50 rounded-2xl text-slate-500 text-xs">
+                <div className="text-center py-8 bg-slate-50 rounded-2xl text-slate-500 text-sm">
                   Este proveedor se enfoca en servicios profesionales.
                 </div>
               )}
@@ -312,8 +326,8 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
-                      <h4 className="text-sm font-bold text-slate-900">{srv.name}</h4>
-                      <div className="flex items-center gap-3 mt-1.5 text-xs text-slate-600">
+                      <h4 className="text-base font-bold text-slate-900">{srv.name}</h4>
+                      <div className="flex items-center gap-3 mt-1.5 text-sm text-slate-600">
                         <span className="font-extrabold text-emerald-600">{srv.priceEstimate}</span>
                         {srv.duration && <span>• {srv.duration}</span>}
                         {srv.isHomeService && (
@@ -330,13 +344,13 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
                           setSelectedService(srv);
                           setShowBookingForm(true);
                         }}
-                        className="bg-[#0052ff] hover:bg-blue-600 text-white text-xs font-bold py-2 px-3.5 rounded-xl transition-all cursor-pointer shadow-xs"
+                        className="bg-[#0052ff] hover:bg-blue-600 text-white text-sm font-bold py-2 px-3.5 rounded-xl transition-all cursor-pointer shadow-xs"
                       >
                         Reservar Cita
                       </button>
                       <button
                         onClick={() => onContactWhatsApp(provider, `Hola ${provider.name}, deseo cotizar el servicio "${srv.name}".`)}
-                        className="bg-emerald-600 hover:bg-emerald-500 text-white p-2.5 rounded-xl text-xs cursor-pointer shadow-xs"
+                        className="bg-emerald-600 hover:bg-emerald-500 text-white p-2.5 rounded-xl text-sm cursor-pointer shadow-xs"
                         title="Consultar por WhatsApp"
                       >
                         <MessageSquare className="w-4 h-4" />
@@ -383,7 +397,7 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
                     <span>{provider.rating.toFixed(1)}</span>
                   </div>
                   <div>
-                    <div className="text-xs font-extrabold text-slate-900">Promedio de Calificación</div>
+                    <div className="text-sm font-extrabold text-slate-900">Promedio de Calificación</div>
                     <div className="text-[11px] text-slate-500">Basado en {provider.reviewCount} calificaciones de clientes</div>
                   </div>
                 </div>
@@ -400,7 +414,7 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
                       currentRating: provider.rating,
                       reviewCount: provider.reviewCount
                     })}
-                    className="bg-[#0052ff] hover:bg-blue-700 text-white font-bold text-xs py-2.5 px-4 rounded-xl flex items-center justify-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                    className="bg-[#0052ff] hover:bg-blue-700 text-white font-bold text-sm py-2.5 px-4 rounded-xl flex items-center justify-center gap-1.5 shadow-sm transition-all cursor-pointer"
                   >
                     <Star className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
                     <span>Calificar (1 a 5 ⭐)</span>
@@ -415,11 +429,11 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
                     <div key={rev.id} className="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 space-y-1.5">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 rounded-full bg-blue-100 text-[#0052ff] text-xs font-bold flex items-center justify-center">
+                          <div className="w-7 h-7 rounded-full bg-blue-100 text-[#0052ff] text-sm font-bold flex items-center justify-center">
                             {rev.author.substring(0, 2).toUpperCase()}
                           </div>
                           <div>
-                            <span className="text-xs font-bold text-slate-900">{rev.author}</span>
+                            <span className="text-sm font-bold text-slate-900">{rev.author}</span>
                             <span className="text-[10px] text-slate-400 ml-2">{rev.date}</span>
                           </div>
                         </div>
@@ -439,7 +453,7 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
                         </div>
                       </div>
 
-                      <p className="text-xs text-slate-700 leading-relaxed italic">
+                      <p className="text-sm text-slate-700 leading-relaxed italic">
                         "{rev.comment}"
                       </p>
 
@@ -466,7 +480,7 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8 bg-slate-50 rounded-2xl text-slate-500 text-xs">
+                <div className="text-center py-8 bg-slate-50 rounded-2xl text-slate-500 text-sm">
                   Aún no hay reseñas escritas. ¡Sé el primero en calificar a este proveedor!
                 </div>
               )}
@@ -476,16 +490,16 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
           {/* TAB 4: LOCATION */}
           {activeTab === 'location' && (
             <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2">
-              <h4 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
+              <h4 className="text-base font-bold text-slate-900 flex items-center gap-1.5">
                 <MapPin className="w-4 h-4 text-[#0052ff]" />
                 Dirección Fija Registrada
               </h4>
-              <p className="text-xs text-slate-700">{provider.address}, {provider.city}, Colombia</p>
+              <p className="text-sm text-slate-700">{provider.address}, {provider.city}, Colombia</p>
               <a
                 href={`https://www.google.com/maps/search/?api=1&query=${provider.coordinates.lat},${provider.coordinates.lng}`}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-block mt-2 text-xs font-bold text-[#0052ff] hover:underline"
+                className="inline-block mt-2 text-sm font-bold text-[#0052ff] hover:underline"
               >
                 Ver ruta en Google Maps →
               </a>
@@ -522,7 +536,7 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
                 </button>
               </div>
 
-              <div className="space-y-3 text-xs">
+              <div className="space-y-3 text-sm">
                 <div>
                   <label className="block text-slate-600 mb-1">Fecha</label>
                   <input
@@ -556,13 +570,13 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
             <div className="flex gap-2 pt-4 border-t border-slate-200">
               <button
                 onClick={() => setShowBookingForm(false)}
-                className="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 text-xs font-semibold"
+                className="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 text-sm font-semibold"
               >
                 Volver
               </button>
               <button
                 onClick={handleConfirmBooking}
-                className="flex-1 bg-[#0052ff] hover:bg-blue-600 text-white text-xs font-bold py-2.5 rounded-xl shadow-md shadow-blue-500/20"
+                className="flex-1 bg-[#0052ff] hover:bg-blue-600 text-white text-sm font-bold py-2.5 rounded-xl shadow-md shadow-blue-500/20"
               >
                 Confirmar Solicitud
               </button>
@@ -573,3 +587,4 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
     </div>
   );
 };
+

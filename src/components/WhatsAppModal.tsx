@@ -57,7 +57,7 @@ export const WhatsAppModal: React.FC<WhatsAppModalProps> = ({
                   <ShieldCheck className="w-4 h-4 text-emerald-400" />
                 )}
               </div>
-              <p className="text-xs text-slate-400">{provider.businessName}</p>
+              <p className="text-sm text-slate-400">{provider.businessName}</p>
               <div className="flex items-center gap-1 text-[11px] text-slate-500">
                 <MapPin className="w-3 h-3 text-blue-400" /> {provider.address}
               </div>
@@ -72,21 +72,21 @@ export const WhatsAppModal: React.FC<WhatsAppModalProps> = ({
           <div className="bg-slate-800/80 border border-slate-700/70 rounded-2xl p-3 mb-4 flex items-center gap-3">
             <img src={product.images[0]} alt={product.name} className="w-12 h-12 rounded-xl object-cover" />
             <div className="flex-1 min-w-0">
-              <h4 className="text-xs font-bold text-white truncate">{product.name}</h4>
-              <p className="text-xs text-emerald-400 font-bold">${product.price.toLocaleString('es-CO')} COP</p>
+              <h4 className="text-sm font-bold text-white truncate">{product.name}</h4>
+              <p className="text-sm text-emerald-400 font-bold">${product.price.toLocaleString('es-CO')} COP</p>
             </div>
           </div>
         )}
 
         <div className="mb-4">
-          <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+          <label className="block text-sm font-semibold text-slate-300 mb-1.5">
             Mensaje Directo a WhatsApp:
           </label>
           <textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             rows={4}
-            className="w-full bg-slate-800 border border-slate-700 rounded-2xl p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+            className="w-full bg-slate-800 border border-slate-700 rounded-2xl p-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
           />
         </div>
 
@@ -100,7 +100,7 @@ export const WhatsAppModal: React.FC<WhatsAppModalProps> = ({
           </button>
           <button
             onClick={handleOpenWhatsApp}
-            className="flex-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs py-3 px-4 rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 transition-all"
+            className="flex-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-sm py-3 px-4 rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 transition-all"
           >
             <MessageSquare className="w-4 h-4" />
             <span>Abrir Chat en WhatsApp</span>
@@ -110,3 +110,4 @@ export const WhatsAppModal: React.FC<WhatsAppModalProps> = ({
     </div>
   );
 };
+

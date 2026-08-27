@@ -110,7 +110,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
           {/* Top buttons */}
           <button
             onClick={onClose}
-            className="absolute top-4 left-4 flex items-center gap-1.5 px-3 py-1.5 bg-white/90 hover:bg-white text-slate-800 rounded-full shadow-md text-xs font-bold transition-all z-10 cursor-pointer"
+            className="absolute top-4 left-4 flex items-center gap-1.5 px-3 py-1.5 bg-white/90 hover:bg-white text-slate-800 rounded-full shadow-md text-sm font-bold transition-all z-10 cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4 text-[#0052ff]" />
             <span>Volver</span>
@@ -152,10 +152,10 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
         {/* Content */}
         <div className="p-6">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#0052ff] bg-blue-50 px-2.5 py-1 rounded-full border border-blue-200">
+            <span className="text-sm font-bold uppercase tracking-wider text-[#0052ff] bg-blue-50 px-2.5 py-1 rounded-full border border-blue-200">
               {product.condition} • {product.category}
             </span>
-            <div className="flex items-center gap-1 text-xs text-slate-500">
+            <div className="flex items-center gap-1 text-sm text-slate-500">
               <MapPin className="w-3.5 h-3.5 text-[#0052ff]" />
               <span>{product.city}, Colombia</span>
             </div>
@@ -165,11 +165,11 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
           {/* Product Star Rating */}
           <div className="flex items-center gap-2 mb-3">
-            <div className="flex items-center gap-1 text-amber-500 font-extrabold text-xs">
+            <div className="flex items-center gap-1 text-amber-500 font-extrabold text-sm">
               <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
               <span>{productRating.toFixed(1)}</span>
             </div>
-            <span className="text-xs text-slate-400">({productReviewsCount} valoraciones de clientes)</span>
+            <span className="text-sm text-slate-400">({productReviewsCount} valoraciones de clientes)</span>
           </div>
 
           <div className="flex items-baseline gap-3 mb-4">
@@ -177,18 +177,18 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               {formatCurrencyCOP(product.price)}
             </span>
             {product.inStock && (
-              <span className="text-xs text-emerald-600 font-semibold flex items-center gap-1 ml-auto">
+              <span className="text-sm text-emerald-600 font-semibold flex items-center gap-1 ml-auto">
                 <CheckCircle2 className="w-3.5 h-3.5" /> En Stock ({product.stockQuantity || 1} disponibles)
               </span>
             )}
           </div>
 
-          <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 mb-5 text-xs text-slate-700 leading-relaxed">
+          <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 mb-5 text-sm text-slate-700 leading-relaxed">
             <h4 className="font-bold text-slate-900 mb-1">Descripción del Producto</h4>
             <p className="whitespace-pre-line">{product.description}</p>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 mb-5 text-xs">
+          <div className="grid grid-cols-2 gap-3 mb-5 text-sm">
             <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">
               <span className="text-slate-500 block mb-0.5">Garantía</span>
               <strong className="text-slate-800">{product.warranty || 'Directa con el vendedor'}</strong>
@@ -213,18 +213,18 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               </div>
               <div>
                 <div className="flex items-center gap-1.5">
-                  <h4 className="font-bold text-sm text-[#141b2b]">{product.providerName}</h4>
+                  <h4 className="font-bold text-base text-[#141b2b]">{product.providerName}</h4>
                   {product.verifiedSeller && (
                     <ShieldCheck className="w-4 h-4 text-emerald-600" />
                   )}
                 </div>
-                <p className="text-xs text-slate-500">{product.providerBusinessName || 'Proveedor Verificado'}</p>
+                <p className="text-sm text-slate-500">{product.providerBusinessName || 'Proveedor Verificado'}</p>
               </div>
             </div>
 
             <button
               onClick={() => onViewProvider(product.providerId)}
-              className="text-xs text-[#0052ff] font-semibold hover:underline flex items-center gap-1 cursor-pointer"
+              className="text-sm text-[#0052ff] font-semibold hover:underline flex items-center gap-1 cursor-pointer"
             >
               <span>Ver Tienda</span>
               <ChevronRight className="w-4 h-4" />
@@ -235,7 +235,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
           <div className="border-t border-slate-200 pt-5 mb-6 space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <h4 className="font-bold text-sm text-slate-900 flex items-center gap-1.5">
+                <h4 className="font-bold text-base text-slate-900 flex items-center gap-1.5">
                   <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
                   <span>Opiniones y Fotos del Producto</span>
                 </h4>
@@ -253,7 +253,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                     currentRating: productRating,
                     reviewCount: productReviewsCount
                   })}
-                  className="bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold py-2 px-3.5 rounded-xl flex items-center gap-1 transition-all cursor-pointer shadow-xs"
+                  className="bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 text-sm font-bold py-2 px-3.5 rounded-xl flex items-center gap-1 transition-all cursor-pointer shadow-xs"
                 >
                   <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
                   <span>Opinar / Subir Foto</span>
@@ -267,11 +267,11 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                   <div key={rev.id} className="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 space-y-2">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-full bg-blue-100 text-[#0052ff] text-xs font-bold flex items-center justify-center">
+                        <div className="w-7 h-7 rounded-full bg-blue-100 text-[#0052ff] text-sm font-bold flex items-center justify-center">
                           {rev.author.substring(0, 2).toUpperCase()}
                         </div>
                         <div>
-                          <span className="text-xs font-bold text-slate-900">{rev.author}</span>
+                          <span className="text-sm font-bold text-slate-900">{rev.author}</span>
                           <span className="text-[10px] text-slate-400 ml-2">{rev.date}</span>
                         </div>
                       </div>
@@ -290,7 +290,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                       </div>
                     </div>
 
-                    <p className="text-xs text-slate-700 leading-relaxed">
+                    <p className="text-sm text-slate-700 leading-relaxed">
                       "{rev.comment}"
                     </p>
 
@@ -317,7 +317,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                 ))}
               </div>
             ) : (
-              <div className="text-center py-6 bg-slate-50 rounded-2xl text-slate-500 text-xs">
+              <div className="text-center py-6 bg-slate-50 rounded-2xl text-slate-500 text-sm">
                 Aún no hay comentarios con foto para este producto. ¡Sé el primero en opinar!
               </div>
             )}
@@ -326,14 +326,14 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
           <div className="flex gap-3">
             <button
               onClick={onClose}
-              className="px-5 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+              className="px-5 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold transition-all flex items-center gap-1.5 cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4" />
               <span>Volver</span>
             </button>
             <button
               onClick={() => onContactWhatsApp(product)}
-              className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-3 px-6 rounded-2xl flex items-center justify-center gap-2 shadow-md shadow-emerald-600/20 transition-all cursor-pointer"
+              className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm py-3 px-6 rounded-2xl flex items-center justify-center gap-2 shadow-md shadow-emerald-600/20 transition-all cursor-pointer"
             >
               <MessageSquare className="w-4 h-4" />
               <span>Comprar / Consultar por WhatsApp</span>
@@ -350,10 +350,10 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             {/* Top Bar */}
             <div className="w-full max-w-4xl flex items-center justify-between text-white z-10" onClick={e => e.stopPropagation()}>
               <div className="flex items-center gap-2">
-                <span className="bg-white/20 text-white text-xs font-bold px-3 py-1 rounded-full backdrop-blur-sm">
+                <span className="bg-white/20 text-white text-sm font-bold px-3 py-1 rounded-full backdrop-blur-sm">
                   Foto {zoomIndex + 1} de {imagesList.length}
                 </span>
-                <span className="text-xs text-slate-300 font-medium truncate max-w-[200px] sm:max-w-md">
+                <span className="text-sm text-slate-300 font-medium truncate max-w-[200px] sm:max-w-md">
                   {product.name}
                 </span>
               </div>
@@ -425,3 +425,4 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
     </div>
   );
 };
+

@@ -134,7 +134,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
             </div>
             <div>
               <h3 className="font-black text-base sm:text-lg">Radicar Denuncia Formal</h3>
-              <p className="text-xs text-white/80">Canal confidencial con el Super Administrador</p>
+              <p className="text-sm text-white/80">Canal confidencial con el Super Administrador</p>
             </div>
           </div>
           <button
@@ -152,11 +152,11 @@ export const ReportModal: React.FC<ReportModalProps> = ({
               <CheckCircle2 className="w-10 h-10" />
             </div>
             <h4 className="text-xl font-bold text-slate-900">¡Denuncia Radicada con Éxito!</h4>
-            <p className="text-xs text-slate-600 leading-relaxed max-w-md mx-auto">
+            <p className="text-sm text-slate-600 leading-relaxed max-w-md mx-auto">
               Tu reporte contra <strong className="text-slate-900">{targetUser.name}</strong> ha sido enviado de forma confidencial al Administrador.
             </p>
 
-            <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 text-left text-xs text-blue-900 space-y-1.5">
+            <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 text-left text-sm text-blue-900 space-y-1.5">
               <div className="flex items-center gap-1.5 font-bold text-[#0052ff]">
                 <Scale className="w-4 h-4" />
                 <span>Plazo de Evaluación Oficial</span>
@@ -178,7 +178,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
           <form onSubmit={handleSubmit} className="p-5 space-y-4">
             {/* Target User Info */}
             <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3 flex items-center gap-3">
-              <div className="w-11 h-11 rounded-xl bg-slate-200 overflow-hidden ring-2 ring-slate-300 flex items-center justify-center text-sm font-bold text-slate-700 shrink-0">
+              <div className="w-11 h-11 rounded-xl bg-slate-200 overflow-hidden ring-2 ring-slate-300 flex items-center justify-center text-base font-bold text-slate-700 shrink-0">
                 {targetUser.avatarUrl ? (
                   <img src={targetUser.avatarUrl} alt={targetUser.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                 ) : (
@@ -189,13 +189,13 @@ export const ReportModal: React.FC<ReportModalProps> = ({
                 <div className="text-[10px] uppercase font-extrabold tracking-wider text-rose-600">
                   Denunciando a {targetUser.type === 'provider' ? 'Proveedor' : 'Cliente'}:
                 </div>
-                <div className="font-black text-sm text-slate-900 truncate">{targetUser.name}</div>
-                <div className="text-xs text-slate-500 truncate">{targetUser.email}</div>
+                <div className="font-black text-base text-slate-900 truncate">{targetUser.name}</div>
+                <div className="text-sm text-slate-500 truncate">{targetUser.email}</div>
               </div>
             </div>
 
             {errorMessage && (
-              <div className="bg-rose-50 border border-rose-200 text-rose-700 text-xs p-3 rounded-2xl flex items-center gap-2">
+              <div className="bg-rose-50 border border-rose-200 text-rose-700 text-sm p-3 rounded-2xl flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 shrink-0" />
                 <span>{errorMessage}</span>
               </div>
@@ -203,7 +203,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
 
             {/* Motivo Selector */}
             <div>
-              <label className="block text-xs font-bold text-slate-800 mb-1.5">
+              <label className="block text-sm font-bold text-slate-800 mb-1.5">
                 1. Selecciona el motivo principal de la denuncia: *
               </label>
               <div className="grid grid-cols-1 gap-1.5 max-h-44 overflow-y-auto pr-1">
@@ -220,7 +220,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
                   >
                     <span className="text-base shrink-0">{r.icon}</span>
                     <div className="min-w-0 flex-1">
-                      <div className="text-xs font-bold">{r.label}</div>
+                      <div className="text-sm font-bold">{r.label}</div>
                       <div className="text-[10px] text-slate-500 font-normal truncate">{r.desc}</div>
                     </div>
                   </button>
@@ -231,7 +231,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
             {/* Explicación de los Hechos */}
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="block text-xs font-bold text-slate-800">
+                <label className="block text-sm font-bold text-slate-800">
                   2. Explicación detallada de los hechos: *
                 </label>
                 <span className="text-[10px] text-slate-400 font-medium">
@@ -244,13 +244,13 @@ export const ReportModal: React.FC<ReportModalProps> = ({
                 placeholder="Describe con claridad lo sucedido: fechas, acuerdos incumplidos, montos o situaciones ocurridas..."
                 rows={3}
                 required
-                className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-100 transition-all resize-none"
+                className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-100 transition-all resize-none"
               />
             </div>
 
             {/* Pruebas / Teléfono de Contacto */}
             <div>
-              <label className="block text-xs font-bold text-slate-800 mb-1">
+              <label className="block text-sm font-bold text-slate-800 mb-1">
                 3. Pruebas o notas adicionales (opcional):
               </label>
               <input
@@ -258,7 +258,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
                 value={evidenceNotes}
                 onChange={e => setEvidenceNotes(e.target.value)}
                 placeholder="Ej: Tengo capturas de chat en WhatsApp, recibo de transferencia..."
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-red-500"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-red-500"
               />
             </div>
 
@@ -279,14 +279,14 @@ export const ReportModal: React.FC<ReportModalProps> = ({
                 type="button"
                 onClick={onClose}
                 disabled={loading}
-                className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all cursor-pointer"
+                className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold rounded-xl transition-all cursor-pointer"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={loading || explanation.trim().length < 15}
-                className="flex-2 py-2.5 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md active:scale-98 cursor-pointer"
+                className="flex-2 py-2.5 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md active:scale-98 cursor-pointer"
               >
                 <Send className="w-3.5 h-3.5" />
                 <span>{loading ? 'Radicando...' : 'Radicar Denuncia al Admin'}</span>
@@ -298,3 +298,4 @@ export const ReportModal: React.FC<ReportModalProps> = ({
     </div>
   );
 };
+

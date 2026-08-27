@@ -436,7 +436,7 @@ export const SnapMapView: React.FC<SnapMapViewProps> = ({
           {onBack && (
             <button
               onClick={onBack}
-              className="p-2 bg-white/95 hover:bg-white backdrop-blur-md rounded-2xl border border-slate-200/90 shadow-lg text-slate-700 hover:text-slate-900 flex items-center gap-1.5 text-xs font-bold transition-all active:scale-95 cursor-pointer"
+              className="p-2 bg-white/95 hover:bg-white backdrop-blur-md rounded-2xl border border-slate-200/90 shadow-lg text-slate-700 hover:text-slate-900 flex items-center gap-1.5 text-sm font-bold transition-all active:scale-95 cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4 text-[#0052ff]" />
               <span className="hidden sm:inline">Volver</span>
@@ -444,7 +444,7 @@ export const SnapMapView: React.FC<SnapMapViewProps> = ({
           )}
 
           {/* Type filters */}
-          <div className="bg-white/95 backdrop-blur-md p-1 rounded-2xl border border-slate-200/90 shadow-lg flex items-center gap-0.5 text-xs">
+          <div className="bg-white/95 backdrop-blur-md p-1 rounded-2xl border border-slate-200/90 shadow-lg flex items-center gap-0.5 text-sm">
             <button
               onClick={() => setFilterType('all')}
               className={`px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer ${
@@ -487,7 +487,7 @@ export const SnapMapView: React.FC<SnapMapViewProps> = ({
                 setShowLayerPanel(!showLayerPanel);
                 setShowRangePanel(false);
               }}
-              className={`p-2.5 backdrop-blur-md rounded-2xl border shadow-lg transition-all active:scale-95 flex items-center gap-1 text-xs font-bold cursor-pointer ${
+              className={`p-2.5 backdrop-blur-md rounded-2xl border shadow-lg transition-all active:scale-95 flex items-center gap-1 text-sm font-bold cursor-pointer ${
                 showLayerPanel
                   ? 'bg-[#0052ff] text-white border-[#0052ff]'
                   : 'bg-white/95 text-slate-700 hover:text-slate-900 hover:bg-white border-slate-200/90'
@@ -514,7 +514,7 @@ export const SnapMapView: React.FC<SnapMapViewProps> = ({
                         setMapStyle(key);
                         setShowLayerPanel(false);
                       }}
-                      className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-sm font-bold transition-all cursor-pointer ${
                         isActive
                           ? 'bg-[#0052ff] text-white shadow-sm'
                           : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
@@ -538,7 +538,7 @@ export const SnapMapView: React.FC<SnapMapViewProps> = ({
               setShowRangePanel(!showRangePanel);
               setShowLayerPanel(false);
             }}
-            className={`p-2.5 backdrop-blur-md rounded-2xl border shadow-lg transition-all active:scale-95 flex items-center gap-1 text-xs font-bold cursor-pointer ${
+            className={`p-2.5 backdrop-blur-md rounded-2xl border shadow-lg transition-all active:scale-95 flex items-center gap-1 text-sm font-bold cursor-pointer ${
               showRangePanel
                 ? 'bg-[#0052ff] text-white border-[#0052ff]'
                 : 'bg-white/95 text-slate-700 hover:text-slate-900 hover:bg-white border-slate-200/90'
@@ -565,7 +565,7 @@ export const SnapMapView: React.FC<SnapMapViewProps> = ({
       {showRangePanel && (
         <div className="absolute top-16 right-3 z-[1050] bg-white/95 backdrop-blur-md border border-slate-200 rounded-3xl p-4 shadow-2xl w-64 animate-in fade-in zoom-in-95 duration-150">
           <div className="flex items-center justify-between mb-3">
-            <h4 className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+            <h4 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
               <SlidersHorizontal className="w-3.5 h-3.5 text-[#0052ff]" />
               Radio de Cobertura
             </h4>
@@ -646,9 +646,9 @@ export const SnapMapView: React.FC<SnapMapViewProps> = ({
       <div className="absolute bottom-3 left-3 z-[1000] bg-white/95 backdrop-blur-md border border-slate-200/90 rounded-2xl px-3.5 py-2 shadow-lg flex items-center gap-2 pointer-events-auto">
         <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
         <MapPin className="w-3.5 h-3.5 text-[#0052ff]" />
-        <span className="text-xs font-bold text-slate-900">{visibleProviders.length}</span>
-        <span className="text-xs text-slate-500">en</span>
-        <span className="text-xs font-bold text-[#0052ff]">{currentCity}</span>
+        <span className="text-sm font-bold text-slate-900">{visibleProviders.length}</span>
+        <span className="text-sm text-slate-500">en</span>
+        <span className="text-sm font-bold text-[#0052ff]">{currentCity}</span>
         <span className="text-[11px] text-slate-400">({rangeKm} km)</span>
       </div>
 
@@ -673,7 +673,7 @@ export const SnapMapView: React.FC<SnapMapViewProps> = ({
 
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <h3 className="font-bold text-slate-900 text-sm truncate">{selectedEntity.name}</h3>
+                  <h3 className="font-bold text-slate-900 text-base truncate">{selectedEntity.name}</h3>
                   {selectedEntity.isFeatured && (
                     <span className="px-1.5 py-0.5 bg-amber-50 border border-amber-200 text-amber-700 text-[9px] font-extrabold rounded-md flex items-center gap-0.5">
                       <Sparkles className="w-2.5 h-2.5" /> PRO
@@ -711,7 +711,7 @@ export const SnapMapView: React.FC<SnapMapViewProps> = ({
           </div>
 
           {/* Modality and Address */}
-          <div className="flex items-center gap-1.5 text-xs text-slate-600 my-2 bg-slate-50 p-2 rounded-xl border border-slate-100">
+          <div className="flex items-center gap-1.5 text-sm text-slate-600 my-2 bg-slate-50 p-2 rounded-xl border border-slate-100">
             {selectedEntity.serviceModality === 'physical_store' ? (
               <span className="text-[10px] font-bold bg-blue-50 text-[#0052ff] border border-blue-200 px-2 py-0.5 rounded-lg shrink-0">
                 📍 Local Físico Fijo
@@ -732,14 +732,14 @@ export const SnapMapView: React.FC<SnapMapViewProps> = ({
           <div className="flex items-center gap-2 pt-3 border-t border-slate-100">
             <button
               onClick={() => onSelectProvider(selectedEntity)}
-              className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold py-2.5 px-3 rounded-2xl transition-all cursor-pointer"
+              className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-800 text-sm font-bold py-2.5 px-3 rounded-2xl transition-all cursor-pointer"
             >
               Ver Perfil Completo
             </button>
 
             <button
               onClick={() => onContactWhatsApp(selectedEntity)}
-              className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2.5 px-3 rounded-2xl flex items-center justify-center gap-1.5 shadow-md shadow-emerald-500/20 transition-all active:scale-98 cursor-pointer"
+              className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold py-2.5 px-3 rounded-2xl flex items-center justify-center gap-1.5 shadow-md shadow-emerald-500/20 transition-all active:scale-98 cursor-pointer"
             >
               <MessageSquare className="w-3.5 h-3.5" />
               <span>WhatsApp</span>
@@ -760,4 +760,5 @@ export const SnapMapView: React.FC<SnapMapViewProps> = ({
     </div>
   );
 };
+
 

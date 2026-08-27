@@ -55,7 +55,7 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
   onSwitchToClientMode,
   onOpenRatingModal,
 }) => {
-  const [activeTab, setActiveTab] = useState<'products' | 'services' | 'location' | 'verification' | 'orders'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'services' | 'location' | 'verification' | 'orders' | 'analytics'>('products');
   
   // Profile state
   const [businessName, setBusinessName] = useState(userSession.providerProfile?.businessName || userSession.name || '');
@@ -229,18 +229,18 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
       {/* Studio Header Banner */}
       <div className="bg-gradient-to-r from-emerald-950/80 via-slate-900 to-slate-900 border border-emerald-500/30 rounded-3xl p-6 mb-6 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 mb-2 inline-block">
+          <span className="text-sm font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 mb-2 inline-block">
             Panel de Negocio & Ventas
           </span>
           <h1 className="text-2xl font-bold text-white">Mi Estudio de Proveedor / Vendedor</h1>
-          <p className="text-xs text-slate-300 mt-1">
+          <p className="text-sm text-slate-300 mt-1">
             Administra tu catálogo de productos, lista de servicios, dirección fija para el mapa y pedidos.
           </p>
         </div>
 
         <button
           onClick={handleSaveGeneral}
-          className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs py-3 px-5 rounded-2xl shadow-lg shadow-emerald-500/20 flex items-center gap-1.5 transition-all self-start sm:self-auto"
+          className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-sm py-3 px-5 rounded-2xl shadow-lg shadow-emerald-500/20 flex items-center gap-1.5 transition-all self-start sm:self-auto"
         >
           <Check className="w-4 h-4" />
           <span>Guardar Cambios</span>
@@ -248,7 +248,7 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
       </div>
 
       {/* Tabs Switcher */}
-      <div className="flex gap-2 border-b border-slate-800 pb-3 mb-6 overflow-x-auto text-xs font-bold">
+      <div className="flex gap-2 border-b border-slate-800 pb-3 mb-6 overflow-x-auto text-sm font-bold">
         <button
           onClick={() => setActiveTab('products')}
           className={`px-4 py-2 rounded-2xl flex items-center gap-2 transition-all ${
@@ -323,11 +323,11 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-base font-bold text-white">Catálogo de Productos en Venta Directa</h2>
-              <p className="text-xs text-slate-400">Los clientes podrán verlos y comprarlos directamente por WhatsApp</p>
+              <p className="text-sm text-slate-400">Los clientes podrán verlos y comprarlos directamente por WhatsApp</p>
             </div>
             <button
               onClick={() => setShowAddProductModal(true)}
-              className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2 px-3.5 rounded-xl flex items-center gap-1.5 shadow-md shadow-emerald-500/20"
+              className="bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold py-2 px-3.5 rounded-xl flex items-center gap-1.5 shadow-md shadow-emerald-500/20"
             >
               <Plus className="w-4 h-4" />
               <span>Publicar Producto</span>
@@ -339,8 +339,8 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
               <div key={p.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 flex gap-3 items-center justify-between">
                 <img src={p.images[0]} alt={p.name} className="w-14 h-14 rounded-xl object-cover" />
                 <div className="flex-1 min-w-0">
-                  <h4 className="text-xs font-bold text-white truncate">{p.name}</h4>
-                  <p className="text-xs text-emerald-400 font-extrabold">{formatCurrencyCOP(p.price)}</p>
+                  <h4 className="text-sm font-bold text-white truncate">{p.name}</h4>
+                  <p className="text-sm text-emerald-400 font-extrabold">{formatCurrencyCOP(p.price)}</p>
                   <span className="text-[10px] text-slate-500 uppercase">{p.condition}</span>
                 </div>
                 <button
@@ -358,7 +358,7 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
             ))}
 
             {products.length === 0 && (
-              <div className="col-span-full py-12 text-center bg-slate-900 border border-slate-800 rounded-3xl text-slate-400 text-xs">
+              <div className="col-span-full py-12 text-center bg-slate-900 border border-slate-800 rounded-3xl text-slate-400 text-sm">
                 Aún no has publicado ningún producto. Haz clic en "Publicar Producto" para empezar a vender.
               </div>
             )}
@@ -372,11 +372,11 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-base font-bold text-white">Tarifario de Servicios Ofrecidos</h2>
-              <p className="text-xs text-slate-400">Define los servicios que tus clientes pueden cotizar o agendar</p>
+              <p className="text-sm text-slate-400">Define los servicios que tus clientes pueden cotizar o agendar</p>
             </div>
             <button
               onClick={() => setShowAddServiceModal(true)}
-              className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2 px-3.5 rounded-xl flex items-center gap-1.5 shadow-md shadow-blue-500/20"
+              className="bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold py-2 px-3.5 rounded-xl flex items-center gap-1.5 shadow-md shadow-blue-500/20"
             >
               <Plus className="w-4 h-4" />
               <span>Añadir Servicio</span>
@@ -387,8 +387,8 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
             {services.map((s) => (
               <div key={s.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center justify-between">
                 <div>
-                  <h4 className="text-sm font-bold text-white">{s.name}</h4>
-                  <div className="flex items-center gap-3 text-xs text-slate-400 mt-1">
+                  <h4 className="text-base font-bold text-white">{s.name}</h4>
+                  <div className="flex items-center gap-3 text-sm text-slate-400 mt-1">
                     <span className="font-extrabold text-emerald-400">{s.priceEstimate}</span>
                     <span>• {s.duration || '1 hr'}</span>
                   </div>
@@ -408,7 +408,7 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
             ))}
 
             {services.length === 0 && (
-              <div className="py-12 text-center bg-slate-900 border border-slate-800 rounded-3xl text-slate-400 text-xs">
+              <div className="py-12 text-center bg-slate-900 border border-slate-800 rounded-3xl text-slate-400 text-sm">
                 No tienes servicios listados. Haz clic en "Añadir Servicio" para comenzar.
               </div>
             )}
@@ -421,15 +421,15 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
         <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4">
           <div>
             <h3 className="text-base font-bold text-white mb-1">Modalidad de Atención y Posición en el Mapa</h3>
-            <p className="text-xs text-slate-400">
+            <p className="text-sm text-slate-400">
               Define si operas con local físico, a domicilio o como vendedor ambulante en {currentCity}.
             </p>
           </div>
 
           {/* Selector de Modalidad */}
           <div>
-            <label className="block text-slate-300 font-semibold mb-2 text-xs">Modalidad de Servicio / Venta</label>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+            <label className="block text-slate-300 font-semibold mb-2 text-sm">Modalidad de Servicio / Venta</label>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-sm">
               {/* Opción 1: Local Físico Fijo */}
               <div
                 onClick={() => setServiceModality('physical_store')}
@@ -482,7 +482,7 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
 
           {/* BANNER EXPLICATIVO DE UBICACIÓN SEGÚN MODALIDAD */}
           {serviceModality === 'physical_store' ? (
-            <div className="p-3.5 bg-blue-950/60 border border-blue-800/80 rounded-2xl text-xs space-y-1">
+            <div className="p-3.5 bg-blue-950/60 border border-blue-800/80 rounded-2xl text-sm space-y-1">
               <div className="flex items-center gap-2 font-bold text-blue-400">
                 <MapPin className="w-4 h-4 shrink-0" />
                 <span>📍 Ubicación Fija en el Mapa Satelital</span>
@@ -492,7 +492,7 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
               </p>
             </div>
           ) : serviceModality === 'mobile_street' ? (
-            <div className="p-3.5 bg-amber-950/60 border border-amber-800/80 rounded-2xl text-xs space-y-2">
+            <div className="p-3.5 bg-amber-950/60 border border-amber-800/80 rounded-2xl text-sm space-y-2">
               <div className="flex items-center gap-2 font-bold text-amber-400">
                 <Navigation className="w-4 h-4 shrink-0" />
                 <span>📱 Ubicación Celular / GPS en Vivo</span>
@@ -520,7 +520,7 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
                   setIsSyncingGps(false);
                 }}
                 disabled={isSyncingGps}
-                className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-all cursor-pointer"
+                className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 text-sm font-bold rounded-xl flex items-center gap-1.5 transition-all cursor-pointer"
               >
                 <Crosshair className={`w-3.5 h-3.5 ${isSyncingGps ? 'animate-spin' : ''}`} />
                 <span>{isSyncingGps ? 'Obteniendo GPS...' : 'Actualizar GPS del Celular Ahora'}</span>
@@ -530,7 +530,7 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
               )}
             </div>
           ) : (
-            <div className="p-3.5 bg-emerald-950/60 border border-emerald-800/80 rounded-2xl text-xs space-y-1">
+            <div className="p-3.5 bg-emerald-950/60 border border-emerald-800/80 rounded-2xl text-sm space-y-1">
               <div className="flex items-center gap-2 font-bold text-emerald-400">
                 <Truck className="w-4 h-4 shrink-0" />
                 <span>🛵 Cobertura a Domicilio</span>
@@ -541,7 +541,7 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
             </div>
           )}
 
-          <div className="space-y-3 text-xs">
+          <div className="space-y-3 text-sm">
             <div>
               <label className="block text-slate-300 font-semibold mb-1">Nombre Comercial / Local</label>
               <input
@@ -559,7 +559,7 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white focus:outline-none focus:border-blue-500 text-xs font-semibold"
+                className="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white focus:outline-none focus:border-blue-500 text-sm font-semibold"
               >
                 <option value="nutricion">🌿 Productos Nutricionales & Suplementos (Melena de león, vitaminas, etc.)</option>
                 <option value="tecnologia">📱 Tecnología & Dispositivos (Celulares, computadores, repuestos)</option>
@@ -654,11 +654,11 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
             </div>
             <div>
               <h3 className="text-base font-bold text-white">Sello de Proveedor / Vendedor Verificado</h3>
-              <p className="text-xs text-slate-400">Aumenta la confianza y visibilidad en los resultados de búsqueda</p>
+              <p className="text-sm text-slate-400">Aumenta la confianza y visibilidad en los resultados de búsqueda</p>
             </div>
           </div>
 
-          <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-4 text-xs text-emerald-300 mb-4 flex items-center gap-2">
+          <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-4 text-sm text-emerald-300 mb-4 flex items-center gap-2">
             <Check className="w-5 h-5 text-emerald-400 shrink-0" />
             <span>Tu cuenta cuenta con insignia de verificación oficial activa para operar en {currentCity}.</span>
           </div>
@@ -671,7 +671,7 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
           <div className="flex items-center justify-between mb-2">
             <div>
               <h2 className="text-base font-bold text-white">Pedidos y Clientes Atendidos</h2>
-              <p className="text-xs text-slate-400">Califica a tus clientes de 1 a 5 estrellas para premiar su puntualidad y trato</p>
+              <p className="text-sm text-slate-400">Califica a tus clientes de 1 a 5 estrellas para premiar su puntualidad y trato</p>
             </div>
           </div>
 
@@ -680,17 +680,17 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
               {bookings.map((ord) => (
                 <div key={ord.id} className="bg-slate-900 border border-slate-800 rounded-3xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-md">
                   <div className="flex items-start gap-3">
-                    <div className="w-11 h-11 rounded-2xl bg-indigo-950/80 border border-indigo-500/30 text-indigo-400 font-black flex items-center justify-center text-sm shrink-0">
+                    <div className="w-11 h-11 rounded-2xl bg-indigo-950/80 border border-indigo-500/30 text-indigo-400 font-black flex items-center justify-center text-base shrink-0">
                       {ord.clientName ? ord.clientName.substring(0, 2).toUpperCase() : 'CL'}
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <h4 className="text-sm font-bold text-white">{ord.clientName || 'Cliente NexService'}</h4>
+                        <h4 className="text-base font-bold text-white">{ord.clientName || 'Cliente NexService'}</h4>
                         <span className="text-[10px] bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-full border border-indigo-500/30 font-semibold">
                           Cliente
                         </span>
                       </div>
-                      <p className="text-xs text-slate-300 mt-0.5">
+                      <p className="text-sm text-slate-300 mt-0.5">
                         Solicitó: <strong>{ord.itemName}</strong> • <span className="text-emerald-400">{ord.totalAmount}</span>
                       </p>
                       <div className="text-[11px] text-slate-400 mt-1 flex items-center gap-2">
@@ -712,7 +712,7 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
                           type: 'client',
                           itemName: ord.itemName
                         })}
-                        className="bg-amber-500 hover:bg-amber-400 text-amber-950 font-extrabold text-xs py-2.5 px-4 rounded-xl flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                        className="bg-amber-500 hover:bg-amber-400 text-amber-950 font-extrabold text-sm py-2.5 px-4 rounded-xl flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
                       >
                         <Star className="w-3.5 h-3.5 fill-amber-950 text-amber-950" />
                         <span>Calificar Cliente (1-5 ⭐)</span>
@@ -723,7 +723,7 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
                       <button
                         type="button"
                         onClick={() => window.open(`https://wa.me/${ord.clientPhone.replace(/\D/g, '')}?text=Hola+${encodeURIComponent(ord.clientName || 'estimado cliente')},+te+contacto+sobre+tu+pedido+de+${encodeURIComponent(ord.itemName)}`, '_blank')}
-                        className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-2.5 px-3 rounded-xl flex items-center gap-1 transition-all cursor-pointer"
+                        className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm py-2.5 px-3 rounded-xl flex items-center gap-1 transition-all cursor-pointer"
                       >
                         <MessageSquare className="w-3.5 h-3.5" />
                         <span>WhatsApp</span>
@@ -734,7 +734,7 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
               ))}
             </div>
           ) : (
-            <div className="text-center py-12 bg-slate-900 border border-slate-800 rounded-3xl p-8 text-slate-400 text-xs">
+            <div className="text-center py-12 bg-slate-900 border border-slate-800 rounded-3xl p-8 text-slate-400 text-sm">
               <UserCheck className="w-10 h-10 text-slate-600 mx-auto mb-2" />
               Aún no tienes solicitudes directas registradas. Cuando un cliente te contacte o agende, podrás calificarlo aquí con 1 a 5 estrellas.
             </div>
@@ -754,7 +754,7 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
                 <TrendingUp className="w-5 h-5 text-purple-400" />
                 Estadísticas de Visitas
               </h2>
-              <p className="text-xs text-slate-400 mb-6 max-w-lg">
+              <p className="text-sm text-slate-400 mb-6 max-w-lg">
                 Aquí puedes ver quién ha visitado tu perfil recientemente.
               </p>
 
@@ -767,7 +767,7 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
                     <div className="text-3xl font-black text-white">
                       {existingProviderData?.views?.length || 0}
                     </div>
-                    <div className="text-xs text-slate-400 font-semibold uppercase tracking-wider">
+                    <div className="text-sm text-slate-400 font-semibold uppercase tracking-wider">
                       Visitas Totales
                     </div>
                   </div>
@@ -775,17 +775,17 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
 
                 {existingProviderData?.views && existingProviderData.views.length > 0 ? (
                   <div className="space-y-2 mt-4">
-                    <h3 className="text-xs font-bold text-slate-300 mb-3">Historial de Visitantes:</h3>
+                    <h3 className="text-sm font-bold text-slate-300 mb-3">Historial de Visitantes:</h3>
                     {[...existingProviderData.views].reverse().map((visit, idx) => (
                       <div key={idx} className="bg-slate-800 rounded-xl p-3 flex items-center justify-between border border-slate-700/50">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold text-slate-300">
+                          <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-sm font-bold text-slate-300">
                             {visit.clientName.substring(0, 2).toUpperCase()}
                           </div>
                           <div>
-                            <div className="text-sm font-bold text-slate-200">{visit.clientName}</div>
+                            <div className="text-base font-bold text-slate-200">{visit.clientName}</div>
                             <div className="text-[10px] text-slate-400">
-                              {new Date(visit.date).toLocaleString()}
+                                  {visit.timestamp ? new Date(visit.timestamp).toLocaleDateString() : 'Reciente'} - {visit.timestamp ? new Date(visit.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
                             </div>
                           </div>
                         </div>
@@ -796,7 +796,7 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-6 text-slate-500 text-xs mt-4 border-t border-slate-700/50">
+                  <div className="text-center py-6 text-slate-500 text-sm mt-4 border-t border-slate-700/50">
                     Aún no hay visitas registradas en tu perfil.
                   </div>
                 )}
@@ -813,7 +813,7 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
             <div className="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
               <div>
                 <h3 className="text-base font-bold text-white">Nuevo Producto para Venta</h3>
-                <p className="text-xs text-slate-400">Agrega nombre, precio y hasta 10 fotos reales</p>
+                <p className="text-sm text-slate-400">Agrega nombre, precio y hasta 10 fotos reales</p>
               </div>
               <button
                 onClick={() => setShowAddProductModal(false)}
@@ -823,7 +823,7 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
               </button>
             </div>
 
-            <div className="space-y-3.5 text-xs mb-5">
+            <div className="space-y-3.5 text-sm mb-5">
               <div>
                 <label className="block text-slate-400 mb-1 font-semibold">Nombre del Producto</label>
                 <input
@@ -939,13 +939,13 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
             <div className="flex gap-2 pt-2 border-t border-slate-800">
               <button
                 onClick={() => setShowAddProductModal(false)}
-                className="px-4 py-2.5 rounded-xl bg-slate-800 text-slate-300 text-xs font-semibold hover:bg-slate-700 transition-all cursor-pointer"
+                className="px-4 py-2.5 rounded-xl bg-slate-800 text-slate-300 text-sm font-semibold hover:bg-slate-700 transition-all cursor-pointer"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleAddProduct}
-                className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2.5 rounded-xl shadow-md shadow-emerald-500/20 transition-all cursor-pointer"
+                className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold py-2.5 rounded-xl shadow-md shadow-emerald-500/20 transition-all cursor-pointer"
               >
                 Guardar Producto ({newProdImages.length || 1} fotos)
               </button>
@@ -961,7 +961,7 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
             <div className="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
               <div>
                 <h3 className="text-base font-bold text-white">Nuevo Servicio Ofrecido</h3>
-                <p className="text-xs text-slate-400">Agrega detalles y fotos de trabajos realizados</p>
+                <p className="text-sm text-slate-400">Agrega detalles y fotos de trabajos realizados</p>
               </div>
               <button
                 onClick={() => setShowAddServiceModal(false)}
@@ -971,7 +971,7 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
               </button>
             </div>
 
-            <div className="space-y-3.5 text-xs mb-5">
+            <div className="space-y-3.5 text-sm mb-5">
               <div>
                 <label className="block text-slate-400 mb-1 font-semibold">Nombre del Servicio</label>
                 <input
@@ -1070,13 +1070,13 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
             <div className="flex gap-2 pt-2 border-t border-slate-800">
               <button
                 onClick={() => setShowAddServiceModal(false)}
-                className="px-4 py-2.5 rounded-xl bg-slate-800 text-slate-300 text-xs font-semibold hover:bg-slate-700 transition-all cursor-pointer"
+                className="px-4 py-2.5 rounded-xl bg-slate-800 text-slate-300 text-sm font-semibold hover:bg-slate-700 transition-all cursor-pointer"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleAddService}
-                className="flex-1 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2.5 rounded-xl shadow-md shadow-blue-500/20 transition-all cursor-pointer"
+                className="flex-1 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold py-2.5 rounded-xl shadow-md shadow-blue-500/20 transition-all cursor-pointer"
               >
                 Guardar Servicio ({newSrvImages.length} fotos)
               </button>
@@ -1087,3 +1087,4 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
     </div>
   );
 };
+

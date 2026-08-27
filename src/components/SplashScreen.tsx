@@ -78,3 +78,4 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish, durationMs
     </div>
   );
 };
+

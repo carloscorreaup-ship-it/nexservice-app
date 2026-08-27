@@ -122,7 +122,7 @@ export const RatingReviewModal: React.FC<RatingReviewModalProps> = ({
               <h3 className="font-black text-base sm:text-lg">
                 Calificar {getTargetTypeLabel()}
               </h3>
-              <p className="text-xs text-white/80">Comentario con foto o solo texto (1 a 5 ⭐)</p>
+              <p className="text-sm text-white/80">Comentario con foto o solo texto (1 a 5 ⭐)</p>
             </div>
           </div>
           <button
@@ -140,7 +140,7 @@ export const RatingReviewModal: React.FC<RatingReviewModalProps> = ({
               <Sparkles className="w-9 h-9" />
             </div>
             <h4 className="text-xl font-bold text-slate-900">¡Calificación Publicada!</h4>
-            <p className="text-xs text-slate-600 leading-relaxed max-w-sm mx-auto">
+            <p className="text-sm text-slate-600 leading-relaxed max-w-sm mx-auto">
               Tu valoración de <strong>{rating} estrellas ⭐</strong> {imageUrl ? 'con foto adjunta' : 'en texto'} para <strong className="text-slate-900">{target.name}</strong> ha sido guardada con éxito.
             </p>
 
@@ -156,7 +156,7 @@ export const RatingReviewModal: React.FC<RatingReviewModalProps> = ({
           <form onSubmit={handleSubmit} className="p-5 space-y-4">
             {/* Target Profile Info */}
             <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3 flex items-center gap-3">
-              <div className="w-11 h-11 rounded-xl bg-slate-200 overflow-hidden ring-2 ring-slate-300 flex items-center justify-center text-sm font-bold text-slate-700 shrink-0">
+              <div className="w-11 h-11 rounded-xl bg-slate-200 overflow-hidden ring-2 ring-slate-300 flex items-center justify-center text-base font-bold text-slate-700 shrink-0">
                 {target.avatarUrl ? (
                   <img src={target.avatarUrl} alt={target.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                 ) : (
@@ -167,16 +167,16 @@ export const RatingReviewModal: React.FC<RatingReviewModalProps> = ({
                 <div className="text-[10px] uppercase font-bold tracking-wider text-[#0052ff]">
                   {getTargetTypeLabel()}:
                 </div>
-                <div className="font-black text-sm text-slate-900 truncate">{target.name}</div>
+                <div className="font-black text-base text-slate-900 truncate">{target.name}</div>
                 {target.itemName && (
-                  <div className="text-xs text-slate-500 truncate">Por: {target.itemName}</div>
+                  <div className="text-sm text-slate-500 truncate">Por: {target.itemName}</div>
                 )}
               </div>
             </div>
 
             {/* Interactive Stars Selector */}
             <div className="bg-gradient-to-b from-amber-50/70 to-white border border-amber-200/80 rounded-2xl p-3.5 text-center space-y-2">
-              <label className="block text-xs font-bold text-slate-700">
+              <label className="block text-sm font-bold text-slate-700">
                 Selecciona tu puntuación (1 a 5 estrellas):
               </label>
 
@@ -207,7 +207,7 @@ export const RatingReviewModal: React.FC<RatingReviewModalProps> = ({
 
               {/* Dynamic feedback label */}
               <div className="pt-0.5">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-amber-300 rounded-full text-xs font-extrabold text-amber-950 shadow-xs">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-amber-300 rounded-full text-sm font-extrabold text-amber-950 shadow-xs">
                   <span>{currentLevel.emoji}</span>
                   <span>{currentLevel.value} Estrellas • {currentLevel.label}</span>
                 </div>
@@ -218,7 +218,7 @@ export const RatingReviewModal: React.FC<RatingReviewModalProps> = ({
             {/* Comment Area (Text Only or with Photo) */}
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="text-xs font-bold text-slate-800">
+                <label className="text-sm font-bold text-slate-800">
                   Comentario u opinión:
                 </label>
                 <span className="text-[10px] text-slate-400">Texto o con foto</span>
@@ -228,14 +228,14 @@ export const RatingReviewModal: React.FC<RatingReviewModalProps> = ({
                 onChange={e => setComment(e.target.value)}
                 placeholder={`Cuenta tu experiencia con ${target.name}: calidad, puntualidad, atención...`}
                 rows={3}
-                className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#0052ff] focus:ring-2 focus:ring-blue-100 transition-all resize-none"
+                className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#0052ff] focus:ring-2 focus:ring-blue-100 transition-all resize-none"
               />
             </div>
 
             {/* Photo / Image Attachment Section */}
             <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3 space-y-2">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
+                <div className="flex items-center gap-1.5 text-sm font-bold text-slate-800">
                   <Camera className="w-3.5 h-3.5 text-[#0052ff]" />
                   <span>Foto del Servicio o Producto (Opcional)</span>
                 </div>
@@ -247,7 +247,7 @@ export const RatingReviewModal: React.FC<RatingReviewModalProps> = ({
                 <div className="relative rounded-xl overflow-hidden border border-slate-200 bg-white p-2 flex items-center gap-3">
                   <img src={imageUrl} alt="Evidencia" className="w-16 h-16 rounded-lg object-cover" />
                   <div className="flex-1 min-w-0">
-                    <span className="text-xs font-bold text-emerald-600 flex items-center gap-1">
+                    <span className="text-sm font-bold text-emerald-600 flex items-center gap-1">
                       <CheckCircle2 className="w-3.5 h-3.5" /> Foto adjunta
                     </span>
                     <p className="text-[10px] text-slate-500 truncate">Se publicará junto a tu reseña</p>
@@ -274,7 +274,7 @@ export const RatingReviewModal: React.FC<RatingReviewModalProps> = ({
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="flex-1 py-2 px-3 bg-white hover:bg-blue-50 border border-slate-200 hover:border-[#0052ff] rounded-xl text-xs font-bold text-slate-700 hover:text-[#0052ff] flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                    className="flex-1 py-2 px-3 bg-white hover:bg-blue-50 border border-slate-200 hover:border-[#0052ff] rounded-xl text-sm font-bold text-slate-700 hover:text-[#0052ff] flex items-center justify-center gap-1.5 transition-all cursor-pointer"
                   >
                     <UploadCloud className="w-3.5 h-3.5" />
                     <span>Subir Foto / Captura</span>
@@ -283,7 +283,7 @@ export const RatingReviewModal: React.FC<RatingReviewModalProps> = ({
                   <button
                     type="button"
                     onClick={() => setShowUrlInput(!showUrlInput)}
-                    className="py-2 px-3 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl text-xs font-semibold text-slate-600 flex items-center gap-1 transition-all cursor-pointer"
+                    className="py-2 px-3 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 flex items-center gap-1 transition-all cursor-pointer"
                     title="Pegar enlace de imagen"
                   >
                     <LinkIcon className="w-3.5 h-3.5" />
@@ -299,12 +299,12 @@ export const RatingReviewModal: React.FC<RatingReviewModalProps> = ({
                     placeholder="https://ejemplo.com/foto.jpg"
                     value={imageUrl}
                     onChange={e => setImageUrl(e.target.value)}
-                    className="flex-1 bg-white border border-slate-200 rounded-xl p-2 text-xs text-slate-900 focus:outline-none focus:border-[#0052ff]"
+                    className="flex-1 bg-white border border-slate-200 rounded-xl p-2 text-sm text-slate-900 focus:outline-none focus:border-[#0052ff]"
                   />
                   <button
                     type="button"
                     onClick={() => setShowUrlInput(false)}
-                    className="px-2.5 py-2 bg-slate-200 text-slate-700 text-xs font-bold rounded-xl"
+                    className="px-2.5 py-2 bg-slate-200 text-slate-700 text-sm font-bold rounded-xl"
                   >
                     OK
                   </button>
@@ -318,14 +318,14 @@ export const RatingReviewModal: React.FC<RatingReviewModalProps> = ({
                 type="button"
                 onClick={onClose}
                 disabled={loading}
-                className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all cursor-pointer"
+                className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold rounded-xl transition-all cursor-pointer"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-2 py-2.5 bg-[#0052ff] hover:bg-blue-700 disabled:opacity-50 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md active:scale-98 cursor-pointer"
+                className="flex-2 py-2.5 bg-[#0052ff] hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md active:scale-98 cursor-pointer"
               >
                 <Send className="w-3.5 h-3.5" />
                 <span>{loading ? 'Publicando...' : 'Publicar Calificación'}</span>
@@ -337,3 +337,4 @@ export const RatingReviewModal: React.FC<RatingReviewModalProps> = ({
     </div>
   );
 };
+

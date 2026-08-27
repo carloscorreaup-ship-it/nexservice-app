@@ -137,7 +137,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
       {onBack && (
         <button
           onClick={onBack}
-          className="mb-4 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 font-semibold text-xs transition-all border border-slate-200 shadow-sm cursor-pointer"
+          className="mb-4 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 font-semibold text-sm transition-all border border-slate-200 shadow-sm cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4 text-[#0052ff]" />
           <span>Volver al Inicio</span>
@@ -211,7 +211,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
 
             {/* Live Feedback Toast on Avatar Change */}
             {avatarFeedback && (
-              <div className="inline-flex items-center gap-1.5 mt-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-semibold animate-fade-in">
+              <div className="inline-flex items-center gap-1.5 mt-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-sm font-semibold animate-fade-in">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                 <span>{avatarFeedback}</span>
               </div>
@@ -219,7 +219,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
 
             {/* Star Rating of User */}
             <div className="flex items-center gap-2 mt-1">
-              <div className="flex items-center gap-1 text-amber-500 font-extrabold text-xs">
+              <div className="flex items-center gap-1 text-amber-500 font-extrabold text-sm">
                 <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
                 <span>{clientRating.toFixed(1)} / 5.0</span>
               </div>
@@ -228,11 +228,11 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               </span>
             </div>
 
-            <div className="flex items-center gap-1.5 text-xs text-slate-500 truncate mt-0.5">
+            <div className="flex items-center gap-1.5 text-sm text-slate-500 truncate mt-0.5">
               <Mail className="w-3 h-3 text-[#0052ff] shrink-0" />
               <span className="truncate">{userSession.email}</span>
             </div>
-            <div className="flex items-center gap-1.5 text-xs text-[#0052ff] mt-1">
+            <div className="flex items-center gap-1.5 text-sm text-[#0052ff] mt-1">
               <MapPin className="w-3.5 h-3.5 shrink-0" />
               <span className="truncate">{userSession.fixedLocation?.address || `${userSession.city}, Colombia`}</span>
             </div>
@@ -246,12 +246,12 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
 
         {/* Change Photo Banner Button */}
         <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
-          <span className="text-xs text-slate-500">Foto sincronizada o personalizada</span>
+          <span className="text-sm text-slate-500">Foto sincronizada o personalizada</span>
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploadingAvatar}
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0052ff] hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-xl transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1.5 text-sm font-bold text-[#0052ff] hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-xl transition-colors cursor-pointer"
           >
             <Camera className="w-3.5 h-3.5" />
             <span>{isUploadingAvatar ? 'Subiendo...' : 'Cambiar Foto de Perfil'}</span>
@@ -271,11 +271,11 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                 <ShieldAlert className="w-6 h-6" />
               </div>
               <div>
-                <div className="font-extrabold text-sm text-slate-900">Panel Super Administrador</div>
-                <div className="text-xs text-red-700">Ver base de datos de usuarios y activar/desactivar cuentas</div>
+                <div className="font-extrabold text-base text-slate-900">Panel Super Administrador</div>
+                <div className="text-sm text-red-700">Ver base de datos de usuarios y activar/desactivar cuentas</div>
               </div>
             </div>
-            <span className="text-xs font-bold bg-red-600 text-white px-3 py-1.5 rounded-xl shadow-sm">Abrir</span>
+            <span className="text-sm font-bold bg-red-600 text-white px-3 py-1.5 rounded-xl shadow-sm">Abrir</span>
           </button>
         </div>
       )}
@@ -293,7 +293,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               <Crosshair className={`w-5 h-5 ${isSyncingGps ? 'animate-spin' : ''}`} />
             </div>
             <div>
-              <div className="font-bold text-sm text-slate-900 flex items-center gap-1.5">
+              <div className="font-bold text-base text-slate-900 flex items-center gap-1.5">
                 <span>Sincronizar Ubicación GPS</span>
                 {syncStatus && (
                   <span className="text-[11px] font-semibold text-emerald-600 animate-fade-in">
@@ -301,10 +301,10 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                   </span>
                 )}
               </div>
-              <div className="text-xs text-slate-500">Actualizar las coordenadas de tu celular para el mapa</div>
+              <div className="text-sm text-slate-500">Actualizar las coordenadas de tu celular para el mapa</div>
             </div>
           </div>
-          <span className="text-xs font-bold bg-slate-100 group-hover:bg-[#0052ff] group-hover:text-white text-slate-700 px-3 py-1.5 rounded-xl transition-colors">
+          <span className="text-sm font-bold bg-slate-100 group-hover:bg-[#0052ff] group-hover:text-white text-slate-700 px-3 py-1.5 rounded-xl transition-colors">
             {isSyncingGps ? 'GPS...' : 'Sincronizar'}
           </span>
         </button>
@@ -318,8 +318,8 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               <Store className="w-5 h-5" />
             </div>
             <div>
-              <div className="font-bold text-sm text-slate-900">Cambiar Modo</div>
-              <div className="text-xs text-slate-500">Actualmente en: {userSession.mode === 'provider' ? 'Modo Proveedor' : 'Modo Cliente'}</div>
+              <div className="font-bold text-base text-slate-900">Cambiar Modo</div>
+              <div className="text-sm text-slate-500">Actualmente en: {userSession.mode === 'provider' ? 'Modo Proveedor' : 'Modo Cliente'}</div>
             </div>
           </div>
         </button>
@@ -333,8 +333,8 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               <Flame className="w-5 h-5" />
             </div>
             <div>
-              <div className="font-bold text-sm text-slate-900">Configuración Firebase</div>
-              <div className="text-xs text-slate-500">Gestionar claves y conexión en tiempo real</div>
+              <div className="font-bold text-base text-slate-900">Configuración Firebase</div>
+              <div className="text-sm text-slate-500">Gestionar claves y conexión en tiempo real</div>
             </div>
           </div>
         </button>
@@ -348,8 +348,8 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               <MapPin className="w-5 h-5" />
             </div>
             <div>
-              <div className="font-bold text-sm text-slate-900">Cambiar Ciudad</div>
-              <div className="text-xs text-slate-500">Actual: {userSession.city}</div>
+              <div className="font-bold text-base text-slate-900">Cambiar Ciudad</div>
+              <div className="text-sm text-slate-500">Actual: {userSession.city}</div>
             </div>
           </div>
         </button>
@@ -361,13 +361,13 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                 <Smartphone className="w-5 h-5" />
               </div>
               <div>
-                <div className="font-bold text-sm text-slate-900 flex items-center gap-1.5">
+                <div className="font-bold text-base text-slate-900 flex items-center gap-1.5">
                   <span>App Instalada</span>
                   <span className="bg-emerald-500 text-white text-[9px] font-black px-1.5 py-0.2 rounded-full">
                     ✓ ACTIVA
                   </span>
                 </div>
-                <div className="text-xs text-emerald-600">NexService está instalada en tu dispositivo</div>
+                <div className="text-sm text-emerald-600">NexService está instalada en tu dispositivo</div>
               </div>
             </div>
             <CheckCircle2 className="w-5 h-5 text-emerald-600" />
@@ -394,13 +394,13 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                 <Smartphone className="w-5 h-5" />
               </div>
               <div>
-                <div className="font-bold text-sm text-slate-900 flex items-center gap-1.5">
+                <div className="font-bold text-base text-slate-900 flex items-center gap-1.5">
                   <span>Instalar App en el Celular</span>
                   <span className="bg-emerald-500 text-white text-[9px] font-black px-1.5 py-0.2 rounded-full">
                     PWA
                   </span>
                 </div>
-                <div className="text-xs text-slate-500">Acceso rápido directo con el logo oficial en tu pantalla</div>
+                <div className="text-sm text-slate-500">Acceso rápido directo con el logo oficial en tu pantalla</div>
               </div>
             </div>
             <Download className="w-4 h-4 text-[#0052ff]" />
@@ -416,8 +416,8 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               <FileText className="w-5 h-5" />
             </div>
             <div>
-              <div className="font-bold text-sm text-slate-900">Tratamiento de Datos y Privacidad</div>
-              <div className="text-xs text-slate-500">Ley 1581 de 2012 • Habeas Data</div>
+              <div className="font-bold text-base text-slate-900">Tratamiento de Datos y Privacidad</div>
+              <div className="text-sm text-slate-500">Ley 1581 de 2012 • Habeas Data</div>
             </div>
           </div>
         </button>
@@ -426,14 +426,14 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
       <div className="flex gap-3 mb-8">
         <button
           onClick={onResetData}
-          className="flex-1 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold py-3 px-4 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-sm cursor-pointer"
+          className="flex-1 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-sm font-semibold py-3 px-4 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-sm cursor-pointer"
         >
           <RefreshCw className="w-4 h-4" />
           <span>Restablecer Datos</span>
         </button>
         <button
           onClick={onLogout}
-          className="bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 text-xs font-semibold py-3 px-4 rounded-2xl flex items-center justify-center gap-2 transition-all cursor-pointer"
+          className="bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 text-sm font-semibold py-3 px-4 rounded-2xl flex items-center justify-center gap-2 transition-all cursor-pointer"
         >
           <LogOut className="w-4 h-4" />
           <span>Cerrar Sesión</span>
@@ -442,10 +442,10 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
 
       {/* Footer Branding */}
       <div className="text-center pb-6">
-        <div className="flex items-center justify-center gap-1.5 font-bold text-sm text-slate-800">
+        <div className="flex items-center justify-center gap-1.5 font-bold text-base text-slate-800">
           <span>NexService<span className="text-[#0052ff]">.app</span></span>
         </div>
-        <div className="text-xs font-serif italic text-slate-500 mt-0.5">
+        <div className="text-sm font-serif italic text-slate-500 mt-0.5">
           By <span className="text-[#0052ff] font-semibold">Pasiflora Biohacking Pro.</span>
         </div>
         <p className="text-[10px] text-slate-400 mt-1">
@@ -462,3 +462,4 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
     </div>
   );
 };
+

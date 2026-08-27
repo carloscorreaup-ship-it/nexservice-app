@@ -209,7 +209,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
           {step > 1 && (
             <button
               onClick={() => setStep(step - 1)}
-              className="flex items-center gap-1 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-full cursor-pointer transition-all"
+              className="flex items-center gap-1 text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-full cursor-pointer transition-all"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Atrás</span>
@@ -223,7 +223,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
             <>
               <div>
                 <h3 className="text-lg font-bold text-[#141b2b] mb-1 font-geist">Crea tu Perfil</h3>
-                <p className="text-xs text-slate-500 mb-3">La foto de perfil se sincroniza con tu correo o puedes subir una personalizada.</p>
+                <p className="text-sm text-slate-500 mb-3">La foto de perfil se sincroniza con tu correo o puedes subir una personalizada.</p>
               </div>
 
               {/* Live Avatar Preview & Custom Upload */}
@@ -248,7 +248,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
                     </div>
                   </div>
                   <div>
-                    <span className="text-xs font-bold text-slate-800 block">Foto de Perfil</span>
+                    <span className="text-sm font-bold text-slate-800 block">Foto de Perfil</span>
                     <span className="text-[11px] text-emerald-600">
                       {customAvatarUrl ? '✓ Foto personalizada cargada' : 'Sincronizada con tu correo'}
                     </span>
@@ -259,7 +259,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
                   type="button"
                   onClick={() => avatarFileInputRef.current?.click()}
                   disabled={isCompressingAvatar}
-                  className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-xs font-bold text-[#0052ff] flex items-center gap-1 shadow-xs cursor-pointer"
+                  className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-sm font-bold text-[#0052ff] flex items-center gap-1 shadow-xs cursor-pointer"
                 >
                   <Camera className="w-3.5 h-3.5" />
                   <span>{isCompressingAvatar ? 'Cargando...' : 'Cambiar'}</span>
@@ -275,35 +275,35 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Nombre Completo</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Nombre Completo</label>
                 <input
                   type="text"
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-[#141b2b] focus:outline-none focus:border-[#0052ff]"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-base text-[#141b2b] focus:outline-none focus:border-[#0052ff]"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Correo Electrónico</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Correo Electrónico</label>
                 <input
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-[#141b2b] focus:outline-none focus:border-[#0052ff]"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-base text-[#141b2b] focus:outline-none focus:border-[#0052ff]"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">WhatsApp de Contacto Directo</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">WhatsApp de Contacto Directo</label>
                 <input
                   type="text"
                   required
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-[#141b2b] focus:outline-none focus:border-[#0052ff] font-mono"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-base text-[#141b2b] focus:outline-none focus:border-[#0052ff] font-mono"
                 />
               </div>
             </>
@@ -314,10 +314,10 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
             <>
               <div>
                 <h3 className="text-lg font-bold text-[#141b2b] mb-1 font-geist">¿Cómo usarás la app?</h3>
-                <p className="text-xs text-slate-500 mb-3">Puedes alternar tu modo en cualquier momento.</p>
+                <p className="text-sm text-slate-500 mb-3">Puedes alternar tu modo en cualquier momento.</p>
               </div>
 
-              <div className="space-y-2.5 text-xs">
+              <div className="space-y-2.5 text-sm">
                 <div
                   onClick={() => setRole('both')}
                   className={`p-4 rounded-2xl border cursor-pointer transition-all ${
@@ -326,7 +326,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
                       : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
                   }`}
                 >
-                  <div className="flex items-center justify-between font-bold text-sm mb-1 text-[#0052ff]">
+                  <div className="flex items-center justify-between font-bold text-base mb-1 text-[#0052ff]">
                     <span>⭐ Cliente y Proveedor (Recomendado)</span>
                     {role === 'both' && <Check className="w-4 h-4 text-[#0052ff]" />}
                   </div>
@@ -341,7 +341,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
                       : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
                   }`}
                 >
-                  <div className="flex items-center justify-between font-bold text-sm mb-1 text-slate-900">
+                  <div className="flex items-center justify-between font-bold text-base mb-1 text-slate-900">
                     <span>🛒 Solo Cliente / Comprador</span>
                     {role === 'client' && <Check className="w-4 h-4 text-[#0052ff]" />}
                   </div>
@@ -356,7 +356,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
                       : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
                   }`}
                 >
-                  <div className="flex items-center justify-between font-bold text-sm mb-1 text-slate-900">
+                  <div className="flex items-center justify-between font-bold text-base mb-1 text-slate-900">
                     <span>💼 Proveedor / Vendedor</span>
                     {role === 'provider' && <Check className="w-4 h-4 text-[#0052ff]" />}
                   </div>
@@ -367,13 +367,13 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
               {/* SELECTOR DE CATEGORÍA GENERAL PARA PROVEEDORES */}
               {(role === 'both' || role === 'provider') && (
                 <div className="mt-4 pt-3.5 border-t border-slate-200">
-                  <label className="block text-xs font-bold text-slate-800 mb-1.5">
+                  <label className="block text-sm font-bold text-slate-800 mb-1.5">
                     ¿Qué tipo de producto o servicio ofreces? <span className="text-red-500">*</span>
                   </label>
                   <select
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-[#141b2b] font-semibold focus:outline-none focus:border-[#0052ff]"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-[#141b2b] font-semibold focus:outline-none focus:border-[#0052ff]"
                   >
                     <option value="nutricion">🌿 Productos Nutricionales & Suplementos (Melena de león, vitaminas, adaptógenos)</option>
                     <option value="tecnologia">📱 Tecnología & Dispositivos (Celulares, computadores, repuestos)</option>
@@ -400,17 +400,17 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
             <>
               <div>
                 <h3 className="text-lg font-bold text-[#141b2b] mb-1 font-geist">Modalidad y Ubicación</h3>
-                <p className="text-xs text-slate-500 mb-3">
+                <p className="text-sm text-slate-500 mb-3">
                   Indica si cuentas con local físico para definir la ubicación exacta en el mapa satelital de {city}.
                 </p>
               </div>
 
               {/* OBLIGATORIO: SELECTOR DE LOCAL FÍSICO / MODALIDAD */}
               <div>
-                <label className="block text-xs font-bold text-slate-800 mb-1.5">
+                <label className="block text-sm font-bold text-slate-800 mb-1.5">
                   ¿Tienes Local Físico Abierto al Público? <span className="text-red-500">* (Obligatorio)</span>
                 </label>
-                <div className="grid grid-cols-1 gap-2 text-xs">
+                <div className="grid grid-cols-1 gap-2 text-sm">
                   {/* Opción 1: Sí, Local Físico Fijo */}
                   <div
                     onClick={() => setServiceModality('physical_store')}
@@ -428,7 +428,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
                       <Building2 className="w-4 h-4" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between font-bold text-sm text-slate-900">
+                      <div className="flex items-center justify-between font-bold text-base text-slate-900">
                         <span>🏢 Sí, tengo Local o Dirección Física Fija</span>
                         {serviceModality === 'physical_store' && <Check className="w-4 h-4 text-[#0052ff]" />}
                       </div>
@@ -455,7 +455,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
                       <Navigation className="w-4 h-4" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between font-bold text-sm text-slate-900">
+                      <div className="flex items-center justify-between font-bold text-base text-slate-900">
                         <span>🚐 No tengo local (Venta Ambulatoria / Móvil)</span>
                         {serviceModality === 'mobile_street' && <Check className="w-4 h-4 text-amber-600" />}
                       </div>
@@ -482,7 +482,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
                       <Truck className="w-4 h-4" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between font-bold text-sm text-slate-900">
+                      <div className="flex items-center justify-between font-bold text-base text-slate-900">
                         <span>🛵 No tengo local (Solo a Domicilio)</span>
                         {serviceModality === 'home_delivery' && <Check className="w-4 h-4 text-emerald-600" />}
                       </div>
@@ -496,7 +496,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
 
               {/* BANNER EXPLICATIVO DE UBICACIÓN EN EL MAPA SEGÚN MODALIDAD */}
               {serviceModality === 'physical_store' ? (
-                <div className="p-3.5 bg-blue-50/90 border border-blue-200 rounded-2xl text-xs space-y-1">
+                <div className="p-3.5 bg-blue-50/90 border border-blue-200 rounded-2xl text-sm space-y-1">
                   <div className="flex items-center gap-2 font-bold text-[#0052ff]">
                     <MapPin className="w-4 h-4 shrink-0" />
                     <span>📍 Ubicación Fija en el Mapa Satelital</span>
@@ -506,7 +506,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
                   </p>
                 </div>
               ) : serviceModality === 'mobile_street' ? (
-                <div className="p-3.5 bg-amber-50/90 border border-amber-200 rounded-2xl text-xs space-y-1">
+                <div className="p-3.5 bg-amber-50/90 border border-amber-200 rounded-2xl text-sm space-y-1">
                   <div className="flex items-center gap-2 font-bold text-amber-800">
                     <Navigation className="w-4 h-4 shrink-0" />
                     <span>📱 Ubicación Celular / GPS en Vivo</span>
@@ -516,7 +516,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
                   </p>
                 </div>
               ) : (
-                <div className="p-3.5 bg-emerald-50/90 border border-emerald-200 rounded-2xl text-xs space-y-1">
+                <div className="p-3.5 bg-emerald-50/90 border border-emerald-200 rounded-2xl text-sm space-y-1">
                   <div className="flex items-center gap-2 font-bold text-emerald-800">
                     <Truck className="w-4 h-4 shrink-0" />
                     <span>🛵 Cobertura a Domicilio</span>
@@ -549,7 +549,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
                       <Navigation className="w-4 h-4 text-amber-600 shrink-0" />
                     )}
 
-                    <div className="text-xs truncate">
+                    <div className="text-sm truncate">
                       {gpsStatus === 'detecting' && <span className="font-bold">Obteniendo coordenadas GPS del celular...</span>}
                       {gpsStatus === 'success' && (
                         <div>
@@ -582,19 +582,19 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Ciudad / Municipio</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Ciudad / Municipio</label>
                 <input
                   type="text"
                   required
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-[#141b2b] focus:outline-none focus:border-[#0052ff]"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-base text-[#141b2b] focus:outline-none focus:border-[#0052ff]"
                 />
               </div>
 
               {/* DIRECCIÓN FÍSICA - CONDICIONAL SEGÚN MODALIDAD */}
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-sm font-semibold text-slate-700 mb-1">
                   {serviceModality === 'physical_store' ? (
                     <span className="flex items-center gap-1 font-bold text-slate-800">
                       <span>Dirección Física del Local / Negocio (Fija en el mapa)</span>
@@ -611,7 +611,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
                   required={serviceModality === 'physical_store'}
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
-                  className={`w-full border rounded-xl p-3 text-sm text-[#141b2b] focus:outline-none ${
+                  className={`w-full border rounded-xl p-3 text-base text-[#141b2b] focus:outline-none ${
                     serviceModality === 'physical_store'
                       ? 'bg-white border-blue-400 focus:border-[#0052ff] ring-2 ring-blue-100 font-medium'
                       : 'bg-slate-50 border-slate-200 focus:border-[#0052ff]'
@@ -634,7 +634,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
               </div>
 
               {validationError && (
-                <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs flex items-center gap-2">
+                <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-sm flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 shrink-0" />
                   <span>{validationError}</span>
                 </div>
@@ -646,7 +646,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
             <button
               type="submit"
               disabled={isGeocodingAddress}
-              className="w-full bg-[#0052ff] hover:bg-blue-600 text-white font-bold text-sm py-3.5 rounded-2xl shadow-md shadow-blue-500/20 flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-60"
+              className="w-full bg-[#0052ff] hover:bg-blue-600 text-white font-bold text-base py-3.5 rounded-2xl shadow-md shadow-blue-500/20 flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-60"
             >
               {isGeocodingAddress ? (
                 <>
@@ -666,3 +666,4 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
     </div>
   );
 };
+

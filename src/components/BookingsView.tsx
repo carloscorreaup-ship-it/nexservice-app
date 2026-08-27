@@ -33,11 +33,11 @@ export const BookingsView: React.FC<BookingsViewProps> = ({
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-[#141b2b]">Mis Pedidos y Servicios</h1>
-          <p className="text-xs text-slate-500">Historial y seguimiento en tiempo real</p>
+          <p className="text-sm text-slate-500">Historial y seguimiento en tiempo real</p>
         </div>
         <button
           onClick={onExploreServices}
-          className="bg-[#0052ff] hover:bg-blue-700 text-white text-xs font-bold py-2.5 px-4 rounded-xl transition-all cursor-pointer"
+          className="bg-[#0052ff] hover:bg-blue-700 text-white text-sm font-bold py-2.5 px-4 rounded-xl transition-all cursor-pointer"
         >
           Explorar Más
         </button>
@@ -53,8 +53,8 @@ export const BookingsView: React.FC<BookingsViewProps> = ({
                   <span className="text-[10px] font-bold uppercase tracking-wider text-[#0052ff] bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
                     {b.type === 'producto' ? 'Pedido de Producto' : 'Reserva de Servicio'}
                   </span>
-                  <h3 className="text-sm font-bold text-slate-900 mt-1">{b.itemName}</h3>
-                  <p className="text-xs text-slate-500">Con: {b.providerName}</p>
+                  <h3 className="text-base font-bold text-slate-900 mt-1">{b.itemName}</h3>
+                  <p className="text-sm text-slate-500">Con: {b.providerName}</p>
                 </div>
               </div>
 
@@ -69,7 +69,7 @@ export const BookingsView: React.FC<BookingsViewProps> = ({
               </span>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 bg-slate-50 p-3 rounded-2xl text-xs text-slate-700 mb-3 border border-slate-100">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 bg-slate-50 p-3 rounded-2xl text-sm text-slate-700 mb-3 border border-slate-100">
               <div>
                 <span className="text-slate-400 block">Fecha & Hora:</span>
                 <strong>{b.date} • {b.time}</strong>
@@ -85,13 +85,13 @@ export const BookingsView: React.FC<BookingsViewProps> = ({
             </div>
 
             {b.notes && (
-              <p className="text-xs text-slate-500 mb-3 italic">"{b.notes}"</p>
+              <p className="text-sm text-slate-500 mb-3 italic">"{b.notes}"</p>
             )}
 
             <div className="flex items-center gap-2 flex-wrap">
               <button
                 onClick={() => onOpenWhatsApp(b.clientPhone, `Hola, sobre mi solicitud #${b.id} de "${b.itemName}"...`)}
-                className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold py-2.5 px-3 rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold py-2.5 px-3 rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer"
               >
                 <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />
                 <span>WhatsApp</span>
@@ -107,7 +107,7 @@ export const BookingsView: React.FC<BookingsViewProps> = ({
                     type: 'provider',
                     itemName: b.itemName
                   })}
-                  className="px-3.5 py-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
+                  className="px-3.5 py-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 text-sm font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
                   title="Calificar este servicio/producto con estrellas (1 a 5)"
                 >
                   <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
@@ -125,7 +125,7 @@ export const BookingsView: React.FC<BookingsViewProps> = ({
                     avatarUrl: b.providerAvatar,
                     type: 'provider'
                   })}
-                  className="px-3 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold flex items-center gap-1 transition-all cursor-pointer"
+                  className="px-3 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-sm font-bold flex items-center gap-1 transition-all cursor-pointer"
                   title="Denunciar este pedido/servicio ante el Super Administrador"
                 >
                   <Flag className="w-3.5 h-3.5 text-rose-600" />
@@ -137,7 +137,7 @@ export const BookingsView: React.FC<BookingsViewProps> = ({
         ))}
 
         {bookings.length === 0 && (
-          <div className="text-center py-16 bg-slate-900 border border-slate-800 rounded-3xl p-8 text-slate-400 text-xs">
+          <div className="text-center py-16 bg-slate-900 border border-slate-800 rounded-3xl p-8 text-slate-400 text-sm">
             Aún no tienes pedidos o servicios agendados.
           </div>
         )}
@@ -145,3 +145,4 @@ export const BookingsView: React.FC<BookingsViewProps> = ({
     </div>
   );
 };
+

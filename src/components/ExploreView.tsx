@@ -117,7 +117,18 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
   // Filtrado y ordenamiento por relevancia semántica de Proveedores
   const filteredProviders = useMemo(() => {
     const query = executedSearchQuery || searchQuery;
-    if (!query.trim()) return [];
+    
+    if (!query.trim()) {
+      return providers
+        .filter((p) => {
+          if (p.city.toLowerCase() !== currentCity.toLowerCase()) return false;
+          if (selectedCategory !== 'todos' && p.category !== selectedCategory) return false;
+          if (onlyVerified && !p.verified) return false;
+          return true;
+        })
+        .sort((a, b) => (b.views?.length || 0) - (a.views?.length || 0) || b.reviewCount - a.reviewCount)
+        .slice(0, 10);
+    }
 
     const keywords = extractKeywords(query);
     const expandedKeywords = searchIntent?.expandedKeywords || keywords;
@@ -141,7 +152,18 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
   // Filtrado y ordenamiento por relevancia semántica de Productos
   const filteredProducts = useMemo(() => {
     const query = executedSearchQuery || searchQuery;
-    if (!query.trim()) return [];
+
+    if (!query.trim()) {
+      return products
+        .filter((prod) => {
+          if (prod.city.toLowerCase() !== currentCity.toLowerCase()) return false;
+          if (selectedCategory !== 'todos' && prod.category !== selectedCategory) return false;
+          if (onlyVerified && !prod.verifiedSeller) return false;
+          return true;
+        })
+        .sort((a, b) => (b.reviewsCount || 0) - (a.reviewsCount || 0) || b.rating - a.rating)
+        .slice(0, 10);
+    }
 
     const keywords = extractKeywords(query);
     const expandedKeywords = searchIntent?.expandedKeywords || keywords;
@@ -192,7 +214,7 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
 
         <div className="relative z-10 max-w-2xl mx-auto flex flex-col items-center text-center">
           <div className="flex items-center justify-center gap-2 mb-2">
-            <span className="bg-white/20 backdrop-blur-md px-2.5 py-0.5 rounded-full text-xs font-bold tracking-wide uppercase flex items-center gap-1 text-white border border-white/30">
+            <span className="bg-white/20 backdrop-blur-md px-2.5 py-0.5 rounded-full text-sm font-bold tracking-wide uppercase flex items-center gap-1 text-white border border-white/30">
               <Sparkles className="w-3 h-3 text-amber-300" />
               {currentCity} • En Vivo
             </span>
@@ -201,7 +223,7 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight font-geist mb-2 text-center">
             Encuentra los Proveedores y Servicios más Populares
           </h1>
-          <p className="text-sm sm:text-base text-blue-100 mb-5 font-normal text-center max-w-xl">
+          <p className="text-base sm:text-base text-blue-100 mb-5 font-normal text-center max-w-xl">
             Contacta directamente por WhatsApp con los proveedores más buscados en tu área, cotiza servicios y ubícalos en el mapa satelital.
           </p>
 
@@ -229,20 +251,20 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
             )}
             <button
               type="submit"
-              className="absolute right-1.5 bg-[#0052ff] hover:bg-blue-600 text-white text-sm font-bold px-4 py-2.5 rounded-xl shadow-md transition-all active:scale-95 cursor-pointer"
+              className="absolute right-1.5 bg-[#0052ff] hover:bg-blue-600 text-white text-base font-bold px-4 py-2.5 rounded-xl shadow-md transition-all active:scale-95 cursor-pointer"
             >
               Buscar
             </button>
           </form>
 
           {/* Quick Keywords Chips */}
-          <div className="flex items-center justify-center gap-1.5 mt-3 overflow-x-auto pb-1 no-scrollbar text-sm w-full flex-wrap sm:flex-nowrap">
-            <span className="text-xs text-blue-200 font-semibold shrink-0">Popular:</span>
+          <div className="flex items-center justify-center gap-1.5 mt-3 overflow-x-auto pb-1 no-scrollbar text-base w-full flex-wrap sm:flex-nowrap">
+            <span className="text-sm text-blue-200 font-semibold shrink-0">Popular:</span>
             {quickKeywords.map((item) => (
               <button
                 key={item.label}
                 onClick={() => handleQuickKeywordClick(item.query)}
-                className="bg-white/15 hover:bg-white/30 backdrop-blur-md text-white px-2.5 py-1 rounded-xl text-xs font-medium transition-all shrink-0 cursor-pointer border border-white/20"
+                className="bg-white/15 hover:bg-white/30 backdrop-blur-md text-white px-2.5 py-1 rounded-xl text-sm font-medium transition-all shrink-0 cursor-pointer border border-white/20"
               >
                 {item.label}
               </button>
@@ -259,7 +281,7 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
               <Sparkles className="w-4 h-4" />
             </div>
             <div className="min-w-0">
-              <div className="text-xs font-extrabold text-[#0052ff] flex items-center gap-1">
+              <div className="text-sm font-extrabold text-[#0052ff] flex items-center gap-1">
                 <span>Búsqueda Inteligente en {currentCity}:</span>
                 <span className="text-slate-800 font-bold">{searchIntent.intentLabel}</span>
               </div>
@@ -273,7 +295,7 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
               setSearchQuery('');
               setExecutedSearchQuery('');
             }}
-            className="text-xs font-bold text-slate-500 hover:text-slate-800 shrink-0 p-1 rounded-lg hover:bg-white/60 transition-all cursor-pointer"
+            className="text-sm font-bold text-slate-500 hover:text-slate-800 shrink-0 p-1 rounded-lg hover:bg-white/60 transition-all cursor-pointer"
           >
             Limpiar
           </button>
@@ -283,13 +305,13 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
       {/* Categories Horizontal Carousel */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-bold text-[#141b2b] uppercase tracking-wider font-geist flex items-center gap-1.5">
+          <h3 className="text-base font-bold text-[#141b2b] uppercase tracking-wider font-geist flex items-center gap-1.5">
             <span>Categorías de Proveedores</span>
           </h3>
           <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-200 shadow-xs">
             <button
               onClick={() => setViewMode('grid')}
-              className={`p-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all cursor-pointer ${
+              className={`p-1.5 rounded-lg text-sm font-bold flex items-center gap-1 transition-all cursor-pointer ${
                 viewMode === 'grid'
                   ? 'bg-[#0052ff] text-white shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
@@ -301,7 +323,7 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
             </button>
             <button
               onClick={() => setViewMode('map')}
-              className={`p-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all cursor-pointer ${
+              className={`p-1.5 rounded-lg text-sm font-bold flex items-center gap-1 transition-all cursor-pointer ${
                 viewMode === 'map'
                   ? 'bg-[#0052ff] text-white shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
@@ -321,7 +343,7 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
               <button
                 key={cat.id}
                 onClick={() => setSelectedCategory(cat.id)}
-                className={`px-4 py-2 rounded-2xl border text-xs font-bold transition-all shrink-0 flex items-center gap-2 cursor-pointer ${
+                className={`px-4 py-2 rounded-2xl border text-sm font-bold transition-all shrink-0 flex items-center gap-2 cursor-pointer ${
                   isSelected
                     ? 'bg-[#0052ff] text-white border-[#0052ff] shadow-md shadow-blue-500/20 scale-102'
                     : 'bg-white text-slate-700 border-slate-200/90 hover:bg-slate-50 hover:border-slate-300'
@@ -354,7 +376,7 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
             <div className="flex items-center gap-1.5 bg-white p-1.5 rounded-2xl border border-slate-200 shadow-xs">
               <button
                 onClick={() => setActiveTab('all')}
-                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                className={`px-3.5 py-2 rounded-xl text-sm font-bold transition-all cursor-pointer ${
                   activeTab === 'all'
                     ? 'bg-[#0052ff] text-white shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
@@ -364,7 +386,7 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
               </button>
               <button
                 onClick={() => setActiveTab('popular')}
-                className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                className={`px-3.5 py-2 rounded-xl text-sm font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
                   activeTab === 'popular'
                     ? 'bg-[#0052ff] text-white shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
@@ -375,7 +397,7 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
               </button>
               <button
                 onClick={() => setActiveTab('services')}
-                className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                className={`px-3.5 py-2 rounded-xl text-sm font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
                   activeTab === 'services'
                     ? 'bg-[#0052ff] text-white shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
@@ -386,7 +408,7 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
               </button>
               <button
                 onClick={() => setActiveTab('products')}
-                className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                className={`px-3.5 py-2 rounded-xl text-sm font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
                   activeTab === 'products'
                     ? 'bg-emerald-600 text-white shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
@@ -400,7 +422,7 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setOnlyVerified(!onlyVerified)}
-                className={`text-xs font-semibold px-3 py-1.5 rounded-xl border flex items-center gap-1 transition-all cursor-pointer ${
+                className={`text-sm font-semibold px-3 py-1.5 rounded-xl border flex items-center gap-1 transition-all cursor-pointer ${
                   onlyVerified
                     ? 'bg-emerald-50 text-emerald-700 border-emerald-200 font-bold'
                     : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
@@ -413,7 +435,7 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
               <div className="flex items-center bg-white p-1 rounded-xl border border-slate-200 shadow-xs">
                 <button
                   onClick={() => setListMode('grid')}
-                  className={`p-1.5 rounded-lg text-xs transition-all cursor-pointer ${
+                  className={`p-1.5 rounded-lg text-sm transition-all cursor-pointer ${
                     listMode === 'grid' ? 'bg-slate-100 text-[#0052ff]' : 'text-slate-400 hover:text-slate-700'
                   }`}
                   title="Ver en Cuadrícula"
@@ -422,7 +444,7 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
                 </button>
                 <button
                   onClick={() => setListMode('list')}
-                  className={`p-1.5 rounded-lg text-xs transition-all cursor-pointer ${
+                  className={`p-1.5 rounded-lg text-sm transition-all cursor-pointer ${
                     listMode === 'list' ? 'bg-slate-100 text-[#0052ff]' : 'text-slate-400 hover:text-slate-700'
                   }`}
                   title="Ver en Lista"
@@ -447,11 +469,11 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
                     Top 10 en tu área
                   </span>
                 </div>
-                <p className="text-xs sm:text-sm text-slate-500 max-w-xl mx-auto text-center">
+                <p className="text-sm sm:text-base text-slate-500 max-w-xl mx-auto text-center">
                   Los 10 proveedores y comercios más buscados y mejor calificados cerca de ti en <strong className="text-slate-800">{currentCity}</strong>
                 </p>
 
-                <div className="inline-flex items-center gap-1.5 text-xs text-slate-600 bg-white border border-slate-200 px-3 py-1 rounded-2xl shadow-xs mt-1">
+                <div className="inline-flex items-center gap-1.5 text-sm text-slate-600 bg-white border border-slate-200 px-3 py-1 rounded-2xl shadow-xs mt-1">
                   <Navigation className="w-3.5 h-3.5 text-[#0052ff]" />
                   <span>Calculado según tu ubicación GPS</span>
                 </div>
@@ -526,13 +548,13 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
                         <div className="flex-1 min-w-0">
                           <h4
                             onClick={() => onSelectProvider(prov)}
-                            className="text-sm font-bold text-[#141b2b] hover:text-[#0052ff] cursor-pointer truncate transition-colors leading-snug"
+                            className="text-base font-bold text-[#141b2b] hover:text-[#0052ff] cursor-pointer truncate transition-colors leading-snug"
                           >
                             {prov.name}
                           </h4>
                           <p className="text-[11px] text-slate-500 font-medium truncate">{prov.businessName}</p>
 
-                          <div className="flex items-center gap-2 mt-1 text-xs">
+                          <div className="flex items-center gap-2 mt-1 text-sm">
                             <span className="font-extrabold text-amber-500 flex items-center gap-0.5">
                               <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
                               {prov.rating.toFixed(1)}
@@ -548,14 +570,14 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
                             ) : prov.serviceModality === 'mobile_street' ? (
                               <>
                                 <span className="text-slate-300">•</span>
-                                <span className="text-xs font-bold text-amber-800 bg-amber-50 border border-amber-200 px-1.5 py-0.2 rounded-md">
+                                <span className="text-sm font-bold text-amber-800 bg-amber-50 border border-amber-200 px-1.5 py-0.2 rounded-md">
                                   🚐 Ambulante
                                 </span>
                               </>
                             ) : prov.serviceModality === 'home_delivery' ? (
                               <>
                                 <span className="text-slate-300">•</span>
-                                <span className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded-md">
+                                <span className="text-sm font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded-md">
                                   🛵 Domicilio
                                 </span>
                               </>
@@ -566,14 +588,14 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
 
                       {/* Tipo de Producto / Categoría General */}
                       <div className="mb-2.5 flex items-center">
-                        <span className="text-xs font-bold text-[#0052ff] bg-blue-50/90 border border-blue-200/90 px-2.5 py-0.5 rounded-xl flex items-center gap-1">
+                        <span className="text-sm font-bold text-[#0052ff] bg-blue-50/90 border border-blue-200/90 px-2.5 py-0.5 rounded-xl flex items-center gap-1">
                           <span>{getCategoryEmoji(prov.category)}</span>
                           <span>{getCategoryName(prov.category)}</span>
                         </span>
                       </div>
 
                       {/* Description or Services Preview */}
-                      <p className="text-sm text-slate-600 line-clamp-2 mb-3 leading-relaxed">
+                      <p className="text-base text-slate-600 line-clamp-2 mb-3 leading-relaxed">
                         {prov.description || 'Proveedor verificado con atención directa e inmediata por WhatsApp.'}
                       </p>
 
@@ -583,7 +605,7 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
                           {prov.services.slice(0, 2).map((srv) => (
                             <span
                               key={srv.id}
-                              className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-0.5 rounded-lg truncate max-w-[200px]"
+                              className="text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-0.5 rounded-lg truncate max-w-[200px]"
                             >
                               ✓ {srv.name}
                             </span>
@@ -595,13 +617,13 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
                       <div className="flex items-center gap-2 pt-3 border-t border-slate-100">
                         <button
                           onClick={() => onSelectProvider(prov)}
-                          className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-800 text-sm font-bold py-2.5 px-3 rounded-2xl transition-all cursor-pointer text-center"
+                          className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-800 text-base font-bold py-2.5 px-3 rounded-2xl transition-all cursor-pointer text-center"
                         >
                           Ver Perfil
                         </button>
                         <button
                           onClick={() => onContactWhatsApp(prov)}
-                          className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold py-2.5 px-3 rounded-2xl flex items-center justify-center gap-1.5 shadow-md shadow-emerald-500/20 transition-all active:scale-98 cursor-pointer"
+                          className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white text-base font-bold py-2.5 px-3 rounded-2xl flex items-center justify-center gap-1.5 shadow-md shadow-emerald-500/20 transition-all active:scale-98 cursor-pointer"
                         >
                           <MessageSquare className="w-3.5 h-3.5" />
                           <span>WhatsApp</span>
@@ -627,7 +649,7 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
                   <h2 className="text-lg font-bold text-[#141b2b] font-geist">
                     Todos los Proveedores Verificados en {currentCity}
                   </h2>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-sm text-slate-500">
                     Profesionales locales disponibles para cotización y contratación directa
                   </p>
                 </div>
@@ -663,21 +685,21 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
                         <div className="flex items-center gap-1.5">
                           <h4
                             onClick={() => onSelectProvider(provider)}
-                            className="text-sm font-bold text-[#141b2b] hover:text-[#0052ff] cursor-pointer truncate transition-colors"
+                            className="text-base font-bold text-[#141b2b] hover:text-[#0052ff] cursor-pointer truncate transition-colors"
                           >
                             {provider.name}
                           </h4>
                           {provider.verified && <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />}
                         </div>
-                        <p className="text-xs text-slate-500 truncate">{provider.businessName}</p>
-                        <div className="flex items-center gap-2 mt-0.5 text-sm">
+                        <p className="text-sm text-slate-500 truncate">{provider.businessName}</p>
+                        <div className="flex items-center gap-2 mt-0.5 text-base">
                           <span className="flex items-center gap-0.5 text-amber-500 font-bold">
                             <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
                             {provider.rating.toFixed(1)}
                           </span>
                           <span className="text-slate-400">({provider.reviewCount})</span>
                           <span className="text-slate-300">•</span>
-                          <span className="text-xs text-slate-500 flex items-center gap-0.5 truncate">
+                          <span className="text-sm text-slate-500 flex items-center gap-0.5 truncate">
                             <MapPin className="w-3 h-3 text-[#0052ff]" />
                             {provider.address}
                           </span>
@@ -700,13 +722,13 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
                           <div className="flex gap-1.5">
                             <button
                               onClick={() => onSelectProvider(provider)}
-                              className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold py-1.5 px-2.5 rounded-xl transition-all cursor-pointer"
+                              className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold py-1.5 px-2.5 rounded-xl transition-all cursor-pointer"
                             >
                               Perfil
                             </button>
                             <button
                               onClick={() => onContactWhatsApp(provider)}
-                              className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-1.5 px-2.5 rounded-xl flex items-center gap-1 shadow-sm transition-all cursor-pointer"
+                              className="bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold py-1.5 px-2.5 rounded-xl flex items-center gap-1 shadow-sm transition-all cursor-pointer"
                             >
                               <MessageSquare className="w-3 h-3" />
                               <span className="hidden sm:inline">WhatsApp</span>
@@ -732,7 +754,7 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
                 </div>
                 <div>
                   <h2 className="text-lg font-bold text-[#141b2b] font-geist">Productos Disponibles</h2>
-                  <p className="text-xs text-slate-500">Venta y entrega directa en {currentCity}</p>
+                  <p className="text-sm text-slate-500">Venta y entrega directa en {currentCity}</p>
                 </div>
               </div>
 
@@ -783,13 +805,13 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
                         </div>
                         <h4
                           onClick={() => onSelectProduct(product)}
-                          className="text-sm font-bold text-[#141b2b] hover:text-[#0052ff] cursor-pointer line-clamp-1 transition-colors"
+                          className="text-base font-bold text-[#141b2b] hover:text-[#0052ff] cursor-pointer line-clamp-1 transition-colors"
                         >
                           {product.name}
                         </h4>
                         <p className="text-[11px] text-slate-500 line-clamp-1">{product.description}</p>
                         <div className="flex items-center justify-between mt-1.5">
-                          <span className="text-sm font-extrabold text-[#0052ff]">{formatCurrencyCOP(product.price)}</span>
+                          <span className="text-base font-extrabold text-[#0052ff]">{formatCurrencyCOP(product.price)}</span>
                           <div className="flex gap-1.5">
                             <button
                               onClick={() => onSelectProduct(product)}
@@ -821,7 +843,7 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
 
           {filteredProducts.length === 0 && filteredProviders.length === 0 && (
             <div className="text-center py-16 bg-white border border-slate-200 rounded-3xl p-8">
-              <p className="text-slate-500 text-sm mb-4">
+              <p className="text-slate-500 text-base mb-4">
                 No encontramos proveedores o servicios con ese filtro en {currentCity}.
               </p>
               <button
@@ -831,7 +853,7 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
                   setSelectedCategory('todos');
                   setOnlyVerified(false);
                 }}
-                className="px-5 py-2.5 rounded-2xl bg-[#0052ff] text-white text-xs font-bold cursor-pointer"
+                className="px-5 py-2.5 rounded-2xl bg-[#0052ff] text-white text-sm font-bold cursor-pointer"
               >
                 Restablecer Filtros
               </button>
@@ -842,3 +864,4 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
     </div>
   );
 };
+

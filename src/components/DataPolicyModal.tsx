@@ -21,7 +21,7 @@ export const DataPolicyModal: React.FC<DataPolicyModalProps> = ({ onClose, onAcc
               <h3 className="font-bold text-base sm:text-lg text-slate-900 font-geist">
                 Autorización de Tratamiento de Datos Personales
               </h3>
-              <p className="text-xs text-slate-500 font-medium">
+              <p className="text-sm text-slate-500 font-medium">
                 Conforme a la Ley 1581 de 2012 y Decreto 1377 de 2013 • Colombia
               </p>
             </div>
@@ -35,9 +35,9 @@ export const DataPolicyModal: React.FC<DataPolicyModalProps> = ({ onClose, onAcc
         </div>
 
         {/* Modal Body / Legal Content */}
-        <div className="p-6 overflow-y-auto space-y-4 text-xs sm:text-sm text-slate-700 leading-relaxed">
+        <div className="p-6 overflow-y-auto space-y-4 text-sm sm:text-base text-slate-700 leading-relaxed">
           
-          <div className="p-3.5 bg-blue-50/60 rounded-2xl border border-blue-100 flex items-start gap-2.5 text-xs text-blue-900">
+          <div className="p-3.5 bg-blue-50/60 rounded-2xl border border-blue-100 flex items-start gap-2.5 text-sm text-blue-900">
             <Lock className="w-4 h-4 text-[#0052ff] shrink-0 mt-0.5" />
             <p>
               <strong>Pasiflora Biohacking Pro.</strong>, como responsable del tratamiento de datos personales, garantiza la seguridad, confidencialidad e integridad de la información que suministras en <strong>NexService.app</strong>.
@@ -45,11 +45,11 @@ export const DataPolicyModal: React.FC<DataPolicyModalProps> = ({ onClose, onAcc
           </div>
 
           <section className="space-y-2">
-            <h4 className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+            <h4 className="font-bold text-slate-900 text-base flex items-center gap-1.5">
               <FileText className="w-4 h-4 text-[#0052ff]" />
               1. Identificación del Responsable del Tratamiento
             </h4>
-            <p className="text-slate-600 text-xs">
+            <p className="text-slate-600 text-sm">
               <strong>Razón Social / Marca:</strong> Pasiflora Biohacking Pro.<br />
               <strong>Plataforma:</strong> NexService.app<br />
               <strong>Finalidad:</strong> Plataforma tecnológica de geolocalización, catálogo y conexión directa entre clientes y proveedores de productos y servicios.
@@ -57,14 +57,14 @@ export const DataPolicyModal: React.FC<DataPolicyModalProps> = ({ onClose, onAcc
           </section>
 
           <section className="space-y-2">
-            <h4 className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+            <h4 className="font-bold text-slate-900 text-base flex items-center gap-1.5">
               <CheckCircle2 className="w-4 h-4 text-emerald-600" />
               2. Finalidades Autorizadas del Tratamiento
             </h4>
-            <p className="text-slate-600 text-xs">
+            <p className="text-slate-600 text-sm">
               Al registrarte o iniciar sesión, autorizas de manera previa, libre, expresa e informada a <strong>Pasiflora Biohacking Pro.</strong> el tratamiento de tus datos personales para:
             </p>
-            <ul className="list-disc pl-5 space-y-1 text-xs text-slate-600">
+            <ul className="list-disc pl-5 space-y-1 text-sm text-slate-600">
               <li>Crear, administrar y autenticar tu cuenta de usuario (vía Correo o Google).</li>
               <li>Permitir la publicación de tu catálogo de productos y servicios si actúas como proveedor.</li>
               <li>Visualizar tu ubicación fija en el mapa interactivo para cálculo de distancias y cercanía.</li>
@@ -75,13 +75,13 @@ export const DataPolicyModal: React.FC<DataPolicyModalProps> = ({ onClose, onAcc
           </section>
 
           <section className="space-y-2">
-            <h4 className="font-bold text-slate-900 text-sm">
+            <h4 className="font-bold text-slate-900 text-base">
               3. Derechos del Titular de los Datos (Habeas Data)
             </h4>
-            <p className="text-slate-600 text-xs">
+            <p className="text-slate-600 text-sm">
               Conforme al Artículo 8 de la Ley 1581 de 2012, tienes derecho a:
             </p>
-            <ul className="list-disc pl-5 space-y-1 text-xs text-slate-600">
+            <ul className="list-disc pl-5 space-y-1 text-sm text-slate-600">
               <li><strong>Conocer, actualizar y rectificar</strong> tus datos personales frente a Pasiflora Biohacking Pro.</li>
               <li><strong>Solicitar prueba</strong> de la autorización otorgada.</li>
               <li><strong>Ser informado</strong> respecto del uso que se le ha dado a tus datos personales.</li>
@@ -91,10 +91,10 @@ export const DataPolicyModal: React.FC<DataPolicyModalProps> = ({ onClose, onAcc
           </section>
 
           <section className="space-y-2">
-            <h4 className="font-bold text-slate-900 text-sm">
+            <h4 className="font-bold text-slate-900 text-base">
               4. Canales para Ejercer tus Derechos
             </h4>
-            <p className="text-slate-600 text-xs">
+            <p className="text-slate-600 text-sm">
               Puedes ejercer tus derechos de consulta, actualización o eliminación de datos en cualquier momento a través del panel de tu perfil en la aplicación o comunicándote al canal de soporte oficial de <strong>Pasiflora Biohacking Pro.</strong>
             </p>
           </section>
@@ -105,7 +105,7 @@ export const DataPolicyModal: React.FC<DataPolicyModalProps> = ({ onClose, onAcc
         <div className="p-4 sm:p-5 border-t border-slate-100 bg-slate-50 flex items-center justify-end gap-3">
           <button
             onClick={onClose}
-            className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-200/70 font-semibold text-xs transition-all"
+            className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-200/70 font-semibold text-sm transition-all"
           >
             Cerrar
           </button>
@@ -115,7 +115,7 @@ export const DataPolicyModal: React.FC<DataPolicyModalProps> = ({ onClose, onAcc
                 onAccept();
                 onClose();
               }}
-              className="px-5 py-2.5 rounded-xl bg-[#0052ff] hover:bg-blue-600 text-white font-bold text-xs shadow-md shadow-blue-500/20 transition-all flex items-center gap-1.5"
+              className="px-5 py-2.5 rounded-xl bg-[#0052ff] hover:bg-blue-600 text-white font-bold text-sm shadow-md shadow-blue-500/20 transition-all flex items-center gap-1.5"
             >
               <CheckCircle2 className="w-4 h-4" />
               <span>Acepto los Términos y Autorizo</span>
@@ -127,3 +127,4 @@ export const DataPolicyModal: React.FC<DataPolicyModalProps> = ({ onClose, onAcc
     </div>
   );
 };
+

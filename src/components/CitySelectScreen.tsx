@@ -65,11 +65,11 @@ export const CitySelectScreen: React.FC<CitySelectScreenProps> = ({
 
         <div className="flex items-center gap-2 text-[#0052ff] mb-2">
           <MapPin className="w-5 h-5" />
-          <span className="text-xs font-bold uppercase tracking-wider">Ubicación de Búsqueda</span>
+          <span className="text-sm font-bold uppercase tracking-wider">Ubicación de Búsqueda</span>
         </div>
 
         <h2 className="text-xl font-bold text-[#141b2b] mb-1 font-geist">Selecciona tu Ciudad</h2>
-        <p className="text-xs text-slate-500 mb-4">
+        <p className="text-sm text-slate-500 mb-4">
           Conéctate con proveedores verificados y productos cerca de tu ubicación.
         </p>
 
@@ -84,7 +84,7 @@ export const CitySelectScreen: React.FC<CitySelectScreenProps> = ({
               <Crosshair className={`w-4 h-4 ${isLocating ? 'animate-spin' : ''}`} />
             </div>
             <div>
-              <div className="text-xs font-extrabold text-[#0052ff] flex items-center gap-1">
+              <div className="text-sm font-extrabold text-[#0052ff] flex items-center gap-1">
                 <span>Usar mi ubicación GPS actual</span>
                 <Navigation className="w-3 h-3" />
               </div>
@@ -99,7 +99,7 @@ export const CitySelectScreen: React.FC<CitySelectScreenProps> = ({
         </button>
 
         {locateError && (
-          <div className="mb-3 p-2.5 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl text-xs">
+          <div className="mb-3 p-2.5 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl text-sm">
             {locateError}
           </div>
         )}
@@ -112,7 +112,7 @@ export const CitySelectScreen: React.FC<CitySelectScreenProps> = ({
             placeholder="Escribe para buscar ciudad (ej: Pereira, Bogotá)..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-10 pr-9 py-2.5 text-sm text-[#141b2b] placeholder-slate-400 focus:outline-none focus:border-[#0052ff] focus:bg-white shadow-inner transition-all"
+            className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-10 pr-9 py-2.5 text-base text-[#141b2b] placeholder-slate-400 focus:outline-none focus:border-[#0052ff] focus:bg-white shadow-inner transition-all"
             autoFocus
           />
           {searchTerm && (
@@ -136,7 +136,7 @@ export const CitySelectScreen: React.FC<CitySelectScreenProps> = ({
                 <button
                   key={popCity}
                   onClick={() => onSelectCity(popCity)}
-                  className={`text-xs px-2.5 py-1 rounded-full border transition-all cursor-pointer ${
+                  className={`text-sm px-2.5 py-1 rounded-full border transition-all cursor-pointer ${
                     popCity.toLowerCase() === selectedCity.toLowerCase()
                       ? 'bg-blue-50 text-[#0052ff] border-blue-300 font-bold'
                       : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200'
@@ -168,7 +168,7 @@ export const CitySelectScreen: React.FC<CitySelectScreenProps> = ({
                     <MapPin className="w-4 h-4" />
                   </div>
                   <div>
-                    <div className="font-semibold text-sm flex items-center gap-1.5">
+                    <div className="font-semibold text-base flex items-center gap-1.5">
                       {city.name}
                       {city.isPopular && (
                         <span className="text-[10px] bg-blue-100 text-[#0052ff] px-1.5 py-0.2 rounded-full font-medium">
@@ -176,7 +176,7 @@ export const CitySelectScreen: React.FC<CitySelectScreenProps> = ({
                         </span>
                       )}
                     </div>
-                    <div className="text-xs text-slate-400">{city.department}, Colombia</div>
+                    <div className="text-sm text-slate-400">{city.department}, Colombia</div>
                   </div>
                 </div>
 
@@ -187,10 +187,10 @@ export const CitySelectScreen: React.FC<CitySelectScreenProps> = ({
 
           {filteredCities.length === 0 && (
             <div className="text-center py-6">
-              <p className="text-slate-500 text-xs mb-2">No se encontró "{searchTerm}".</p>
+              <p className="text-slate-500 text-sm mb-2">No se encontró "{searchTerm}".</p>
               <button
                 onClick={() => onSelectCity(searchTerm)}
-                className="text-xs font-bold text-[#0052ff] bg-blue-50 hover:bg-blue-100 border border-blue-200 px-3 py-1.5 rounded-xl transition-all cursor-pointer"
+                className="text-sm font-bold text-[#0052ff] bg-blue-50 hover:bg-blue-100 border border-blue-200 px-3 py-1.5 rounded-xl transition-all cursor-pointer"
               >
                 Usar "{searchTerm}" como mi ciudad
               </button>
@@ -201,3 +201,4 @@ export const CitySelectScreen: React.FC<CitySelectScreenProps> = ({
     </div>
   );
 };
+

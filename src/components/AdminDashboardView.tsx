@@ -122,7 +122,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
             {onBack && (
               <button
                 onClick={onBack}
-                className="p-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center gap-1 text-xs font-bold transition-all cursor-pointer shrink-0"
+                className="p-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center gap-1 text-sm font-bold transition-all cursor-pointer shrink-0"
                 title="Volver a la vista anterior"
               >
                 <ArrowLeft className="w-4 h-4 text-[#0052ff]" />
@@ -144,7 +144,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
               <h1 className="text-xl sm:text-2xl font-black text-slate-900 mt-1">
                 Panel de Administración & Usuarios
               </h1>
-              <p className="text-xs text-slate-500 mt-0.5">
+              <p className="text-sm text-slate-500 mt-0.5">
                 Activación, desactivación y moderación oficial de cuentas de usuarios y proveedores
               </p>
             </div>
@@ -154,7 +154,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
         {/* 4 Metric Stats Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-6">
           <div className="bg-slate-50 border border-slate-200/90 rounded-2xl p-3.5 flex flex-col justify-between">
-            <div className="flex items-center justify-between text-xs font-bold text-slate-600 mb-1">
+            <div className="flex items-center justify-between text-sm font-bold text-slate-600 mb-1">
               <span>Usuarios Totales</span>
               <Users className="w-4 h-4 text-[#0052ff]" />
             </div>
@@ -165,7 +165,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
           </div>
 
           <div className="bg-slate-50 border border-slate-200/90 rounded-2xl p-3.5 flex flex-col justify-between">
-            <div className="flex items-center justify-between text-xs font-bold text-slate-600 mb-1">
+            <div className="flex items-center justify-between text-sm font-bold text-slate-600 mb-1">
               <span>Proveedores</span>
               <Store className="w-4 h-4 text-emerald-600" />
             </div>
@@ -176,7 +176,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
           </div>
 
           <div className="bg-slate-50 border border-slate-200/90 rounded-2xl p-3.5 flex flex-col justify-between">
-            <div className="flex items-center justify-between text-xs font-bold text-slate-600 mb-1">
+            <div className="flex items-center justify-between text-sm font-bold text-slate-600 mb-1">
               <span>Denuncias & Casos</span>
               <Scale className="w-4 h-4 text-red-600" />
             </div>
@@ -187,7 +187,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
           </div>
 
           <div className="bg-slate-50 border border-slate-200/90 rounded-2xl p-3.5 flex flex-col justify-between">
-            <div className="flex items-center justify-between text-xs font-bold text-slate-600 mb-1">
+            <div className="flex items-center justify-between text-sm font-bold text-slate-600 mb-1">
               <span>Servicios / Pedidos</span>
               <Wrench className="w-4 h-4 text-indigo-600" />
             </div>
@@ -202,7 +202,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
         <div className="grid grid-cols-2 gap-2 mt-6 p-1.5 bg-slate-100/90 rounded-2xl border border-slate-200">
           <button
             onClick={() => setActiveAdminTab('users')}
-            className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
+            className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-sm font-extrabold transition-all cursor-pointer ${
               activeAdminTab === 'users'
                 ? 'bg-white text-slate-900 shadow-sm'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
@@ -214,7 +214,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
 
           <button
             onClick={() => setActiveAdminTab('reports')}
-            className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
+            className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-sm font-extrabold transition-all cursor-pointer ${
               activeAdminTab === 'reports'
                 ? 'bg-red-600 text-white shadow-sm'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
@@ -248,7 +248,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                 placeholder="Buscar por nombre, correo, teléfono, ciudad o dirección..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-10 pr-10 py-3 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#0052ff] focus:ring-2 focus:ring-blue-100 transition-all"
+                className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-10 pr-10 py-3 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#0052ff] focus:ring-2 focus:ring-blue-100 transition-all"
               />
               {searchTerm && (
                 <button
@@ -269,7 +269,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                 </span>
                 <button
                   onClick={() => setFilterRole('all')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  className={`px-3 py-1.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${
                     filterRole === 'all'
                       ? 'bg-slate-900 text-white shadow-xs'
                       : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -279,7 +279,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                 </button>
                 <button
                   onClick={() => setFilterRole('client')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  className={`px-3 py-1.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${
                     filterRole === 'client'
                       ? 'bg-[#0052ff] text-white shadow-xs'
                       : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -289,7 +289,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                 </button>
                 <button
                   onClick={() => setFilterRole('provider')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  className={`px-3 py-1.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${
                     filterRole === 'provider'
                       ? 'bg-emerald-600 text-white shadow-xs'
                       : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -306,7 +306,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                 </span>
                 <button
                   onClick={() => setFilterStatus('all')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  className={`px-3 py-1.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${
                     filterStatus === 'all'
                       ? 'bg-slate-900 text-white shadow-xs'
                       : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -316,7 +316,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                 </button>
                 <button
                   onClick={() => setFilterStatus('active')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  className={`px-3 py-1.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${
                     filterStatus === 'active'
                       ? 'bg-emerald-600 text-white shadow-xs'
                       : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -326,7 +326,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                 </button>
                 <button
                   onClick={() => setFilterStatus('suspended')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  className={`px-3 py-1.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${
                     filterStatus === 'suspended'
                       ? 'bg-rose-600 text-white shadow-xs'
                       : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -345,7 +345,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                 <UserX className="w-8 h-8" />
               </div>
               <h3 className="font-bold text-slate-800 text-base">No se encontraron usuarios</h3>
-              <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+              <p className="text-sm text-slate-500 mt-1 max-w-sm mx-auto">
                 No hay resultados que coincidan con tu búsqueda o filtros seleccionados.
               </p>
             </div>
@@ -368,7 +368,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                     <div className="flex items-start gap-3.5 min-w-0">
                       {/* Avatar with Status Dot */}
                       <div className="relative shrink-0">
-                        <div className="w-13 h-13 rounded-2xl bg-slate-100 overflow-hidden ring-2 ring-slate-200 flex items-center justify-center text-sm font-bold text-slate-700">
+                        <div className="w-13 h-13 rounded-2xl bg-slate-100 overflow-hidden ring-2 ring-slate-200 flex items-center justify-center text-base font-bold text-slate-700">
                           {u.avatarUrl ? (
                             <img src={u.avatarUrl} alt={u.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                           ) : (
@@ -386,7 +386,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                       {/* Details */}
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <h3 className="font-black text-sm sm:text-base text-slate-900 truncate">
+                          <h3 className="font-black text-base sm:text-base text-slate-900 truncate">
                             {u.name || 'Usuario'}
                           </h3>
 
@@ -423,7 +423,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                         </div>
 
                         {/* Contact info grid */}
-                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-xs text-slate-600">
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-sm text-slate-600">
                           <span className="flex items-center gap-1.5 truncate">
                             <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                             <strong className="text-slate-800 truncate">{u.email}</strong>
@@ -460,37 +460,36 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
 
                     {/* Action Buttons: Activar / Desactivar */}
                     <div className="flex items-center gap-2 pt-2 md:pt-0 border-t md:border-t-0 border-slate-100 shrink-0">
-                      {!isMe ? (
-                        <>
-                          <button
-                            type="button"
-                            onClick={() => onToggleUserStatus(u.email, u.isActive)}
-                            className={`w-full md:w-auto px-4 py-2.5 rounded-2xl text-xs font-black flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm active:scale-98 ${
-                              u.isActive
-                                ? 'bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white border border-rose-300'
-                                : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/20'
-                            }`}
-                            title={u.isActive ? 'Suspender o desactivar cuenta de usuario' : 'Reactivar cuenta de usuario'}
-                          >
-                            <Power className="w-4 h-4" />
-                            <span>{u.isActive ? 'Desactivar Usuario' : 'Activar Usuario'}</span>
-                          </button>
-                          
-                          <button
-                            type="button"
-                            onClick={() => onDeleteUser(u.email)}
-                            className="w-full md:w-auto px-4 py-2.5 rounded-2xl text-xs font-black flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm active:scale-98 bg-red-100 hover:bg-red-600 text-red-700 hover:text-white border border-red-300"
-                            title="Eliminar usuario permanentemente"
-                          >
-                            <UserX className="w-4 h-4" />
-                            <span className="hidden md:inline">Eliminar</span>
-                          </button>
-                        </>
-                      ) : (
-                        <span className="text-xs text-slate-400 italic px-3 py-1">
-                          (Cuenta Master)
-                        </span>
-                      )}
+                      <div className="flex flex-col sm:flex-row items-center gap-2 pt-2 md:pt-0 border-t md:border-t-0 border-slate-100 shrink-0">
+                        {isMe && (
+                          <span className="text-[10px] text-slate-400 italic px-2">
+                            (Estás modificando tu propia cuenta)
+                          </span>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => onToggleUserStatus(u.email, u.isActive)}
+                          className={`w-full md:w-auto px-4 py-2.5 rounded-2xl text-sm font-black flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm active:scale-98 ${
+                            u.isActive
+                              ? 'bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white border border-rose-300'
+                              : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/20'
+                          }`}
+                          title={u.isActive ? 'Suspender o desactivar cuenta de usuario' : 'Reactivar cuenta de usuario'}
+                        >
+                          <Power className="w-4 h-4" />
+                          <span>{u.isActive ? 'Desactivar Usuario' : 'Activar Usuario'}</span>
+                        </button>
+                        
+                        <button
+                          type="button"
+                          onClick={() => onDeleteUser(u.email)}
+                          className="w-full md:w-auto px-4 py-2.5 rounded-2xl text-sm font-black flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm active:scale-98 bg-red-100 hover:bg-red-600 text-red-700 hover:text-white border border-red-300"
+                          title="Eliminar usuario permanentemente"
+                        >
+                          <UserX className="w-4 h-4" />
+                          <span className="hidden md:inline">Eliminar</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 );
@@ -510,7 +509,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
             <div className="flex items-center gap-2 flex-wrap">
               <button
                 onClick={() => setReportFilter('pending')}
-                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                className={`px-3.5 py-2 rounded-xl text-sm font-bold transition-all cursor-pointer ${
                   reportFilter === 'pending'
                     ? 'bg-red-600 text-white shadow-xs'
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -520,7 +519,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
               </button>
               <button
                 onClick={() => setReportFilter('resolved')}
-                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                className={`px-3.5 py-2 rounded-xl text-sm font-bold transition-all cursor-pointer ${
                   reportFilter === 'resolved'
                     ? 'bg-emerald-600 text-white shadow-xs'
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -530,7 +529,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
               </button>
               <button
                 onClick={() => setReportFilter('all')}
-                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                className={`px-3.5 py-2 rounded-xl text-sm font-bold transition-all cursor-pointer ${
                   reportFilter === 'all'
                     ? 'bg-slate-900 text-white'
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -540,7 +539,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
               </button>
             </div>
 
-            <div className="text-xs text-slate-500 font-medium">
+            <div className="text-sm text-slate-500 font-medium">
               ⚖️ Plazo reglamentario: <strong>5 días hábiles</strong>
             </div>
           </div>
@@ -551,7 +550,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                 <CheckCircle2 className="w-8 h-8" />
               </div>
               <h3 className="font-bold text-slate-800 text-base">No hay casos pendientes</h3>
-              <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+              <p className="text-sm text-slate-500 mt-1 max-w-sm mx-auto">
                 No existen denuncias pendientes de resolución administrativa en este momento.
               </p>
             </div>
@@ -577,13 +576,13 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                         <span className="bg-red-100 text-red-700 text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider">
                           Radicado #{rep.id.slice(-6)}
                         </span>
-                        <span className="text-xs text-slate-500 font-medium">
+                        <span className="text-sm text-slate-500 font-medium">
                           Radicado el {rep.createdAt}
                         </span>
                       </div>
 
                       <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-1 text-xs bg-amber-50 text-amber-900 border border-amber-200 font-bold px-2.5 py-0.5 rounded-full">
+                        <div className="flex items-center gap-1 text-sm bg-amber-50 text-amber-900 border border-amber-200 font-bold px-2.5 py-0.5 rounded-full">
                           <Clock className="w-3.5 h-3.5 text-amber-600" />
                           <span>Límite (5 días hábiles): {rep.deadlineDate}</span>
                         </div>
@@ -597,8 +596,8 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                         <div className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1">
                           👤 Parte Denunciante
                         </div>
-                        <div className="font-bold text-sm text-slate-900">{rep.reporterName}</div>
-                        <div className="text-xs text-slate-500 truncate">{rep.reporterEmail}</div>
+                        <div className="font-bold text-base text-slate-900">{rep.reporterName}</div>
+                        <div className="text-sm text-slate-500 truncate">{rep.reporterEmail}</div>
                       </div>
 
                       {/* Reported User */}
@@ -606,31 +605,31 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                         <div className="text-[10px] font-extrabold uppercase tracking-wider text-red-600 mb-1">
                           🎯 Parte Denunciada ({rep.targetType === 'provider' ? 'Proveedor' : 'Cliente'})
                         </div>
-                        <div className="font-bold text-sm text-red-950">{rep.targetName}</div>
-                        <div className="text-xs text-red-700 truncate">{rep.targetEmail}</div>
+                        <div className="font-bold text-base text-red-950">{rep.targetName}</div>
+                        <div className="text-sm text-red-700 truncate">{rep.targetEmail}</div>
                       </div>
                     </div>
 
                     {/* Reason & Facts */}
                     <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 mb-4 space-y-2">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-slate-900">Motivo:</span>
-                        <span className="bg-red-100 text-red-700 text-xs font-extrabold px-2.5 py-0.5 rounded-full">
+                        <span className="text-sm font-bold text-slate-900">Motivo:</span>
+                        <span className="bg-red-100 text-red-700 text-sm font-extrabold px-2.5 py-0.5 rounded-full">
                           {rep.reasonLabel}
                         </span>
                       </div>
 
                       <div>
-                        <span className="text-xs font-bold text-slate-900 block mb-1">
+                        <span className="text-sm font-bold text-slate-900 block mb-1">
                           Hechos Denunciados:
                         </span>
-                        <p className="text-xs text-slate-700 leading-relaxed bg-white border border-slate-200 rounded-xl p-3 italic">
+                        <p className="text-sm text-slate-700 leading-relaxed bg-white border border-slate-200 rounded-xl p-3 italic">
                           "{rep.explanation}"
                         </p>
                       </div>
 
                       {rep.evidenceNotes && (
-                        <div className="text-xs text-slate-600 pt-1">
+                        <div className="text-sm text-slate-600 pt-1">
                           <strong>Pruebas / Notas adicionales:</strong> {rep.evidenceNotes}
                         </div>
                       )}
@@ -639,7 +638,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                     {/* RESOLUTION ACTIONS (FOR PENDING) */}
                     {isPending ? (
                       <div className="border-t border-slate-200 pt-4 space-y-3">
-                        <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                        <div className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
                           <Scale className="w-4 h-4 text-red-600" />
                           <span>Decisión del Administrador:</span>
                         </div>
@@ -655,7 +654,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                                 : 'bg-slate-50 hover:bg-red-50 text-slate-800 border-slate-200'
                             }`}
                           >
-                            <div className="font-bold text-xs flex items-center gap-1.5">
+                            <div className="font-bold text-sm flex items-center gap-1.5">
                               <Ban className="w-4 h-4" />
                               <span>1. Retirar Definitivamente</span>
                             </div>
@@ -673,7 +672,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                                 : 'bg-slate-50 hover:bg-amber-50 text-slate-800 border-slate-200'
                             }`}
                           >
-                            <div className="font-bold text-xs flex items-center gap-1.5">
+                            <div className="font-bold text-sm flex items-center gap-1.5">
                               <Clock className="w-4 h-4" />
                               <span>2. Sanción Temporal</span>
                             </div>
@@ -691,7 +690,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                                 : 'bg-slate-50 hover:bg-indigo-50 text-slate-800 border-slate-200'
                             }`}
                           >
-                            <div className="font-bold text-xs flex items-center gap-1.5">
+                            <div className="font-bold text-sm flex items-center gap-1.5">
                               <AlertTriangle className="w-4 h-4" />
                               <span>3. Advertencia al Denunciante</span>
                             </div>
@@ -709,7 +708,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                                 : 'bg-slate-50 hover:bg-slate-100 text-slate-800 border-slate-200'
                             }`}
                           >
-                            <div className="font-bold text-xs flex items-center gap-1.5">
+                            <div className="font-bold text-sm flex items-center gap-1.5">
                               <CheckCircle2 className="w-4 h-4" />
                               <span>4. Desestimar Caso</span>
                             </div>
@@ -721,7 +720,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
 
                         {/* Suspension Days selector */}
                         {currentRes === 'sancion_temporal' && (
-                          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-sm">
                             <span className="font-bold text-amber-900">Duración de la suspensión temporal:</span>
                             <div className="flex items-center gap-1.5">
                               {[7, 15, 30].map(days => (
@@ -744,7 +743,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
 
                         {/* Notes */}
                         <div>
-                          <label className="block text-xs font-bold text-slate-800 mb-1">
+                          <label className="block text-sm font-bold text-slate-800 mb-1">
                             Fundamento Oficial de la Decisión Administrativa:
                           </label>
                           <textarea
@@ -752,7 +751,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                             onChange={e => setResolutionNotes(prev => ({ ...prev, [rep.id]: e.target.value }))}
                             placeholder="Escribe la explicación oficial que se notificará a las partes..."
                             rows={2}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-red-500 resize-none"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-red-500 resize-none"
                           />
                         </div>
 
@@ -762,7 +761,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                             type="button"
                             onClick={() => handleExecuteResolution(rep.id)}
                             disabled={submitting}
-                            className="w-full sm:w-auto bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-xs font-bold px-6 py-3 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-md active:scale-98 cursor-pointer"
+                            className="w-full sm:w-auto bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-sm font-bold px-6 py-3 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-md active:scale-98 cursor-pointer"
                           >
                             <Scale className="w-4 h-4" />
                             <span>{submitting ? 'Aplicando Resolución...' : 'Emitir Resolución Oficial'}</span>
@@ -771,7 +770,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                       </div>
                     ) : (
                       /* Resolved view */
-                      <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 text-xs space-y-1.5">
+                      <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 text-sm space-y-1.5">
                         <div className="flex items-center justify-between flex-wrap gap-2">
                           <div className="flex items-center gap-1.5 font-bold text-emerald-900">
                             <CheckCircle2 className="w-4 h-4 text-emerald-600" />
@@ -799,3 +798,4 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
     </div>
   );
 };
+

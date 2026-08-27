@@ -128,7 +128,7 @@ export const PWAInstallBanner: React.FC = () => {
       <>
         {/* Success toast — show even after banner hides */}
         {showSuccess && (
-          <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-emerald-600 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 text-xs font-bold animate-bounce">
+          <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-emerald-600 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 text-sm font-bold animate-bounce">
             <CheckCircle2 className="w-5 h-5" />
             <span>¡NexService instalada con éxito!</span>
           </div>
@@ -159,7 +159,7 @@ export const PWAInstallBanner: React.FC = () => {
           {/* Text */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5">
-              <h4 className="font-extrabold text-xs text-white truncate">Instalar NexService</h4>
+              <h4 className="font-extrabold text-sm text-white truncate">Instalar NexService</h4>
               <span className="bg-emerald-500/20 text-emerald-300 text-[9px] font-black px-1.5 py-0.2 rounded-full border border-emerald-500/30">
                 GRATIS
               </span>
@@ -174,7 +174,7 @@ export const PWAInstallBanner: React.FC = () => {
             <button
               onClick={handleInstallClick}
               disabled={isInstalling}
-              className="bg-[#0052ff] hover:bg-blue-600 active:scale-95 text-white font-extrabold text-xs px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow-md shadow-blue-600/30 transition-all cursor-pointer disabled:opacity-60"
+              className="bg-[#0052ff] hover:bg-blue-600 active:scale-95 text-white font-extrabold text-sm px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow-md shadow-blue-600/30 transition-all cursor-pointer disabled:opacity-60"
             >
               <Download className={`w-3.5 h-3.5 ${isInstalling ? 'animate-bounce' : ''}`} />
               <span>{isInstalling ? 'Instalando...' : 'Instalar'}</span>
@@ -193,7 +193,7 @@ export const PWAInstallBanner: React.FC = () => {
 
       {/* Success toast */}
       {showSuccess && (
-        <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-emerald-600 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 text-xs font-bold animate-bounce">
+        <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-emerald-600 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 text-sm font-bold animate-bounce">
           <CheckCircle2 className="w-5 h-5" />
           <span>¡NexService instalada con éxito!</span>
         </div>
@@ -201,3 +201,4 @@ export const PWAInstallBanner: React.FC = () => {
     </>
   );
 };
+

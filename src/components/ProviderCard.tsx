@@ -48,9 +48,9 @@ export const ProviderCard: React.FC<ProviderCardProps> = ({
                   </span>
                 )}
               </div>
-              <p className="text-xs text-slate-500 font-medium">{provider.businessName}</p>
+              <p className="text-sm text-slate-500 font-medium">{provider.businessName}</p>
               
-              <div className="flex items-center gap-2 mt-1 text-xs">
+              <div className="flex items-center gap-2 mt-1 text-sm">
                 <div className="flex items-center gap-0.5 text-amber-500 font-bold">
                   <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
                   <span>{provider.rating.toFixed(1)}</span>
@@ -73,11 +73,11 @@ export const ProviderCard: React.FC<ProviderCardProps> = ({
           </div>
         </div>
 
-        <p className="text-xs text-slate-600 line-clamp-2 mb-3 leading-relaxed">
+        <p className="text-sm text-slate-600 line-clamp-2 mb-3 leading-relaxed">
           {provider.description}
         </p>
 
-        <div className="flex items-center gap-1.5 text-xs text-slate-500 mb-3">
+        <div className="flex items-center gap-1.5 text-sm text-slate-500 mb-3">
           <MapPin className="w-3.5 h-3.5 text-[#0052ff] shrink-0" />
           <span className="truncate flex-1">{provider.address}</span>
           {provider.serviceModality === 'physical_store' ? (
@@ -112,13 +112,13 @@ export const ProviderCard: React.FC<ProviderCardProps> = ({
       <div className="flex gap-2 pt-3 border-t border-slate-100">
         <button
           onClick={() => onViewDetails(provider)}
-          className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold py-2.5 px-3 rounded-2xl transition-all"
+          className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold py-2.5 px-3 rounded-2xl transition-all"
         >
           Ver Perfil Completo
         </button>
         <button
           onClick={() => onContactWhatsApp(provider)}
-          className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2.5 px-3 rounded-2xl flex items-center gap-1.5 shadow-md shadow-emerald-600/20 transition-all"
+          className="bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold py-2.5 px-3 rounded-2xl flex items-center gap-1.5 shadow-md shadow-emerald-600/20 transition-all"
         >
           <MessageSquare className="w-3.5 h-3.5" />
           <span>WhatsApp</span>
@@ -127,3 +127,4 @@ export const ProviderCard: React.FC<ProviderCardProps> = ({
     </div>
   );
 };
+

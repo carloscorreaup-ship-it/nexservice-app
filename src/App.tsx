@@ -105,14 +105,24 @@ export default function App() {
     reviewCount?: number;
     itemName?: string;
   } | null>(null);
+  const [adminEditingProviderId, setAdminEditingProviderId] = useState<string | null>(null);
 
   const isSuperAdmin = session.email.toLowerCase() === 'carloscorreaup@gmail.com';
 
   const navigateToTab = (newTab: 'explore' | 'map' | 'provider' | 'bookings' | 'profile' | 'admin') => {
     if (newTab !== activeTab) {
+      if (newTab !== 'provider') {
+        setAdminEditingProviderId(null);
+      }
       setTabHistory(prev => [...prev, newTab]);
       setActiveTab(newTab);
     }
+  };
+
+  const handleEditProvider = (providerId: string) => {
+    setAdminEditingProviderId(providerId);
+    setSelectedProviderDetail(null);
+    navigateToTab('provider');
   };
 
   const handleGoBack = () => {
@@ -475,9 +485,10 @@ export default function App() {
   const handleSelectProvider = (provider: Provider) => {
     if (provider.email !== session.email) {
       const newVisit = {
-        date: new Date().toISOString(),
+        timestamp: Date.now(),
         clientId: session.id,
-        clientName: session.name
+        clientName: session.name,
+        clientAvatar: session.avatarUrl
       };
       const updatedProvider = {
         ...provider,
@@ -493,7 +504,10 @@ export default function App() {
     try {
       const modality = profileData.serviceModality || session.fixedLocation?.serviceModality || 'physical_store';
       const category = profileData.category || session.providerProfile?.category || 'nutricion';
-      let coords = session.fixedLocation.coordinates;
+      let coords = session.fixedLocation?.coordinates || DEFAULT_COLOMBIA_COORDS[session.city] || { lat: 4.81333, lng: -75.69611 };
+
+      const targetProviderId = adminEditingProviderId || profileData.id || session.email || 'my-provider-id';
+      const isEditingSelf = targetProviderId === session.id || targetProviderId === session.email || targetProviderId === 'my-provider-id';
 
       // Si es local físico y la dirección fue ingresada/actualizada, geocodificarla para fijar el pin en esa dirección exacta
       if (modality === 'physical_store' && profileData.address && profileData.address.trim().length >= 4) {
@@ -508,86 +522,97 @@ export default function App() {
       }
 
       const updatedProvider: Provider = {
-        id: profileData.id || session.email || 'my-provider-id',
-        name: profileData.name || session.name,
+        id: targetProviderId,
+        name: profileData.name || (isEditingSelf ? session.name : ''),
         businessName: profileData.businessName || 'Mi Negocio Local',
         category: category,
         offerType: profileData.offerType || 'both',
-        rating: 5.0,
-        reviewCount: 1,
+        rating: profileData.rating || 5.0,
+        reviewCount: profileData.reviewCount || 1,
         tags: profileData.tags || ['Verificado', session.city],
-        phone: profileData.phone || session.phone,
-        whatsapp: profileData.whatsapp || session.phone,
-        address: profileData.address || session.fixedLocation.address,
-        coordinates: coords,
-        city: session.city,
-        department: session.department,
+        phone: profileData.phone || (isEditingSelf ? session.phone : ''),
+        whatsapp: profileData.whatsapp || (isEditingSelf ? session.phone : ''),
+        address: profileData.address || (isEditingSelf ? session.fixedLocation?.address || '' : ''),
+        coordinates: profileData.coordinates || coords,
+        city: profileData.city || session.city,
+        department: profileData.department || session.department,
         isFixedLocationVisibleOnMap: true,
         verified: true,
         verifiedBadgeType: 'oficial',
-        avatarUrl: profileData.avatarUrl || session.avatarUrl || getEmailAvatarUrl(session.email, session.name),
+        avatarUrl: profileData.avatarUrl || (isEditingSelf ? session.avatarUrl : '') || getEmailAvatarUrl(session.email, session.name),
         description: profileData.description || 'Ofrecemos los mejores productos y servicios.',
         services: profileData.services || [],
         products: profileData.products || [],
-        reviews: [],
+        reviews: profileData.reviews || [],
+        views: profileData.views || [],
         isDelivery: true,
         serviceModality: modality,
       };
 
-      await saveProviderToDB(updatedProvider);
+      // Merge with existing if any
+      const existingProviderIndex = providers.findIndex(p => p.id === updatedProvider.id);
+      let finalProvider = updatedProvider;
+      if (existingProviderIndex >= 0) {
+         finalProvider = { ...providers[existingProviderIndex], ...updatedProvider };
+      }
 
-      // Sincronizar session.fixedLocation y session.providerProfile
-      setSession(prev => {
-        const updatedSession: UserSession = {
-          ...prev,
-          fixedLocation: {
-            ...prev.fixedLocation,
-            address: updatedProvider.address,
-            coordinates: coords,
-            serviceModality: modality,
-          },
-          providerProfile: {
-            ...prev.providerProfile,
-            businessName: updatedProvider.businessName,
-            category: updatedProvider.category,
-            address: updatedProvider.address,
-            whatsapp: updatedProvider.whatsapp,
-            serviceModality: modality,
-          }
-        };
-        saveUserToDB(updatedSession);
-        return updatedSession;
-      });
+      await saveProviderToDB(finalProvider);
+
+      if (isEditingSelf) {
+        // Sincronizar session.fixedLocation y session.providerProfile
+        setSession(prev => {
+          const updatedSession: UserSession = {
+            ...prev,
+            fixedLocation: {
+              ...prev.fixedLocation,
+              address: finalProvider.address,
+              coordinates: finalProvider.coordinates,
+              serviceModality: modality,
+            },
+            providerProfile: {
+              ...prev.providerProfile,
+              businessName: finalProvider.businessName,
+              category: finalProvider.category,
+              address: finalProvider.address,
+              whatsapp: finalProvider.whatsapp,
+              serviceModality: modality,
+            }
+          };
+          saveUserToDB(updatedSession);
+          return updatedSession;
+        });
+      }
 
       setProviders(prev => {
-        const idx = prev.findIndex(p => p.id === updatedProvider.id);
+        const idx = prev.findIndex(p => p.id === finalProvider.id);
         if (idx >= 0) {
           const copy = [...prev];
-          copy[idx] = updatedProvider;
+          copy[idx] = finalProvider;
           return copy;
         }
-        return [updatedProvider, ...prev];
+        return [finalProvider, ...prev];
       });
 
-      // Store a LIGHTWEIGHT copy in session.providerProfile (no Base64 images)
-      // to avoid bloating localStorage with duplicate heavy data.
-      // The full data (with images) is persisted separately in the providers store.
-      const lightweightProfile: Partial<Provider> = {
-        ...profileData,
-        products: (profileData.products || []).map(p => ({
-          ...p,
-          images: p.images.map(img => img.startsWith('data:') ? `[compressed:${img.length}]` : img),
-        })),
-        services: (profileData.services || []).map(s => ({
-          ...s,
-          images: s.images?.map(img => img.startsWith('data:') ? `[compressed:${img.length}]` : img),
-        })),
-      };
-
-      setSession(prev => ({
-        ...prev,
-        providerProfile: lightweightProfile
-      }));
+      if (isEditingSelf) {
+        // Store a LIGHTWEIGHT copy in session.providerProfile (no Base64 images)
+        // to avoid bloating localStorage with duplicate heavy data.
+        // The full data (with images) is persisted separately in the providers store.
+        const lightweightProfile: Partial<Provider> = {
+          ...profileData,
+          products: (profileData.products || []).map(p => ({
+            ...p,
+            images: p.images.map(img => img.startsWith('data:') ? `[compressed:${img.length}]` : img),
+          })),
+          services: (profileData.services || []).map(s => ({
+            ...s,
+            images: s.images?.map(img => img.startsWith('data:') ? `[compressed:${img.length}]` : img),
+          })),
+        };
+        setSession(prev => ({
+          ...prev,
+          providerProfile: lightweightProfile
+        }));
+      }
     } catch (err) {
       console.error('[App] handleSaveProviderProfile error:', err);
     }
@@ -801,7 +826,11 @@ export default function App() {
             currentCity={session.city}
             userSession={session}
             bookings={bookings}
-            existingProviderData={providers.find(p => p.id === 'my-provider-id')}
+            existingProviderData={
+              adminEditingProviderId 
+                ? providers.find(p => p.id === adminEditingProviderId) 
+                : providers.find(p => p.id === session.id || p.id === session.email || p.id === 'my-provider-id')
+            }
             onSaveProviderProfile={handleSaveProviderProfile}
             onSwitchToClientMode={() => {
               setSession(p => ({ ...p, mode: 'client' }));
@@ -907,6 +936,7 @@ export default function App() {
             setSelectedProviderDetail(null);
             setRatingModalTarget(target);
           }}
+          onEditProvider={(isSuperAdmin || session.id === selectedProviderDetail.id || session.email === selectedProviderDetail.id || selectedProviderDetail.id === 'my-provider-id') ? () => handleEditProvider(selectedProviderDetail.id) : undefined}
         />
       )}
 
