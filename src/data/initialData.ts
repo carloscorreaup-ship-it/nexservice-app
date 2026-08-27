@@ -14,6 +14,15 @@ export const INITIAL_CATEGORIES: Category[] = [
     description: 'Todos los productos y servicios verificados'
   },
   {
+    id: 'nutricion',
+    name: 'Productos Nutricionales',
+    icon: 'eco',
+    count: 0,
+    type: 'producto',
+    color: '#10b981',
+    description: 'Suplementos, adaptógenos, melena de león, vitaminas, proteínas y nutrición natural'
+  },
+  {
     id: 'tecnologia',
     name: 'Tecnología & Dispositivos',
     icon: 'devices',
@@ -21,6 +30,15 @@ export const INITIAL_CATEGORIES: Category[] = [
     type: 'both',
     color: '#6366f1',
     description: 'Venta de accesorios, laptops, armado de PC, mantenimiento y repuestos'
+  },
+  {
+    id: 'alimentos',
+    name: 'Alimentos & Gastronomía',
+    icon: 'restaurant',
+    count: 0,
+    type: 'both',
+    color: '#f97316',
+    description: 'Comida rápida, panadería, café especial, frutas, verduras y postres'
   },
   {
     id: 'reparaciones',

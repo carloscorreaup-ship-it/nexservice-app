@@ -129,6 +129,12 @@ export interface Provider {
   services: ServiceItem[];
   products: ProductItem[];
   reviews: Review[];
+  views?: {
+    clientId: string;
+    clientName: string;
+    clientAvatar?: string;
+    timestamp: number;
+  }[];
   isDelivery: boolean;
   serviceModality?: ServiceModality;
   isFeatured?: boolean;

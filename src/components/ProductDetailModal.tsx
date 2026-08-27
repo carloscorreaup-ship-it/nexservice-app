@@ -61,11 +61,11 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
       <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-2xl max-h-[92vh] overflow-y-auto shadow-2xl relative font-inter">
         {/* Header Image Gallery */}
         <div className="relative bg-slate-900 overflow-hidden group">
-          <div className="h-72 sm:h-80 w-full relative">
+          <div className="h-80 sm:h-96 w-full relative bg-black/5 flex items-center justify-center">
             <img
               src={imagesList[selectedImg] || imagesList[0]}
               alt={product.name}
-              className="w-full h-full object-cover cursor-pointer transition-transform duration-300 group-hover:scale-102"
+              className="w-full h-full object-contain cursor-pointer transition-transform duration-300 group-hover:scale-102"
               onClick={() => handleOpenZoom(selectedImg)}
             />
 

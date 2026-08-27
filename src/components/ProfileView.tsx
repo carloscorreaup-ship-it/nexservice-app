@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { User, MapPin, ShieldCheck, Flame, RefreshCw, LogOut, Store, ShieldAlert, ArrowLeft, FileText, Crosshair, Navigation, CheckCircle2, Chrome, Star, Download, Smartphone, Camera, Loader2 } from 'lucide-react';
+import { User, MapPin, ShieldCheck, Flame, RefreshCw, LogOut, Store, ShieldAlert, ArrowLeft, FileText, Crosshair, Navigation, CheckCircle2, Mail, Star, Download, Smartphone, Camera, Loader2 } from 'lucide-react';
 import { UserSession, Provider } from '../types';
 import { DataPolicyModal } from './DataPolicyModal';
 import { requestUserCoordinates, reverseGeocodeAddress, findNearestCity } from '../utils/geoUtils';
@@ -229,7 +229,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             </div>
 
             <div className="flex items-center gap-1.5 text-xs text-slate-500 truncate mt-0.5">
-              <Chrome className="w-3 h-3 text-[#0052ff] shrink-0" />
+              <Mail className="w-3 h-3 text-[#0052ff] shrink-0" />
               <span className="truncate">{userSession.email}</span>
             </div>
             <div className="flex items-center gap-1.5 text-xs text-[#0052ff] mt-1">

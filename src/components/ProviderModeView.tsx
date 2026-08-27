@@ -19,11 +19,15 @@ import {
   Star,
   UserCheck,
   MessageSquare,
-  X
+  Crosshair,
+  CheckCircle2,
+  X,
+  TrendingUp
 } from 'lucide-react';
-import { Provider, ProductItem, ServiceItem, UserSession, ServiceModality, BookingOrOrder } from '../types';
+import { Provider, ProductItem, ServiceItem, UserSession, ServiceModality, BookingOrOrder, Coordinates } from '../types';
 import { formatCurrencyCOP } from '../utils/userUtils';
 import { compressMultipleImages } from '../utils/imageUtils';
+import { requestUserCoordinates } from '../utils/geoUtils';
 
 interface ProviderModeViewProps {
   currentCity: string;
@@ -62,6 +66,8 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
   const [whatsapp, setWhatsapp] = useState(userSession.providerProfile?.whatsapp || userSession.phone || '');
   const [description, setDescription] = useState(userSession.providerProfile?.description || '');
   const [savedSuccess, setSavedSuccess] = useState(false);
+  const [isSyncingGps, setIsSyncingGps] = useState(false);
+  const [gpsNotice, setGpsNotice] = useState<string | null>(null);
 
   // Products state — prefer existingProviderData (has real images) over session (lightweight copy)
   const [products, setProducts] = useState<ProductItem[]>(
@@ -289,14 +295,25 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
         </button>
         <button
           onClick={() => setActiveTab('verification')}
-          className={`px-4 py-2 rounded-2xl flex items-center gap-2 transition-all ${
+          className={`px-4 py-2 rounded-2xl flex items-center gap-2 transition-all shrink-0 cursor-pointer ${
             activeTab === 'verification'
               ? 'bg-amber-600 text-white shadow-md'
               : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
           }`}
         >
           <ShieldCheck className="w-4 h-4" />
-          <span>Sello Verificado</span>
+          <span>Verificación Oficial</span>
+        </button>
+        <button
+          onClick={() => setActiveTab('analytics')}
+          className={`px-4 py-2 rounded-2xl flex items-center gap-2 transition-all shrink-0 cursor-pointer ${
+            activeTab === 'analytics'
+              ? 'bg-purple-600 text-white shadow-md'
+              : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
+          }`}
+        >
+          <TrendingUp className="w-4 h-4" />
+          <span>Visitas al Perfil</span>
         </button>
       </div>
 
@@ -413,26 +430,44 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
           <div>
             <label className="block text-slate-300 font-semibold mb-2 text-xs">Modalidad de Servicio / Venta</label>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+              {/* Opción 1: Local Físico Fijo */}
               <div
                 onClick={() => setServiceModality('physical_store')}
                 className={`p-3 rounded-2xl border cursor-pointer transition-all flex flex-col justify-between ${
                   serviceModality === 'physical_store'
-                    ? 'bg-blue-600/20 border-blue-500 text-white'
+                    ? 'bg-blue-600/25 border-blue-500 ring-1 ring-blue-400 text-white'
                     : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-750'
                 }`}
               >
                 <div className="flex items-center gap-2 font-bold mb-1">
                   <Building2 className="w-4 h-4 text-blue-400" />
-                  <span>🏢 Local Físico</span>
+                  <span>🏢 Local Físico Fijo</span>
                 </div>
-                <p className="text-[10px] text-slate-400">Tienda o taller físico con atención presencial.</p>
+                <p className="text-[10px] text-slate-400">Tienda o taller físico. Se muestra la dirección registrada en el mapa.</p>
               </div>
 
+              {/* Opción 2: Ambulante / Móvil */}
+              <div
+                onClick={() => setServiceModality('mobile_street')}
+                className={`p-3 rounded-2xl border cursor-pointer transition-all flex flex-col justify-between ${
+                  serviceModality === 'mobile_street'
+                    ? 'bg-amber-600/25 border-amber-500 ring-1 ring-amber-400 text-white'
+                    : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-750'
+                }`}
+              >
+                <div className="flex items-center gap-2 font-bold mb-1">
+                  <Navigation className="w-4 h-4 text-amber-400" />
+                  <span>🚐 Venta Ambulatoria</span>
+                </div>
+                <p className="text-[10px] text-slate-400">Food truck o técnico móvil. Usa el GPS de tu celular en tiempo real.</p>
+              </div>
+
+              {/* Opción 3: A Domicilio */}
               <div
                 onClick={() => setServiceModality('home_delivery')}
                 className={`p-3 rounded-2xl border cursor-pointer transition-all flex flex-col justify-between ${
                   serviceModality === 'home_delivery'
-                    ? 'bg-emerald-600/20 border-emerald-500 text-white'
+                    ? 'bg-emerald-600/25 border-emerald-500 ring-1 ring-emerald-400 text-white'
                     : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-750'
                 }`}
               >
@@ -440,25 +475,71 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
                   <Truck className="w-4 h-4 text-emerald-400" />
                   <span>🛵 A Domicilio</span>
                 </div>
-                <p className="text-[10px] text-slate-400">Entrega o servicio directo en casa del cliente.</p>
-              </div>
-
-              <div
-                onClick={() => setServiceModality('mobile_street')}
-                className={`p-3 rounded-2xl border cursor-pointer transition-all flex flex-col justify-between ${
-                  serviceModality === 'mobile_street'
-                    ? 'bg-amber-600/20 border-amber-500 text-white'
-                    : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-750'
-                }`}
-              >
-                <div className="flex items-center gap-2 font-bold mb-1">
-                  <Navigation className="w-4 h-4 text-amber-400" />
-                  <span>🚐 Ambulante / Móvil</span>
-                </div>
-                <p className="text-[10px] text-slate-400">Food truck o técnico móvil itinerante.</p>
+                <p className="text-[10px] text-slate-400">Entrega o servicio en casa del cliente. Sin local público.</p>
               </div>
             </div>
           </div>
+
+          {/* BANNER EXPLICATIVO DE UBICACIÓN SEGÚN MODALIDAD */}
+          {serviceModality === 'physical_store' ? (
+            <div className="p-3.5 bg-blue-950/60 border border-blue-800/80 rounded-2xl text-xs space-y-1">
+              <div className="flex items-center gap-2 font-bold text-blue-400">
+                <MapPin className="w-4 h-4 shrink-0" />
+                <span>📍 Ubicación Fija en el Mapa Satelital</span>
+              </div>
+              <p className="text-[11.5px] text-slate-300 leading-relaxed">
+                La <strong>dirección física registrada</strong> es la que se mostrará fijada en el mapa satelital para que todos tus clientes puedan ubicar tu negocio y llegar directamente.
+              </p>
+            </div>
+          ) : serviceModality === 'mobile_street' ? (
+            <div className="p-3.5 bg-amber-950/60 border border-amber-800/80 rounded-2xl text-xs space-y-2">
+              <div className="flex items-center gap-2 font-bold text-amber-400">
+                <Navigation className="w-4 h-4 shrink-0" />
+                <span>📱 Ubicación Celular / GPS en Vivo</span>
+              </div>
+              <p className="text-[11.5px] text-slate-300 leading-relaxed">
+                Al ser <strong>Venta Ambulatoria</strong>, la ubicación mostrada en el mapa satelital es <strong>la del GPS de tu celular en tiempo real</strong>.
+              </p>
+              <button
+                type="button"
+                onClick={async () => {
+                  setIsSyncingGps(true);
+                  setGpsNotice(null);
+                  const detected = await requestUserCoordinates();
+                  if (detected) {
+                    onSaveProviderProfile({
+                      businessName,
+                      address,
+                      whatsapp,
+                      serviceModality,
+                    });
+                    setGpsNotice(`✓ GPS sincronizado (${detected.lat.toFixed(4)}, ${detected.lng.toFixed(4)})`);
+                  } else {
+                    setGpsNotice('No se pudo acceder al GPS. Verifica los permisos.');
+                  }
+                  setIsSyncingGps(false);
+                }}
+                disabled={isSyncingGps}
+                className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-all cursor-pointer"
+              >
+                <Crosshair className={`w-3.5 h-3.5 ${isSyncingGps ? 'animate-spin' : ''}`} />
+                <span>{isSyncingGps ? 'Obteniendo GPS...' : 'Actualizar GPS del Celular Ahora'}</span>
+              </button>
+              {gpsNotice && (
+                <div className="text-[11px] font-semibold text-emerald-400">{gpsNotice}</div>
+              )}
+            </div>
+          ) : (
+            <div className="p-3.5 bg-emerald-950/60 border border-emerald-800/80 rounded-2xl text-xs space-y-1">
+              <div className="flex items-center gap-2 font-bold text-emerald-400">
+                <Truck className="w-4 h-4 shrink-0" />
+                <span>🛵 Cobertura a Domicilio</span>
+              </div>
+              <p className="text-[11.5px] text-slate-300 leading-relaxed">
+                Atención en casa del cliente en {currentCity}. No se expone un local físico público.
+              </p>
+            </div>
+          )}
 
           <div className="space-y-3 text-xs">
             <div>
@@ -468,28 +549,63 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
                 value={businessName}
                 onChange={(e) => setBusinessName(e.target.value)}
                 placeholder="Ej: Taller Don Pedro, Tienda XYZ..."
-                className="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white placeholder:text-slate-500"
+                className="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500"
               />
             </div>
             <div>
               <label className="block text-slate-300 font-semibold mb-1">
+                🏷️ Tipo de Producto o Categoría General <span className="text-red-400">*</span>
+              </label>
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white focus:outline-none focus:border-blue-500 text-xs font-semibold"
+              >
+                <option value="nutricion">🌿 Productos Nutricionales & Suplementos (Melena de león, vitaminas, etc.)</option>
+                <option value="tecnologia">📱 Tecnología & Dispositivos (Celulares, computadores, repuestos)</option>
+                <option value="alimentos">🥗 Alimentos & Gastronomía (Restaurantes, postres, café especial)</option>
+                <option value="reparaciones">🚰 Plomería & Reparaciones (Electricidad, gas, hogar)</option>
+                <option value="belleza">💅 Belleza & Cuidado Personal (Cosmética, spa, barbería)</option>
+                <option value="salud">🩺 Salud & Odontología (Medicina, consultas)</option>
+                <option value="mascotas">🐾 Mascotas & Veterinaria (Alimentos, accesorios)</option>
+                <option value="moda">👗 Moda & Calzado (Ropa, confección, calzado)</option>
+                <option value="ferreteria">🔨 Ferretería & Repuestos (Herramientas, materiales)</option>
+                <option value="legal">⚖️ Legal & Asesorías (Abogados, trámites)</option>
+                <option value="servicios">💼 Servicios Profesionales & Otros</option>
+              </select>
+              <p className="text-[11px] text-slate-400 mt-1">
+                Esta categoría general se mostrará en tu tarjeta en la lista y mapa de proveedores.
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-slate-300 font-semibold mb-1">
                 {serviceModality === 'physical_store'
-                  ? 'Dirección Física Exacta (Obligatorio para local)'
+                  ? '📍 Dirección Física Exacta (Fija en el mapa)'
                   : serviceModality === 'home_delivery'
                   ? 'Zona o Barrio Base de Domicilios'
-                  : 'Punto o Zona Ambulante'}
+                  : 'Punto o Sector Ambulante de Referencia'}
               </label>
               <input
                 type="text"
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
-                className="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white placeholder:text-slate-500"
+                className="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500"
                 placeholder={
                   serviceModality === 'physical_store'
-                    ? 'Ej: Carrera 15 # 12-45, Local 102'
+                    ? 'Ej: Carrera 15 # 12-45, Local 102, Barrio Álamos'
+                    : serviceModality === 'mobile_street'
+                    ? 'Ej: Plaza de Bolívar / Parque El Lago'
                     : 'Ej: Cobertura en toda la ciudad / Zona Álamos'
                 }
               />
+              <p className="text-[11px] text-slate-400 mt-1">
+                {serviceModality === 'physical_store'
+                  ? 'Esta dirección física exacta se geocodificará para fijar tu pin en el mapa satelital.'
+                  : serviceModality === 'mobile_street'
+                  ? 'En venta ambulatoria, el mapa satelital utilizará la posición en vivo del GPS de tu celular.'
+                  : 'Servicio a domicilio sin local físico abierto al público.'}
+              </p>
             </div>
             <div>
               <label className="block text-slate-300 font-semibold mb-1">WhatsApp de Ventas Directas</label>
@@ -498,7 +614,7 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
                 value={whatsapp}
                 onChange={(e) => setWhatsapp(e.target.value)}
                 placeholder="Ej: 573001234567"
-                className="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white font-mono placeholder:text-slate-500"
+                className="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white font-mono placeholder:text-slate-500 focus:outline-none focus:border-blue-500"
               />
             </div>
 
@@ -506,6 +622,7 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
               onClick={() => {
                 onSaveProviderProfile({
                   businessName,
+                  category,
                   address,
                   whatsapp,
                   serviceModality,
@@ -513,10 +630,10 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
                 setSavedSuccess(true);
                 setTimeout(() => setSavedSuccess(false), 3000);
               }}
-              className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl transition-all shadow-md shadow-blue-500/20 cursor-pointer flex items-center justify-center gap-2"
+              className="w-full bg-[#0052ff] hover:bg-blue-600 text-white font-bold py-3 rounded-xl transition-all shadow-md shadow-blue-500/20 cursor-pointer flex items-center justify-center gap-2"
             >
               <Check className="w-4 h-4" />
-              <span>Guardar Ubicación y Modalidad</span>
+              <span>Guardar Perfil, Categoría y Ubicación</span>
             </button>
 
             {savedSuccess && (
@@ -622,6 +739,70 @@ export const ProviderModeView: React.FC<ProviderModeViewProps> = ({
               Aún no tienes solicitudes directas registradas. Cuando un cliente te contacte o agende, podrás calificarlo aquí con 1 a 5 estrellas.
             </div>
           )}
+        </div>
+      )}
+
+      {/* TAB 6: ANALYTICS / VISITAS */}
+      {activeTab === 'analytics' && (
+        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-lg relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-8 opacity-5">
+              <TrendingUp className="w-32 h-32 text-white" />
+            </div>
+            <div className="relative z-10">
+              <h2 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-purple-400" />
+                Estadísticas de Visitas
+              </h2>
+              <p className="text-xs text-slate-400 mb-6 max-w-lg">
+                Aquí puedes ver quién ha visitado tu perfil recientemente.
+              </p>
+
+              <div className="bg-slate-800/50 rounded-2xl border border-slate-700 p-4">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center border border-purple-500/30">
+                    <TrendingUp className="w-6 h-6 text-purple-400" />
+                  </div>
+                  <div>
+                    <div className="text-3xl font-black text-white">
+                      {existingProviderData?.views?.length || 0}
+                    </div>
+                    <div className="text-xs text-slate-400 font-semibold uppercase tracking-wider">
+                      Visitas Totales
+                    </div>
+                  </div>
+                </div>
+
+                {existingProviderData?.views && existingProviderData.views.length > 0 ? (
+                  <div className="space-y-2 mt-4">
+                    <h3 className="text-xs font-bold text-slate-300 mb-3">Historial de Visitantes:</h3>
+                    {[...existingProviderData.views].reverse().map((visit, idx) => (
+                      <div key={idx} className="bg-slate-800 rounded-xl p-3 flex items-center justify-between border border-slate-700/50">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold text-slate-300">
+                            {visit.clientName.substring(0, 2).toUpperCase()}
+                          </div>
+                          <div>
+                            <div className="text-sm font-bold text-slate-200">{visit.clientName}</div>
+                            <div className="text-[10px] text-slate-400">
+                              {new Date(visit.date).toLocaleString()}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-[10px] text-purple-400 font-semibold bg-purple-400/10 px-2 py-1 rounded-lg">
+                          Vio tu perfil
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-6 text-slate-500 text-xs mt-4 border-t border-slate-700/50">
+                    Aún no hay visitas registradas en tu perfil.
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

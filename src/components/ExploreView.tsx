@@ -15,7 +15,6 @@ import {
   Star,
   MessageSquare,
   Truck,
-  Flame,
   Trophy,
   Navigation,
   Clock,
@@ -24,7 +23,7 @@ import {
   TrendingUp,
   CheckCircle2
 } from 'lucide-react';
-import { formatCurrencyCOP } from '../utils/userUtils';
+import { formatCurrencyCOP, getCategoryName, getCategoryEmoji } from '../utils/userUtils';
 import { Provider, ProductItem, Category, UserSession } from '../types';
 import { INITIAL_CATEGORIES } from '../data/initialData';
 import { ProviderCard } from './ProviderCard';
@@ -118,6 +117,8 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
   // Filtrado y ordenamiento por relevancia semántica de Proveedores
   const filteredProviders = useMemo(() => {
     const query = executedSearchQuery || searchQuery;
+    if (!query.trim()) return [];
+
     const keywords = extractKeywords(query);
     const expandedKeywords = searchIntent?.expandedKeywords || keywords;
 
@@ -127,14 +128,10 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
         if (selectedCategory !== 'todos' && p.category !== selectedCategory) return false;
         if (onlyVerified && !p.verified) return false;
 
-        if (query.trim()) {
-          const score = scoreProviderMatch(p, query, keywords, expandedKeywords);
-          return score > 0;
-        }
-        return true;
+        const score = scoreProviderMatch(p, query, keywords, expandedKeywords);
+        return score > 0;
       })
       .sort((a, b) => {
-        if (!query.trim()) return 0;
         const scoreA = scoreProviderMatch(a, query, keywords, expandedKeywords);
         const scoreB = scoreProviderMatch(b, query, keywords, expandedKeywords);
         return scoreB - scoreA;
@@ -144,6 +141,8 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
   // Filtrado y ordenamiento por relevancia semántica de Productos
   const filteredProducts = useMemo(() => {
     const query = executedSearchQuery || searchQuery;
+    if (!query.trim()) return [];
+
     const keywords = extractKeywords(query);
     const expandedKeywords = searchIntent?.expandedKeywords || keywords;
 
@@ -153,14 +152,10 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
         if (selectedCategory !== 'todos' && prod.category !== selectedCategory) return false;
         if (onlyVerified && !prod.verifiedSeller) return false;
 
-        if (query.trim()) {
-          const score = scoreProductMatch(prod, query, keywords, expandedKeywords);
-          return score > 0;
-        }
-        return true;
+        const score = scoreProductMatch(prod, query, keywords, expandedKeywords);
+        return score > 0;
       })
       .sort((a, b) => {
-        if (!query.trim()) return 0;
         const scoreA = scoreProductMatch(a, query, keywords, expandedKeywords);
         const scoreB = scoreProductMatch(b, query, keywords, expandedKeywords);
         return scoreB - scoreA;
@@ -191,34 +186,34 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
   return (
     <div className="pb-24 max-w-7xl mx-auto px-3 sm:px-6 pt-4">
       {/* Search Header Banner */}
-      <div className="mb-6 bg-gradient-to-r from-blue-700 via-indigo-700 to-[#0052ff] rounded-3xl p-5 sm:p-7 text-white shadow-elevation-2 relative overflow-hidden">
+      <div className="mb-6 bg-gradient-to-r from-blue-700 via-indigo-700 to-[#0052ff] rounded-3xl p-5 sm:p-7 text-white shadow-elevation-2 relative overflow-hidden text-center">
         {/* Abstract Background pattern */}
         <div className="absolute right-0 top-0 bottom-0 w-1/2 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-white/20 via-transparent to-transparent pointer-events-none" />
 
-        <div className="relative z-10 max-w-2xl">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="bg-white/20 backdrop-blur-md px-2.5 py-0.5 rounded-full text-[11px] font-bold tracking-wide uppercase flex items-center gap-1 text-white border border-white/30">
+        <div className="relative z-10 max-w-2xl mx-auto flex flex-col items-center text-center">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <span className="bg-white/20 backdrop-blur-md px-2.5 py-0.5 rounded-full text-xs font-bold tracking-wide uppercase flex items-center gap-1 text-white border border-white/30">
               <Sparkles className="w-3 h-3 text-amber-300" />
               {currentCity} • En Vivo
             </span>
           </div>
 
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight font-geist mb-2">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight font-geist mb-2 text-center">
             Encuentra los Proveedores y Servicios más Populares
           </h1>
-          <p className="text-xs sm:text-sm text-blue-100 mb-5 font-normal">
-            Contacta directamente por WhatsApp con los profesionales más buscados en tu área, cotiza servicios y ubícalos en el mapa satelital.
+          <p className="text-sm sm:text-base text-blue-100 mb-5 font-normal text-center max-w-xl">
+            Contacta directamente por WhatsApp con los proveedores más buscados en tu área, cotiza servicios y ubícalos en el mapa satelital.
           </p>
 
           {/* Search Bar with Semantic Support */}
-          <form onSubmit={handleSearchSubmit} className="relative flex items-center">
+          <form onSubmit={handleSearchSubmit} className="relative flex items-center w-full">
             <Search className="w-5 h-5 text-slate-400 absolute left-4 pointer-events-none" />
             <input
               type="text"
               placeholder="¿Qué servicio o producto buscas? (ej: plomero, bañar gatos, PC gamer)..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white text-[#141b2b] placeholder-slate-400 pl-12 pr-28 py-3.5 rounded-2xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-blue-400/50 shadow-lg transition-all"
+              className="w-full bg-white text-[#141b2b] placeholder-slate-400 pl-12 pr-28 py-3.5 rounded-2xl text-base font-medium focus:outline-none focus:ring-4 focus:ring-blue-400/50 shadow-lg transition-all"
             />
             {searchQuery && (
               <button
@@ -234,20 +229,20 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
             )}
             <button
               type="submit"
-              className="absolute right-1.5 bg-[#0052ff] hover:bg-blue-600 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-md transition-all active:scale-95 cursor-pointer"
+              className="absolute right-1.5 bg-[#0052ff] hover:bg-blue-600 text-white text-sm font-bold px-4 py-2.5 rounded-xl shadow-md transition-all active:scale-95 cursor-pointer"
             >
               Buscar
             </button>
           </form>
 
           {/* Quick Keywords Chips */}
-          <div className="flex items-center gap-1.5 mt-3 overflow-x-auto pb-1 no-scrollbar text-xs">
-            <span className="text-[11px] text-blue-200 font-semibold shrink-0">Popular:</span>
+          <div className="flex items-center justify-center gap-1.5 mt-3 overflow-x-auto pb-1 no-scrollbar text-sm w-full flex-wrap sm:flex-nowrap">
+            <span className="text-xs text-blue-200 font-semibold shrink-0">Popular:</span>
             {quickKeywords.map((item) => (
               <button
                 key={item.label}
                 onClick={() => handleQuickKeywordClick(item.query)}
-                className="bg-white/15 hover:bg-white/30 backdrop-blur-md text-white px-2.5 py-1 rounded-xl text-[11px] font-medium transition-all shrink-0 cursor-pointer border border-white/20"
+                className="bg-white/15 hover:bg-white/30 backdrop-blur-md text-white px-2.5 py-1 rounded-xl text-xs font-medium transition-all shrink-0 cursor-pointer border border-white/20"
               >
                 {item.label}
               </button>
@@ -371,11 +366,11 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
                 onClick={() => setActiveTab('popular')}
                 className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
                   activeTab === 'popular'
-                    ? 'bg-amber-500 text-white shadow-xs'
+                    ? 'bg-[#0052ff] text-white shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                <Flame className="w-3.5 h-3.5" />
+                <TrendingUp className="w-3.5 h-3.5" />
                 <span>Más Populares ({topPopularProvidersInArea.length})</span>
               </button>
               <button
@@ -442,28 +437,21 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
           {/* SECCIÓN: TOP 10 PROVEEDORES MÁS POPULARES EN TU ÁREA */}
           {/* ======================================================== */}
           {(activeTab === 'all' || activeTab === 'popular') && topPopularProvidersInArea.length > 0 && !searchQuery && (
-            <div className="mb-10 bg-gradient-to-b from-amber-50/50 via-white to-white border border-amber-200/80 rounded-3xl p-4 sm:p-6 shadow-elevation-1">
-              <div className="flex items-center justify-between mb-5 flex-wrap gap-2">
-                <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-md shadow-orange-500/20 shrink-0">
-                    <Flame className="w-5 h-5 fill-white" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h2 className="text-lg sm:text-xl font-extrabold text-[#141b2b] font-geist tracking-tight">
-                        Proveedores Más Populares
-                      </h2>
-                      <span className="text-[10px] font-black bg-gradient-to-r from-amber-500 to-orange-500 text-white px-2.5 py-0.5 rounded-full shadow-xs uppercase tracking-wider">
-                        Top 10 en tu área
-                      </span>
-                    </div>
-                    <p className="text-xs text-slate-500">
-                      Los 10 profesionales y comercios más buscados y mejor calificados cerca de ti en <strong className="text-slate-800">{currentCity}</strong>
-                    </p>
-                  </div>
+            <div className="mb-10 bg-gradient-to-b from-blue-50/40 via-white to-white border border-blue-100 rounded-3xl p-4 sm:p-6 shadow-elevation-1">
+              <div className="flex flex-col items-center justify-center text-center mb-6 gap-2">
+                <div className="flex items-center justify-center gap-2 flex-wrap">
+                  <h2 className="text-xl sm:text-2xl font-extrabold text-[#141b2b] font-geist tracking-tight text-center">
+                    Proveedores Más Populares
+                  </h2>
+                  <span className="text-[10px] font-black bg-[#0052ff] text-white px-2.5 py-0.5 rounded-full shadow-xs uppercase tracking-wider">
+                    Top 10 en tu área
+                  </span>
                 </div>
+                <p className="text-xs sm:text-sm text-slate-500 max-w-xl mx-auto text-center">
+                  Los 10 proveedores y comercios más buscados y mejor calificados cerca de ti en <strong className="text-slate-800">{currentCity}</strong>
+                </p>
 
-                <div className="flex items-center gap-1.5 text-xs text-slate-600 bg-white border border-amber-200 px-3 py-1.5 rounded-2xl shadow-xs">
+                <div className="inline-flex items-center gap-1.5 text-xs text-slate-600 bg-white border border-slate-200 px-3 py-1 rounded-2xl shadow-xs mt-1">
                   <Navigation className="w-3.5 h-3.5 text-[#0052ff]" />
                   <span>Calculado según tu ubicación GPS</span>
                 </div>
@@ -550,26 +538,42 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
                               {prov.rating.toFixed(1)}
                             </span>
                             <span className="text-slate-400 text-[11px]">({prov.reviewCount} reseñas)</span>
-                            <span className="text-slate-300">•</span>
-                            {prov.serviceModality === 'home_delivery' ? (
-                              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded-md">
-                                🛵 Domicilio
-                              </span>
+                            {prov.serviceModality === 'physical_store' ? (
+                              <>
+                                <span className="text-slate-300">•</span>
+                                <span className="text-[10px] font-bold text-[#0052ff] bg-blue-50 border border-blue-200 px-1.5 py-0.2 rounded-md">
+                                  🏢 Local Físico
+                                </span>
+                              </>
                             ) : prov.serviceModality === 'mobile_street' ? (
-                              <span className="text-[10px] font-bold text-amber-800 bg-amber-50 border border-amber-200 px-1.5 py-0.2 rounded-md">
-                                🚐 Ambulante
-                              </span>
-                            ) : (
-                              <span className="text-[10px] font-bold text-[#0052ff] bg-blue-50 border border-blue-200 px-1.5 py-0.2 rounded-md">
-                                🏢 Local Físico
-                              </span>
-                            )}
+                              <>
+                                <span className="text-slate-300">•</span>
+                                <span className="text-xs font-bold text-amber-800 bg-amber-50 border border-amber-200 px-1.5 py-0.2 rounded-md">
+                                  🚐 Ambulante
+                                </span>
+                              </>
+                            ) : prov.serviceModality === 'home_delivery' ? (
+                              <>
+                                <span className="text-slate-300">•</span>
+                                <span className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded-md">
+                                  🛵 Domicilio
+                                </span>
+                              </>
+                            ) : null}
                           </div>
                         </div>
                       </div>
 
+                      {/* Tipo de Producto / Categoría General */}
+                      <div className="mb-2.5 flex items-center">
+                        <span className="text-xs font-bold text-[#0052ff] bg-blue-50/90 border border-blue-200/90 px-2.5 py-0.5 rounded-xl flex items-center gap-1">
+                          <span>{getCategoryEmoji(prov.category)}</span>
+                          <span>{getCategoryName(prov.category)}</span>
+                        </span>
+                      </div>
+
                       {/* Description or Services Preview */}
-                      <p className="text-xs text-slate-600 line-clamp-2 mb-3 leading-relaxed">
+                      <p className="text-sm text-slate-600 line-clamp-2 mb-3 leading-relaxed">
                         {prov.description || 'Proveedor verificado con atención directa e inmediata por WhatsApp.'}
                       </p>
 
@@ -579,7 +583,7 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
                           {prov.services.slice(0, 2).map((srv) => (
                             <span
                               key={srv.id}
-                              className="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-0.5 rounded-lg truncate max-w-[200px]"
+                              className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-0.5 rounded-lg truncate max-w-[200px]"
                             >
                               ✓ {srv.name}
                             </span>
@@ -591,13 +595,13 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
                       <div className="flex items-center gap-2 pt-3 border-t border-slate-100">
                         <button
                           onClick={() => onSelectProvider(prov)}
-                          className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold py-2.5 px-3 rounded-2xl transition-all cursor-pointer text-center"
+                          className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-800 text-sm font-bold py-2.5 px-3 rounded-2xl transition-all cursor-pointer text-center"
                         >
                           Ver Perfil
                         </button>
                         <button
                           onClick={() => onContactWhatsApp(prov)}
-                          className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2.5 px-3 rounded-2xl flex items-center justify-center gap-1.5 shadow-md shadow-emerald-500/20 transition-all active:scale-98 cursor-pointer"
+                          className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold py-2.5 px-3 rounded-2xl flex items-center justify-center gap-1.5 shadow-md shadow-emerald-500/20 transition-all active:scale-98 cursor-pointer"
                         >
                           <MessageSquare className="w-3.5 h-3.5" />
                           <span>WhatsApp</span>
@@ -665,15 +669,15 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
                           </h4>
                           {provider.verified && <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />}
                         </div>
-                        <p className="text-[11px] text-slate-500 truncate">{provider.businessName}</p>
-                        <div className="flex items-center gap-2 mt-0.5 text-xs">
+                        <p className="text-xs text-slate-500 truncate">{provider.businessName}</p>
+                        <div className="flex items-center gap-2 mt-0.5 text-sm">
                           <span className="flex items-center gap-0.5 text-amber-500 font-bold">
                             <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
                             {provider.rating.toFixed(1)}
                           </span>
                           <span className="text-slate-400">({provider.reviewCount})</span>
                           <span className="text-slate-300">•</span>
-                          <span className="text-[11px] text-slate-500 flex items-center gap-0.5 truncate">
+                          <span className="text-xs text-slate-500 flex items-center gap-0.5 truncate">
                             <MapPin className="w-3 h-3 text-[#0052ff]" />
                             {provider.address}
                           </span>
@@ -681,13 +685,13 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
                         <div className="flex items-center justify-between mt-1.5">
                           <div className="flex gap-1">
                             {provider.services.length > 0 && (
-                              <span className="text-[9px] bg-blue-50 text-[#0052ff] border border-blue-200 px-1.5 py-0.5 rounded-lg flex items-center gap-0.5">
+                              <span className="text-[11px] bg-blue-50 text-[#0052ff] border border-blue-200 px-1.5 py-0.5 rounded-lg flex items-center gap-0.5">
                                 <Wrench className="w-2.5 h-2.5" />
                                 {provider.services.length}
                               </span>
                             )}
                             {provider.products.length > 0 && (
-                              <span className="text-[9px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded-lg flex items-center gap-0.5">
+                              <span className="text-[11px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded-lg flex items-center gap-0.5">
                                 <ShoppingBag className="w-2.5 h-2.5" />
                                 {provider.products.length}
                               </span>
@@ -696,13 +700,13 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
                           <div className="flex gap-1.5">
                             <button
                               onClick={() => onSelectProvider(provider)}
-                              className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-semibold py-1.5 px-2.5 rounded-xl transition-all cursor-pointer"
+                              className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold py-1.5 px-2.5 rounded-xl transition-all cursor-pointer"
                             >
                               Perfil
                             </button>
                             <button
                               onClick={() => onContactWhatsApp(provider)}
-                              className="bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold py-1.5 px-2.5 rounded-xl flex items-center gap-1 shadow-sm transition-all cursor-pointer"
+                              className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-1.5 px-2.5 rounded-xl flex items-center gap-1 shadow-sm transition-all cursor-pointer"
                             >
                               <MessageSquare className="w-3 h-3" />
                               <span className="hidden sm:inline">WhatsApp</span>

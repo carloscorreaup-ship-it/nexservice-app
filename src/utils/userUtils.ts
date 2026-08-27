@@ -45,3 +45,51 @@ export function formatCurrencyCOP(amount: number): string {
   }).format(amount);
 }
 
+export const CATEGORY_LABELS: Record<string, string> = {
+  nutricion: 'Productos Nutricionales',
+  productos_nutricionales: 'Productos Nutricionales',
+  suplementos: 'Productos Nutricionales',
+  alimentos: 'Alimentos & Gastronomía',
+  gastronomia: 'Alimentos & Gastronomía',
+  tecnologia: 'Tecnología & Dispositivos',
+  reparaciones: 'Plomería & Reparaciones',
+  ferreteria: 'Ferretería & Repuestos',
+  belleza: 'Belleza & Cuidado Personal',
+  salud: 'Salud & Medicina',
+  legal: 'Legal & Asesorías',
+  mascotas: 'Mascotas & Veterinaria',
+  moda: 'Moda & Calzado',
+  servicios: 'Servicios Profesionales',
+  general: 'Comercio General',
+};
+
+export const CATEGORY_EMOJIS: Record<string, string> = {
+  nutricion: '🌿',
+  productos_nutricionales: '🌿',
+  suplementos: '🌿',
+  alimentos: '🥗',
+  gastronomia: '🥗',
+  tecnologia: '📱',
+  reparaciones: '🚰',
+  ferreteria: '🔨',
+  belleza: '💅',
+  salud: '🩺',
+  legal: '⚖️',
+  mascotas: '🐾',
+  moda: '👗',
+  servicios: '💼',
+  general: '🛒',
+};
+
+export function getCategoryName(category?: string): string {
+  if (!category) return 'Productos & Servicios';
+  const key = category.toLowerCase().trim();
+  return CATEGORY_LABELS[key] || category;
+}
+
+export function getCategoryEmoji(category?: string): string {
+  if (!category) return '🛒';
+  const key = category.toLowerCase().trim();
+  return CATEGORY_EMOJIS[key] || '🏷️';
+}
+

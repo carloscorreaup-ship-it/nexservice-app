@@ -41,7 +41,7 @@ import {
   addReviewToTargetInDB
 } from './services/firestoreService';
 import { getEmailAvatarUrl, getReliableAvatarUrl } from './utils/userUtils';
-import { requestUserCoordinates, reverseGeocodeAddress, findNearestCity, DEFAULT_COLOMBIA_COORDS, calculateDistanceKm } from './utils/geoUtils';
+import { requestUserCoordinates, reverseGeocodeAddress, geocodeAddress, findNearestCity, DEFAULT_COLOMBIA_COORDS, calculateDistanceKm } from './utils/geoUtils';
 
 const STORAGE_KEYS = {
   SESSION: 'nexservice_session_v4',
@@ -338,10 +338,25 @@ export default function App() {
     coordinates?: Coordinates;
     avatarUrl: string;
     serviceModality?: ServiceModality;
+    category?: string;
   }) => {
-    const coords = data.coordinates || session.fixedLocation?.coordinates || DEFAULT_COLOMBIA_COORDS[data.city] || DEFAULT_COLOMBIA_COORDS['Pereira'] || { lat: 4.81333, lng: -75.69611 };
+    let coords = data.coordinates || session.fixedLocation?.coordinates || DEFAULT_COLOMBIA_COORDS[data.city] || DEFAULT_COLOMBIA_COORDS['Pereira'] || { lat: 4.81333, lng: -75.69611 };
     const dept = data.department || session.fixedLocation?.department || 'Risaralda';
     const modality = data.serviceModality || 'physical_store';
+    const selectedCategory = data.category || 'nutricion';
+
+    // Si es local físico fijo con dirección, asegurar que las coordenadas correspondan a la dirección
+    if (modality === 'physical_store' && data.address && data.address.trim().length >= 4) {
+      try {
+        const geocoded = await geocodeAddress(data.address, data.city, dept);
+        if (geocoded) {
+          coords = geocoded;
+        }
+      } catch (e) {
+        console.warn('Geocoding notice:', e);
+      }
+    }
+
     const newSession: UserSession = {
       ...session,
       email: data.email,
@@ -364,10 +379,59 @@ export default function App() {
         isPublicOnMap: true,
         serviceModality: modality,
       },
+      providerProfile: (data.role === 'provider' || data.role === 'both') ? {
+        businessName: data.name,
+        category: selectedCategory,
+        offerType: 'both',
+        phone: data.phone,
+        whatsapp: data.phone,
+        address: data.address,
+        city: data.city,
+        department: dept,
+        description: 'Proveedor verificado con atención directa.',
+        verified: true,
+        verifiedBadgeType: 'oficial',
+        rating: 5.0,
+        reviewCount: 1,
+        serviceModality: modality,
+        services: [],
+        products: []
+      } : session.providerProfile
     };
     setSession(newSession);
     await saveUserToDB(newSession);
     setUsers(prev => [newSession, ...prev.filter(u => u.email !== newSession.email)]);
+
+    if (data.role === 'provider' || data.role === 'both') {
+      const newProvider: Provider = {
+        id: data.email,
+        name: data.name,
+        businessName: data.name,
+        category: selectedCategory,
+        offerType: 'both',
+        rating: 5.0,
+        reviewCount: 1,
+        tags: ['Verificado', data.city],
+        phone: data.phone,
+        whatsapp: data.phone,
+        address: data.address,
+        coordinates: coords,
+        city: data.city,
+        department: dept,
+        isFixedLocationVisibleOnMap: true,
+        verified: true,
+        verifiedBadgeType: 'oficial',
+        avatarUrl: data.avatarUrl,
+        description: 'Proveedor verificado con atención directa.',
+        services: [],
+        products: [],
+        reviews: [],
+        isDelivery: true,
+        serviceModality: modality,
+      };
+      await saveProviderToDB(newProvider);
+      setProviders(prev => [newProvider, ...prev.filter(p => p.id !== newProvider.id)]);
+    }
   };
 
   const handleSelectCity = (cityName: string, detectedCoords?: Coordinates) => {
@@ -408,14 +472,46 @@ export default function App() {
       return { ...prev, favorites };
     });
   };
-
+  const handleSelectProvider = (provider: Provider) => {
+    if (provider.email !== session.email) {
+      const newVisit = {
+        date: new Date().toISOString(),
+        clientId: session.id,
+        clientName: session.name
+      };
+      const updatedProvider = {
+        ...provider,
+        views: [...(provider.views || []), newVisit]
+      };
+      setProviders(prev => prev.map(p => p.id === provider.id ? updatedProvider : p));
+      setSelectedProviderDetail(updatedProvider);
+    } else {
+      setSelectedProviderDetail(provider);
+    }
+  };
   const handleSaveProviderProfile = async (profileData: Partial<Provider>) => {
     try {
+      const modality = profileData.serviceModality || session.fixedLocation?.serviceModality || 'physical_store';
+      const category = profileData.category || session.providerProfile?.category || 'nutricion';
+      let coords = session.fixedLocation.coordinates;
+
+      // Si es local físico y la dirección fue ingresada/actualizada, geocodificarla para fijar el pin en esa dirección exacta
+      if (modality === 'physical_store' && profileData.address && profileData.address.trim().length >= 4) {
+        try {
+          const geocoded = await geocodeAddress(profileData.address, session.city, session.department);
+          if (geocoded) {
+            coords = geocoded;
+          }
+        } catch (e) {
+          console.warn('Geocoding notice on save provider:', e);
+        }
+      }
+
       const updatedProvider: Provider = {
-        id: profileData.id || 'my-provider-id',
+        id: profileData.id || session.email || 'my-provider-id',
         name: profileData.name || session.name,
         businessName: profileData.businessName || 'Mi Negocio Local',
-        category: profileData.category || 'reparaciones',
+        category: category,
         offerType: profileData.offerType || 'both',
         rating: 5.0,
         reviewCount: 1,
@@ -423,7 +519,7 @@ export default function App() {
         phone: profileData.phone || session.phone,
         whatsapp: profileData.whatsapp || session.phone,
         address: profileData.address || session.fixedLocation.address,
-        coordinates: session.fixedLocation.coordinates,
+        coordinates: coords,
         city: session.city,
         department: session.department,
         isFixedLocationVisibleOnMap: true,
@@ -435,10 +531,34 @@ export default function App() {
         products: profileData.products || [],
         reviews: [],
         isDelivery: true,
-        serviceModality: profileData.serviceModality || session.fixedLocation?.serviceModality || 'physical_store',
+        serviceModality: modality,
       };
 
       await saveProviderToDB(updatedProvider);
+
+      // Sincronizar session.fixedLocation y session.providerProfile
+      setSession(prev => {
+        const updatedSession: UserSession = {
+          ...prev,
+          fixedLocation: {
+            ...prev.fixedLocation,
+            address: updatedProvider.address,
+            coordinates: coords,
+            serviceModality: modality,
+          },
+          providerProfile: {
+            ...prev.providerProfile,
+            businessName: updatedProvider.businessName,
+            category: updatedProvider.category,
+            address: updatedProvider.address,
+            whatsapp: updatedProvider.whatsapp,
+            serviceModality: modality,
+          }
+        };
+        saveUserToDB(updatedSession);
+        return updatedSession;
+      });
+
       setProviders(prev => {
         const idx = prev.findIndex(p => p.id === updatedProvider.id);
         if (idx >= 0) {
@@ -655,7 +775,7 @@ export default function App() {
             providers={providers}
             products={products}
             userSession={session}
-            onSelectProvider={p => setSelectedProviderDetail(p)}
+            onSelectProvider={p => handleSelectProvider(p)}
             onSelectProduct={prod => setSelectedProductDetail(prod)}
             onContactWhatsApp={(p, prod) => setWhatsAppModalData({ provider: p, product: prod })}
             onToggleFavorite={handleToggleFavorite}
@@ -670,7 +790,7 @@ export default function App() {
             providers={providers}
             products={products}
             userSession={session}
-            onSelectProvider={p => setSelectedProviderDetail(p)}
+            onSelectProvider={p => handleSelectProvider(p)}
             onContactWhatsApp={p => setWhatsAppModalData({ provider: p })}
             onBack={handleGoBack}
           />
@@ -727,7 +847,7 @@ export default function App() {
             onOpenCitySelector={() => setShowCityModal(true)}
             onOpenFirebaseConfig={() => setShowFirebaseModal(true)}
             onToggleProviderMode={handleToggleProviderMode}
-            onViewProvider={p => setSelectedProviderDetail(p)}
+            onViewProvider={p => handleSelectProvider(p)}
             onUpdateLocation={updatedSession => {
               setSession(updatedSession);
               saveUserToDB(updatedSession);

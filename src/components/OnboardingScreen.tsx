@@ -19,7 +19,7 @@ import {
 import { UserRole, Coordinates, ServiceModality } from '../types';
 import { getEmailAvatarUrl, getReliableAvatarUrl } from '../utils/userUtils';
 import { compressImageFile } from '../utils/imageUtils';
-import { requestUserCoordinates, reverseGeocodeAddress, DEFAULT_COLOMBIA_COORDS } from '../utils/geoUtils';
+import { requestUserCoordinates, reverseGeocodeAddress, geocodeAddress, DEFAULT_COLOMBIA_COORDS } from '../utils/geoUtils';
 
 interface OnboardingScreenProps {
   defaultEmail?: string;
@@ -36,6 +36,7 @@ interface OnboardingScreenProps {
     coordinates: Coordinates;
     avatarUrl: string;
     serviceModality: ServiceModality;
+    category?: string;
   }) => void;
 }
 
@@ -54,12 +55,14 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
   const avatarFileInputRef = React.useRef<HTMLInputElement | null>(null);
 
   const [role, setRole] = useState<UserRole>('both');
+  const [category, setCategory] = useState<string>('nutricion');
   const [serviceModality, setServiceModality] = useState<ServiceModality>('physical_store');
   const [city, setCity] = useState('Pereira');
   const [department, setDepartment] = useState('Risaralda');
   const [address, setAddress] = useState('');
   const [coords, setCoords] = useState<Coordinates>(DEFAULT_COLOMBIA_COORDS['Pereira'] || { lat: 4.81333, lng: -75.69611 });
   const [isDetectingGps, setIsDetectingGps] = useState(false);
+  const [isGeocodingAddress, setIsGeocodingAddress] = useState(false);
   const [gpsStatus, setGpsStatus] = useState<'idle' | 'detecting' | 'success' | 'denied'>('idle');
   const [validationError, setValidationError] = useState<string | null>(null);
 
@@ -117,7 +120,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setValidationError(null);
 
@@ -128,8 +131,23 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
     } else {
       // Step 3 Validation
       if (serviceModality === 'physical_store' && (!address || address.trim().length < 5)) {
-        setValidationError('Para la modalidad de Local Físico, es obligatorio ingresar una dirección exacta (ej: Carrera 15 # 12-45).');
+        setValidationError('Para la modalidad de Local Físico, es obligatorio ingresar la dirección exacta (ej: Carrera 15 # 12-45), la cual será la ubicación fija que se muestre en el mapa.');
         return;
+      }
+
+      setIsGeocodingAddress(true);
+      let finalCoords = coords;
+
+      // Para Local Físico: Geocodificar la dirección escrita para que el punto en el mapa sea exacto a la dirección del local
+      if (serviceModality === 'physical_store' && address && address.trim().length >= 4) {
+        try {
+          const geocoded = await geocodeAddress(address, city, department);
+          if (geocoded) {
+            finalCoords = geocoded;
+          }
+        } catch (geoErr) {
+          console.warn('Geocoding notice:', geoErr);
+        }
       }
 
       let finalAddress = address.trim();
@@ -139,6 +157,8 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
         finalAddress = `Puesto Ambulante / Móvil (${city})`;
       }
 
+      setIsGeocodingAddress(false);
+
       onComplete({
         email,
         name,
@@ -147,9 +167,10 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
         address: finalAddress,
         city,
         department,
-        coordinates: coords,
+        coordinates: finalCoords,
         avatarUrl: customAvatarUrl || autoAvatarUrl,
         serviceModality,
+        category: role === 'client' ? undefined : category,
       });
     }
   };
@@ -342,31 +363,60 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
                   <p className="text-slate-500">Publicar productos y ofrecer servicios en tu ciudad.</p>
                 </div>
               </div>
+
+              {/* SELECTOR DE CATEGORÍA GENERAL PARA PROVEEDORES */}
+              {(role === 'both' || role === 'provider') && (
+                <div className="mt-4 pt-3.5 border-t border-slate-200">
+                  <label className="block text-xs font-bold text-slate-800 mb-1.5">
+                    ¿Qué tipo de producto o servicio ofreces? <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-[#141b2b] font-semibold focus:outline-none focus:border-[#0052ff]"
+                  >
+                    <option value="nutricion">🌿 Productos Nutricionales & Suplementos (Melena de león, vitaminas, adaptógenos)</option>
+                    <option value="tecnologia">📱 Tecnología & Dispositivos (Celulares, computadores, repuestos)</option>
+                    <option value="alimentos">🥗 Alimentos & Gastronomía (Restaurantes, postres, café especial)</option>
+                    <option value="reparaciones">🚰 Plomería & Reparaciones (Electricidad, gas, servicios del hogar)</option>
+                    <option value="belleza">💅 Belleza & Cuidado Personal (Cosméticos, spa, peluquería)</option>
+                    <option value="salud">🩺 Salud & Odontología (Insumos médicos, consultas)</option>
+                    <option value="mascotas">🐾 Mascotas & Veterinaria (Alimentos, accesorios, cuidado)</option>
+                    <option value="moda">👗 Moda & Calzado (Ropa, calzado local)</option>
+                    <option value="ferreteria">🔨 Ferretería & Repuestos (Herramientas, construcción)</option>
+                    <option value="legal">⚖️ Legal & Asesorías (Abogados, trámites)</option>
+                    <option value="servicios">💼 Servicios Profesionales & Otros</option>
+                  </select>
+                  <p className="text-[11px] text-slate-500 mt-1">
+                    Esta categoría se mostrará en tu tarjeta de proveedor para que los clientes identifiquen tus productos.
+                  </p>
+                </div>
+              )}
             </>
           )}
 
-          {/* STEP 3: MODALITY & LOCATION WITH GPS FOR MAP */}
+          {/* STEP 3: MODALITY & LOCATION WITH CLARITY ON MAP POSITIONING */}
           {step === 3 && (
             <>
               <div>
                 <h3 className="text-lg font-bold text-[#141b2b] mb-1 font-geist">Modalidad y Ubicación</h3>
                 <p className="text-xs text-slate-500 mb-3">
-                  Indica cómo atiendes a tus clientes y tu punto en el mapa de {city}.
+                  Indica si cuentas con local físico para definir la ubicación exacta en el mapa satelital de {city}.
                 </p>
               </div>
 
-              {/* OBLIGATORIO: SELECTOR DE MODALIDAD */}
+              {/* OBLIGATORIO: SELECTOR DE LOCAL FÍSICO / MODALIDAD */}
               <div>
                 <label className="block text-xs font-bold text-slate-800 mb-1.5">
-                  Modalidad de Atención <span className="text-red-500">* (Obligatorio)</span>
+                  ¿Tienes Local Físico Abierto al Público? <span className="text-red-500">* (Obligatorio)</span>
                 </label>
                 <div className="grid grid-cols-1 gap-2 text-xs">
-                  {/* Opción 1: Local Físico */}
+                  {/* Opción 1: Sí, Local Físico Fijo */}
                   <div
                     onClick={() => setServiceModality('physical_store')}
                     className={`p-3 rounded-2xl border cursor-pointer transition-all flex items-start gap-3 ${
                       serviceModality === 'physical_store'
-                        ? 'bg-blue-50/80 border-[#0052ff] shadow-xs'
+                        ? 'bg-blue-50/90 border-[#0052ff] ring-1 ring-blue-300 shadow-xs'
                         : 'bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-700'
                     }`}
                   >
@@ -379,48 +429,21 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between font-bold text-sm text-slate-900">
-                        <span>🏢 Local o Dirección Física Fija</span>
+                        <span>🏢 Sí, tengo Local o Dirección Física Fija</span>
                         {serviceModality === 'physical_store' && <Check className="w-4 h-4 text-[#0052ff]" />}
                       </div>
                       <p className="text-[11px] text-slate-500 mt-0.5">
-                        Tienes tienda, taller, oficina o consultorio abierto para visitas presenciales.
+                        Tienda, consultorio, taller u oficina física. La dirección que ingreses aparecerá como "Local Físico" en tu tarjeta y fija en el mapa satelital.
                       </p>
                     </div>
                   </div>
 
-                  {/* Opción 2: A Domicilio */}
-                  <div
-                    onClick={() => setServiceModality('home_delivery')}
-                    className={`p-3 rounded-2xl border cursor-pointer transition-all flex items-start gap-3 ${
-                      serviceModality === 'home_delivery'
-                        ? 'bg-emerald-50/80 border-emerald-600 shadow-xs'
-                        : 'bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-700'
-                    }`}
-                  >
-                    <div
-                      className={`p-2 rounded-xl shrink-0 ${
-                        serviceModality === 'home_delivery' ? 'bg-emerald-600 text-white' : 'bg-white text-slate-600'
-                      }`}
-                    >
-                      <Truck className="w-4 h-4" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between font-bold text-sm text-slate-900">
-                        <span>🛵 Solo a Domicilio</span>
-                        {serviceModality === 'home_delivery' && <Check className="w-4 h-4 text-emerald-600" />}
-                      </div>
-                      <p className="text-[11px] text-slate-500 mt-0.5">
-                        Sin local físico. Se muestra tu área de cobertura y distancia según tu GPS.
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Opción 3: Ambulante / Móvil */}
+                  {/* Opción 2: No, Venta Ambulatoria / Móvil */}
                   <div
                     onClick={() => setServiceModality('mobile_street')}
                     className={`p-3 rounded-2xl border cursor-pointer transition-all flex items-start gap-3 ${
                       serviceModality === 'mobile_street'
-                        ? 'bg-amber-50/80 border-amber-500 shadow-xs'
+                        ? 'bg-amber-50/90 border-amber-500 ring-1 ring-amber-300 shadow-xs'
                         : 'bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-700'
                     }`}
                   >
@@ -433,18 +456,78 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between font-bold text-sm text-slate-900">
-                        <span>🚐 Ambulante / Móvil</span>
+                        <span>🚐 No tengo local (Venta Ambulatoria / Móvil)</span>
                         {serviceModality === 'mobile_street' && <Check className="w-4 h-4 text-amber-600" />}
                       </div>
                       <p className="text-[11px] text-slate-500 mt-0.5">
-                        Food truck, vendedor o técnico móvil. Muestra tu ubicación satelital en vivo.
+                        Puesto ambulante, food truck o técnico itinerante. Usa el GPS de tu celular en tiempo real.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Opción 3: No, Solo a Domicilio */}
+                  <div
+                    onClick={() => setServiceModality('home_delivery')}
+                    className={`p-3 rounded-2xl border cursor-pointer transition-all flex items-start gap-3 ${
+                      serviceModality === 'home_delivery'
+                        ? 'bg-emerald-50/90 border-emerald-600 ring-1 ring-emerald-300 shadow-xs'
+                        : 'bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-700'
+                    }`}
+                  >
+                    <div
+                      className={`p-2 rounded-xl shrink-0 ${
+                        serviceModality === 'home_delivery' ? 'bg-emerald-600 text-white' : 'bg-white text-slate-600'
+                      }`}
+                    >
+                      <Truck className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between font-bold text-sm text-slate-900">
+                        <span>🛵 No tengo local (Solo a Domicilio)</span>
+                        {serviceModality === 'home_delivery' && <Check className="w-4 h-4 text-emerald-600" />}
+                      </div>
+                      <p className="text-[11px] text-slate-500 mt-0.5">
+                        Sin local físico público. Se muestra tu ciudad de cobertura y distancia de despacho.
                       </p>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* GPS Detection Status Banner */}
+              {/* BANNER EXPLICATIVO DE UBICACIÓN EN EL MAPA SEGÚN MODALIDAD */}
+              {serviceModality === 'physical_store' ? (
+                <div className="p-3.5 bg-blue-50/90 border border-blue-200 rounded-2xl text-xs space-y-1">
+                  <div className="flex items-center gap-2 font-bold text-[#0052ff]">
+                    <MapPin className="w-4 h-4 shrink-0" />
+                    <span>📍 Ubicación Fija en el Mapa Satelital</span>
+                  </div>
+                  <p className="text-[11.5px] text-blue-950 leading-relaxed">
+                    La <strong>dirección física exacta</strong> que registres a continuación será la que se mostrará fijada en el mapa satelital para que todos tus clientes puedan encontrarte y llegar a tu negocio.
+                  </p>
+                </div>
+              ) : serviceModality === 'mobile_street' ? (
+                <div className="p-3.5 bg-amber-50/90 border border-amber-200 rounded-2xl text-xs space-y-1">
+                  <div className="flex items-center gap-2 font-bold text-amber-800">
+                    <Navigation className="w-4 h-4 shrink-0" />
+                    <span>📱 Ubicación Celular / GPS en Vivo</span>
+                  </div>
+                  <p className="text-[11.5px] text-amber-950 leading-relaxed">
+                    Al ser <strong>Venta Ambulatoria o Móvil</strong>, la ubicación mostrada en el mapa será <strong>la del GPS de tu celular en tiempo real</strong> para que los clientes sepan exactamente en qué punto estás ubicado en este momento.
+                  </p>
+                </div>
+              ) : (
+                <div className="p-3.5 bg-emerald-50/90 border border-emerald-200 rounded-2xl text-xs space-y-1">
+                  <div className="flex items-center gap-2 font-bold text-emerald-800">
+                    <Truck className="w-4 h-4 shrink-0" />
+                    <span>🛵 Cobertura a Domicilio</span>
+                  </div>
+                  <p className="text-[11.5px] text-emerald-950 leading-relaxed">
+                    Atención en casa del cliente en {city}. No se muestra local físico, calculando la distancia según la ciudad.
+                  </p>
+                </div>
+              )}
+
+              {/* GPS DETECTION BANNER (ESPECIALMENTE IMPORTANTE PARA VENTA AMBULATORIA) */}
               <div
                 className={`p-3.5 rounded-2xl border transition-all ${
                   gpsStatus === 'success'
@@ -467,7 +550,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
                     )}
 
                     <div className="text-xs truncate">
-                      {gpsStatus === 'detecting' && <span className="font-bold">Obteniendo coordenadas GPS...</span>}
+                      {gpsStatus === 'detecting' && <span className="font-bold">Obteniendo coordenadas GPS del celular...</span>}
                       {gpsStatus === 'success' && (
                         <div>
                           <span className="font-bold text-emerald-800 block">GPS del Celular Activo</span>
@@ -513,13 +596,14 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
                   {serviceModality === 'physical_store' ? (
-                    <span>
-                      Dirección Física del Local / Taller <span className="text-red-500">* (Obligatorio)</span>
+                    <span className="flex items-center gap-1 font-bold text-slate-800">
+                      <span>Dirección Física del Local / Negocio (Fija en el mapa)</span>
+                      <span className="text-red-500">* (Obligatorio)</span>
                     </span>
-                  ) : serviceModality === 'home_delivery' ? (
-                    <span>Barrio o Zona Base de Domicilios (Opcional)</span>
+                  ) : serviceModality === 'mobile_street' ? (
+                    <span>Punto o Sector de Referencia Ambulante (Opcional)</span>
                   ) : (
-                    <span>Punto de Venta / Zona Ambulante (Opcional)</span>
+                    <span>Barrio o Zona Base de Domicilios (Opcional)</span>
                   )}
                 </label>
                 <input
@@ -529,23 +613,23 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
                   onChange={(e) => setAddress(e.target.value)}
                   className={`w-full border rounded-xl p-3 text-sm text-[#141b2b] focus:outline-none ${
                     serviceModality === 'physical_store'
-                      ? 'bg-white border-blue-300 focus:border-[#0052ff] ring-1 ring-blue-100'
+                      ? 'bg-white border-blue-400 focus:border-[#0052ff] ring-2 ring-blue-100 font-medium'
                       : 'bg-slate-50 border-slate-200 focus:border-[#0052ff]'
                   }`}
                   placeholder={
                     serviceModality === 'physical_store'
                       ? 'Ej: Carrera 15 # 12-45, Local 102, Barrio Álamos'
-                      : serviceModality === 'home_delivery'
-                      ? 'Ej: Cobertura en toda la ciudad / Barrio Los Álamos'
-                      : 'Ej: Plaza de Bolívar / Parque El Lago'
+                      : serviceModality === 'mobile_street'
+                      ? 'Ej: Plaza de Bolívar / Parque El Lago'
+                      : 'Ej: Cobertura en toda la ciudad / Barrio Los Álamos'
                   }
                 />
-                <p className="text-[11px] text-slate-400 mt-1">
+                <p className="text-[11px] text-slate-500 mt-1.5">
                   {serviceModality === 'physical_store'
-                    ? 'Los clientes podrán ver tu local en el mapa y pedir indicaciones de cómo llegar.'
-                    : serviceModality === 'home_delivery'
-                    ? 'Tu ubicación en el mapa mostrará que atiendes a domicilio y calculará la distancia hasta el cliente usando el GPS.'
-                    : 'Tu ubicación en el mapa se mostrará como puesto ambulante móvil mediante GPS.'}
+                    ? '📍 Esta es la dirección que aparecerá en el mapa satelital para que los clientes lleguen presencialmente.'
+                    : serviceModality === 'mobile_street'
+                    ? '📱 En venta ambulatoria, el mapa mostrará la ubicación GPS del celular en tiempo real.'
+                    : '🛵 Tu ubicación en el mapa indicará que atiendes a domicilio.'}
                 </p>
               </div>
 
@@ -561,10 +645,20 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
           <div className="pt-2">
             <button
               type="submit"
-              className="w-full bg-[#0052ff] hover:bg-blue-600 text-white font-bold text-sm py-3.5 rounded-2xl shadow-md shadow-blue-500/20 flex items-center justify-center gap-2 transition-all cursor-pointer"
+              disabled={isGeocodingAddress}
+              className="w-full bg-[#0052ff] hover:bg-blue-600 text-white font-bold text-sm py-3.5 rounded-2xl shadow-md shadow-blue-500/20 flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-60"
             >
-              <span>{step === 3 ? 'Comenzar en NexService' : 'Continuar'}</span>
-              <ArrowRight className="w-4 h-4" />
+              {isGeocodingAddress ? (
+                <>
+                  <Crosshair className="w-4 h-4 animate-spin" />
+                  <span>Fijando dirección en el mapa...</span>
+                </>
+              ) : (
+                <>
+                  <span>{step === 3 ? 'Comenzar en NexService' : 'Continuar'}</span>
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
             </button>
           </div>
         </form>

@@ -1,6 +1,7 @@
 import React from 'react';
-import { Star, ShieldCheck, MapPin, MessageSquare, ShoppingBag, Wrench } from 'lucide-react';
+import { Star, ShieldCheck, MapPin, MessageSquare, ShoppingBag, Wrench, Tag } from 'lucide-react';
 import { Provider } from '../types';
+import { getCategoryName, getCategoryEmoji } from '../utils/userUtils';
 
 interface ProviderCardProps {
   provider: Provider;
@@ -59,9 +60,17 @@ export const ProviderCard: React.FC<ProviderCardProps> = ({
             </div>
           </div>
 
-          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-slate-50 text-slate-600 border-slate-200 uppercase">
-            {provider.offerType === 'both' ? 'Productos & Servicios' : provider.offerType === 'products' ? 'Tienda / Productos' : 'Servicios'}
-          </span>
+          <div className="flex flex-col items-end gap-1 shrink-0">
+            {/* Categoría General de Producto / Servicio */}
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-[#0052ff] border border-blue-200 flex items-center gap-1">
+              <span>{getCategoryEmoji(provider.category)}</span>
+              <span>{getCategoryName(provider.category)}</span>
+            </span>
+
+            <span className="text-[9px] font-bold px-2 py-0.2 rounded-full border bg-slate-50 text-slate-500 border-slate-200 uppercase">
+              {provider.offerType === 'both' ? 'Productos & Servicios' : provider.offerType === 'products' ? 'Tienda / Productos' : 'Servicios'}
+            </span>
+          </div>
         </div>
 
         <p className="text-xs text-slate-600 line-clamp-2 mb-3 leading-relaxed">
@@ -71,19 +80,19 @@ export const ProviderCard: React.FC<ProviderCardProps> = ({
         <div className="flex items-center gap-1.5 text-xs text-slate-500 mb-3">
           <MapPin className="w-3.5 h-3.5 text-[#0052ff] shrink-0" />
           <span className="truncate flex-1">{provider.address}</span>
-          {provider.serviceModality === 'home_delivery' ? (
-            <span className="text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded-md shrink-0">
-              🛵 Domicilio
+          {provider.serviceModality === 'physical_store' ? (
+            <span className="text-[9px] font-bold bg-blue-50 text-[#0052ff] border border-blue-200 px-1.5 py-0.5 rounded-md shrink-0">
+              🏢 Local Físico
             </span>
           ) : provider.serviceModality === 'mobile_street' ? (
             <span className="text-[9px] font-bold bg-amber-50 text-amber-800 border border-amber-200 px-1.5 py-0.5 rounded-md shrink-0">
               🚐 Ambulante
             </span>
-          ) : (
-            <span className="text-[9px] font-bold bg-blue-50 text-[#0052ff] border border-blue-200 px-1.5 py-0.5 rounded-md shrink-0">
-              🏢 Local Físico
+          ) : provider.serviceModality === 'home_delivery' ? (
+            <span className="text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded-md shrink-0">
+              🛵 Domicilio
             </span>
-          )}
+          ) : null}
         </div>
 
         <div className="flex flex-wrap gap-1.5 mb-4">

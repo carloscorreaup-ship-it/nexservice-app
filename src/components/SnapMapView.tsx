@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import { Provider, ProductItem, UserSession } from '../types';
 import { calculateDistanceKm, formatDistance, DEFAULT_COLOMBIA_COORDS } from '../utils/geoUtils';
-import { getEmailAvatarUrl } from '../utils/userUtils';
+import { getEmailAvatarUrl, getCategoryName, getCategoryEmoji } from '../utils/userUtils';
 
 interface SnapMapViewProps {
   currentCity: string;
@@ -209,6 +209,13 @@ export const SnapMapView: React.FC<SnapMapViewProps> = ({
       circleLayerRef.current = null;
       userMarkerRef.current = null;
     };
+  }, []);
+
+  // Auto-center on GPS if the user hasn't set a physical address
+  useEffect(() => {
+    if (!userSession.fixedLocation?.address) {
+      handleCenterOnUser();
+    }
   }, []);
 
   // Update map style when layer is switched
@@ -686,7 +693,10 @@ export const SnapMapView: React.FC<SnapMapViewProps> = ({
                     {formatDistance(calculateDistanceKm(userCoords, selectedEntity.coordinates))}
                   </span>
                   <span className="text-slate-300">•</span>
-                  <span className="text-slate-500 capitalize">{selectedEntity.category}</span>
+                  <span className="text-slate-700 font-bold flex items-center gap-1">
+                    <span>{getCategoryEmoji(selectedEntity.category)}</span>
+                    <span>{getCategoryName(selectedEntity.category)}</span>
+                  </span>
                 </div>
               </div>
             </div>
@@ -702,19 +712,19 @@ export const SnapMapView: React.FC<SnapMapViewProps> = ({
 
           {/* Modality and Address */}
           <div className="flex items-center gap-1.5 text-xs text-slate-600 my-2 bg-slate-50 p-2 rounded-xl border border-slate-100">
-            {selectedEntity.serviceModality === 'home_delivery' ? (
-              <span className="text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded-lg shrink-0">
-                🛵 Solo a Domicilio
+            {selectedEntity.serviceModality === 'physical_store' ? (
+              <span className="text-[10px] font-bold bg-blue-50 text-[#0052ff] border border-blue-200 px-2 py-0.5 rounded-lg shrink-0">
+                📍 Local Físico Fijo
               </span>
             ) : selectedEntity.serviceModality === 'mobile_street' ? (
               <span className="text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 px-2 py-0.5 rounded-lg shrink-0">
-                🚐 Puesto Ambulante Móvil
+                📱 Venta Ambulatoria (GPS en Vivo)
               </span>
-            ) : (
-              <span className="text-[10px] font-bold bg-blue-50 text-[#0052ff] border border-blue-200 px-2 py-0.5 rounded-lg shrink-0">
-                🏢 Local Físico
+            ) : selectedEntity.serviceModality === 'home_delivery' ? (
+              <span className="text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded-lg shrink-0">
+                🛵 Solo a Domicilio
               </span>
-            )}
+            ) : null}
             <span className="text-[11px] truncate text-slate-600">{selectedEntity.address}</span>
           </div>
 

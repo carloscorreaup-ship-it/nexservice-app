@@ -176,6 +176,62 @@ export async function reverseGeocodeAddress(
 }
 
 /**
+ * Forward geocodes an address string to Coordinates with city context (Colombia)
+ */
+export async function geocodeAddress(
+  address: string,
+  city?: string,
+  department?: string
+): Promise<Coordinates | null> {
+  if (!address || address.trim().length < 3) return null;
+
+  try {
+    const cleanAddress = address.trim();
+    const cityContext = city ? `, ${city}` : '';
+    const deptContext = department ? `, ${department}` : '';
+    const fullQuery = `${cleanAddress}${cityContext}${deptContext}, Colombia`;
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 4000);
+
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+      fullQuery
+    )}&limit=1&countrycodes=co`;
+
+    const response = await fetch(url, {
+      signal: controller.signal,
+      headers: {
+        'Accept-Language': 'es',
+      },
+    });
+    clearTimeout(timeoutId);
+
+    if (response.ok) {
+      const results = await response.json();
+      if (results && results.length > 0) {
+        const lat = parseFloat(results[0].lat);
+        const lng = parseFloat(results[0].lon);
+        if (!isNaN(lat) && !isNaN(lng)) {
+          return {
+            lat: Number(lat.toFixed(6)),
+            lng: Number(lng.toFixed(6)),
+          };
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('Geocoding query notice, using fallback:', e);
+  }
+
+  // Fallback to city coordinates if geocoding fails
+  if (city && DEFAULT_COLOMBIA_COORDS[city]) {
+    return DEFAULT_COLOMBIA_COORDS[city];
+  }
+
+  return null;
+}
+
+/**
  * Jitter coordinate slightly for realistic multi-marker display in map
  */
 export function jitterCoordinate(coord: Coordinates, offsetIndex: number): Coordinates {
@@ -187,3 +243,4 @@ export function jitterCoordinate(coord: Coordinates, offsetIndex: number): Coord
     lng: coord.lng + Math.sin(angle) * radius * 1.2,
   };
 }
+

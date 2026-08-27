@@ -66,9 +66,23 @@ export const PWAInstallBanner: React.FC = () => {
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     window.addEventListener('appinstalled', handleAppInstalled);
 
+    // Auto-dismiss the banner after 15 seconds so it's not intrusive
+    const autoDismissTimer = setTimeout(() => {
+      setIsDismissed(true);
+      // We don't save to localStorage here so it can show again next time they enter
+      // but only once per session basically, or they can manually dismiss to never see it again.
+      sessionStorage.setItem('nexservice_pwa_session_dismissed', 'true');
+    }, 15000);
+
+    if (sessionStorage.getItem('nexservice_pwa_session_dismissed') === 'true') {
+      setIsDismissed(true);
+      clearTimeout(autoDismissTimer);
+    }
+
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('appinstalled', handleAppInstalled);
+      clearTimeout(autoDismissTimer);
     };
   }, []);
 

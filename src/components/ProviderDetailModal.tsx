@@ -15,7 +15,7 @@ import {
   Flag
 } from 'lucide-react';
 import { Provider, ProductItem, ServiceItem } from '../types';
-import { formatCurrencyCOP } from '../utils/userUtils';
+import { formatCurrencyCOP, getCategoryName, getCategoryEmoji } from '../utils/userUtils';
 
 interface ProviderDetailModalProps {
   provider: Provider;
@@ -66,17 +66,11 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm">
       <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-3xl max-h-[92vh] overflow-y-auto shadow-2xl relative flex flex-col">
-        {/* Banner with Back Button */}
-        <div className="relative h-44 sm:h-52 bg-slate-200">
-          <img
-            src={provider.bannerUrl || 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=1000&h=400&fit=crop&q=80'}
-            alt="Banner"
-            className="w-full h-full object-cover"
-          />
-
+        {/* Header without Banner */}
+        <div className="relative bg-white pt-6 pb-2 px-6 flex items-center justify-between border-b border-slate-100">
           <button
             onClick={onClose}
-            className="absolute top-4 left-4 flex items-center gap-1.5 px-3 py-1.5 bg-white/90 hover:bg-white text-slate-800 rounded-full shadow-md text-xs font-bold transition-all z-10 cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-full text-xs font-bold transition-all cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4 text-[#0052ff]" />
             <span>Volver</span>
@@ -84,25 +78,25 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
 
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 p-2 text-slate-700 bg-white/90 hover:bg-white rounded-full shadow-md z-10 cursor-pointer"
+            className="p-1.5 text-slate-500 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-full cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
+        </div>
 
-          <div className="absolute -bottom-8 left-6 flex items-end gap-4">
-            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl overflow-hidden ring-4 ring-white bg-white shadow-lg">
-              <img
-                src={provider.avatarUrl}
-                alt={provider.name}
-                className="w-full h-full object-cover"
-                referrerPolicy="no-referrer"
-              />
-            </div>
+        <div className="px-6 pt-4 pb-2 flex justify-center sm:justify-start">
+          <div className="w-24 h-24 rounded-3xl overflow-hidden ring-2 ring-[#0052ff]/20 bg-slate-100 shadow-lg">
+            <img
+              src={provider.avatarUrl}
+              alt={provider.name}
+              className="w-full h-full object-cover"
+              referrerPolicy="no-referrer"
+            />
           </div>
         </div>
 
         {/* Content */}
-        <div className="pt-10 px-6 pb-6">
+        <div className="px-6 pb-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
             <div>
               <div className="flex items-center gap-2">
@@ -188,19 +182,25 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
 
           {/* Badges */}
           <div className="flex flex-wrap gap-2 mb-4 text-xs">
-            {provider.serviceModality === 'home_delivery' ? (
-              <span className="bg-emerald-50 text-emerald-800 px-3 py-1 rounded-xl border border-emerald-200 flex items-center gap-1.5 font-bold">
-                🛵 Atención Exclusiva a Domicilio
-              </span>
-            ) : provider.serviceModality === 'mobile_street' ? (
-              <span className="bg-amber-50 text-amber-800 px-3 py-1 rounded-xl border border-amber-200 flex items-center gap-1.5 font-bold">
-                🚐 Puesto / Servicio Ambulante Móvil
-              </span>
-            ) : (
+            {/* Categoría General */}
+            <span className="bg-blue-50 text-[#0052ff] px-3 py-1 rounded-xl border border-blue-200 flex items-center gap-1.5 font-bold">
+              <span>{getCategoryEmoji(provider.category)}</span>
+              <span>{getCategoryName(provider.category)}</span>
+            </span>
+
+            {provider.serviceModality === 'physical_store' ? (
               <span className="bg-blue-50 text-[#0052ff] px-3 py-1 rounded-xl border border-blue-200 flex items-center gap-1.5 font-bold">
                 🏢 Local Físico Abierto al Público
               </span>
-            )}
+            ) : provider.serviceModality === 'mobile_street' ? (
+              <span className="bg-amber-50 text-amber-800 px-3 py-1 rounded-xl border border-amber-200 flex items-center gap-1.5 font-bold">
+                🚐 Venta / Servicio Ambulante Móvil
+              </span>
+            ) : provider.serviceModality === 'home_delivery' ? (
+              <span className="bg-emerald-50 text-emerald-800 px-3 py-1 rounded-xl border border-emerald-200 flex items-center gap-1.5 font-bold">
+                🛵 Atención Exclusiva a Domicilio
+              </span>
+            ) : null}
             {provider.documentVerified && (
               <span className="bg-slate-100 text-slate-700 px-3 py-1 rounded-xl border border-slate-200 flex items-center gap-1.5">
                 <FileCheck className="w-3.5 h-3.5 text-[#0052ff]" /> RUT Verificado
@@ -274,7 +274,8 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({
                   {provider.products.map((prod) => (
                     <div
                       key={prod.id}
-                      className="bg-slate-50 border border-slate-200 rounded-2xl p-3 flex gap-3 items-center justify-between"
+                      onClick={() => onSelectProduct?.(prod)}
+                      className={`bg-slate-50 border border-slate-200 rounded-2xl p-3 flex gap-3 items-center justify-between transition-colors ${onSelectProduct ? 'cursor-pointer hover:bg-slate-100 hover:border-slate-300' : ''}`}
                     >
                       <img src={prod.images[0]} alt={prod.name} className="w-14 h-14 rounded-xl object-cover" />
                       <div className="flex-1 min-w-0">
