@@ -139,12 +139,12 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
         if (selectedCategory !== 'todos' && p.category !== selectedCategory) return false;
         if (onlyVerified && !p.verified) return false;
 
-        const score = scoreProviderMatch(p, query, keywords, expandedKeywords);
+        const score = scoreProviderMatch(p, query, keywords, searchIntent || undefined);
         return score > 0;
       })
       .sort((a, b) => {
-        const scoreA = scoreProviderMatch(a, query, keywords, expandedKeywords);
-        const scoreB = scoreProviderMatch(b, query, keywords, expandedKeywords);
+        const scoreA = scoreProviderMatch(a, query, keywords, searchIntent || undefined);
+        const scoreB = scoreProviderMatch(b, query, keywords, searchIntent || undefined);
         return scoreB - scoreA;
       });
   }, [providers, currentCity, selectedCategory, onlyVerified, searchQuery, executedSearchQuery, searchIntent]);
@@ -174,12 +174,12 @@ export const ExploreView: React.FC<ExploreViewProps> = ({
         if (selectedCategory !== 'todos' && prod.category !== selectedCategory) return false;
         if (onlyVerified && !prod.verifiedSeller) return false;
 
-        const score = scoreProductMatch(prod, query, keywords, expandedKeywords);
+        const score = scoreProductMatch(prod, query, keywords, searchIntent || undefined);
         return score > 0;
       })
       .sort((a, b) => {
-        const scoreA = scoreProductMatch(a, query, keywords, expandedKeywords);
-        const scoreB = scoreProductMatch(b, query, keywords, expandedKeywords);
+        const scoreA = scoreProductMatch(a, query, keywords, searchIntent || undefined);
+        const scoreB = scoreProductMatch(b, query, keywords, searchIntent || undefined);
         return scoreB - scoreA;
       });
   }, [products, currentCity, selectedCategory, onlyVerified, searchQuery, executedSearchQuery, searchIntent]);

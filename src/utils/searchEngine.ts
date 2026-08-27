@@ -52,6 +52,13 @@ const SEMANTIC_INTENT_MAP: Record<string, { category: string; synonyms: string[]
   'abogado': { category: 'legal', synonyms: ['abogada', 'juridico', 'derecho', 'leyes', 'contrato', 'demanda', 'laboral', 'civil'], intentLabel: '⚖️ Asesoría Jurídica y Legal' },
   'odontologia': { category: 'salud', synonyms: ['dentista', 'dientes', 'muela', 'ortodoncia', 'blanqueamiento', 'diseno de sonrisa', 'caries'], intentLabel: '🦷 Odontología y Salud Oral' },
   'medico': { category: 'salud', synonyms: ['doctor', 'medicina', 'consulta', 'salud', 'clinica'], intentLabel: '🩺 Atención Médica y Salud' },
+  
+  // Nutrición y Suplementos Naturales
+  'melena de leon': { category: 'nutricion', synonyms: ['hongo', 'suplemento', 'nutricional', 'natural', 'vitaminas', 'memoria', 'salud', 'medicinal', 'organico'], intentLabel: '🌿 Suplementos Naturales y Nutrición' },
+  'suplemento': { category: 'nutricion', synonyms: ['suplementos', 'vitaminas', 'proteina', 'natural', 'melena de leon', 'salud', 'nutricional', 'organico', 'bienestar'], intentLabel: '🌿 Suplementos Naturales y Nutrición' },
+  'suplementos': { category: 'nutricion', synonyms: ['suplemento', 'vitaminas', 'proteina', 'natural', 'melena de leon', 'salud', 'nutricional', 'organico', 'bienestar'], intentLabel: '🌿 Suplementos Naturales y Nutrición' },
+  'natural': { category: 'nutricion', synonyms: ['naturales', 'organico', 'salud', 'suplemento', 'bienestar', 'medicina alternativa'], intentLabel: '🌿 Salud y Productos Naturales' },
+  'nutricion': { category: 'nutricion', synonyms: ['nutricional', 'suplemento', 'vitaminas', 'dieta', 'salud', 'bienestar'], intentLabel: '🌿 Suplementos Naturales y Nutrición' },
 };
 
 // Extrae palabras clave significativas de una consulta de usuario
@@ -73,13 +80,23 @@ export const extractKeywords = (query: string): string[] => {
 
 // Detecta si la consulta tiene un concepto semántico o categoría inferida
 export const detectSearchIntents = (query: string): { category?: string; intentLabel?: string; expandedKeywords: string[] } => {
+  const normalizedQuery = normalizeText(query);
   const keywords = extractKeywords(query);
   const expanded = new Set<string>(keywords);
   let detectedCategory: string | undefined;
   let detectedLabel: string | undefined;
 
+  // First, check for full query match in semantic map (e.g. "melena de leon")
+  for (const [key, config] of Object.entries(SEMANTIC_INTENT_MAP)) {
+    if (normalizedQuery.includes(key)) {
+      if (!detectedCategory) detectedCategory = config.category;
+      if (!detectedLabel) detectedLabel = config.intentLabel;
+      config.synonyms.forEach(syn => expanded.add(normalizeText(syn)));
+    }
+  }
+
+  // Then check individual keywords
   for (const kw of keywords) {
-    // Check direct match or substring
     for (const [key, config] of Object.entries(SEMANTIC_INTENT_MAP)) {
       if (kw === key || kw.includes(key) || key.includes(kw)) {
         if (!detectedCategory) detectedCategory = config.category;
@@ -101,7 +118,7 @@ export const scoreProviderMatch = (
   provider: Provider,
   query: string,
   keywords: string[],
-  expandedKeywords: string[]
+  searchIntent?: { category?: string; intentLabel?: string; expandedKeywords: string[] }
 ): number => {
   if (!query.trim()) return 1;
 
@@ -111,6 +128,11 @@ export const scoreProviderMatch = (
   );
 
   let score = 0;
+
+  // Boost if the provider belongs to the detected semantic category
+  if (searchIntent?.category && normalizeText(provider.category).includes(searchIntent.category)) {
+    score += 50; // High boost for category match
+  }
 
   // Coincidencia exacta de la frase
   if (providerText.includes(normQuery)) {
@@ -129,6 +151,7 @@ export const scoreProviderMatch = (
   }
 
   // Coincidencias de sinónimos semánticos
+  const expandedKeywords = searchIntent?.expandedKeywords || keywords;
   for (const expKw of expandedKeywords) {
     if (providerText.includes(expKw)) {
       score += 15;
@@ -144,7 +167,7 @@ export const scoreProductMatch = (
   product: ProductItem,
   query: string,
   keywords: string[],
-  expandedKeywords: string[]
+  searchIntent?: { category?: string; intentLabel?: string; expandedKeywords: string[] }
 ): number => {
   if (!query.trim()) return 1;
 
@@ -154,6 +177,11 @@ export const scoreProductMatch = (
   );
 
   let score = 0;
+
+  // Boost if the product belongs to the detected semantic category
+  if (searchIntent?.category && normalizeText(product.category).includes(searchIntent.category)) {
+    score += 50; // High boost for category match
+  }
 
   // Coincidencia exacta
   if (productText.includes(normQuery)) {
@@ -170,6 +198,7 @@ export const scoreProductMatch = (
   }
 
   // Sinónimos
+  const expandedKeywords = searchIntent?.expandedKeywords || keywords;
   for (const expKw of expandedKeywords) {
     if (productText.includes(expKw)) {
       score += 15;
